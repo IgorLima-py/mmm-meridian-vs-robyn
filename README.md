@@ -1,6 +1,8 @@
-# mmm-meridian-vs-robyn
+# Meridian vs Robyn
 
-Criado em Dell pelo robo do playbook.
+The same simulated dataset — with known ground truth — run through Google Meridian
+and Meta Robyn. Where the two open-source MMM tools agree, where they diverge, which
+one got closer to reality under which conditions, and what neither can tell you.
+Fully reproducible.
 
-O `CLAUDE.md` e o `docs/STATUS.md` sao escritos na primeira sessao, a partir do que voce
-contar sobre o projeto. Dali em diante o ciclo e `/oi` ao chegar e `/tchau` ao sair.
+**Status: work in progress — not yet released.** See [BRIEF.md](BRIEF.md) for scope.
