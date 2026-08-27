@@ -32,9 +32,31 @@ limites — ela **não** alega "construí um MMM".
 runs demorados — instalar e rodar na máquina. Escrita e análise dos resultados podem
 rodar em qualquer lugar. Documentar no PLAN o setup exato de cada ambiente.
 
+## Duas máquinas
+
+O trabalho alterna entre dois PCs, ambos com o repositório clonado. O handoff
+entre eles é **git + `docs/STATUS.md`** — nunca outra coisa:
+
+- **Nunca trocar de máquina sem `/tchau`** (commit + push). Sempre abrir com
+  `/oi` (pull). Trabalho não commitado não existe na outra máquina.
+- Ambientes (WSL2, venvs Python, biblioteca R) **não viajam pelo git**: os
+  scripts de setup em `envs/` devem ser idempotentes, para reproduzir o ambiente
+  em qualquer máquina do zero.
+- Outputs pesados de model run (pasta ignorada pelo git) ficam na máquina que
+  rodou; os **extratos pequenos** em `runs/*/results/` são commitados e viajam.
+  O `docs/STATUS.md` registra em qual máquina cada run pesado ficou.
+- Runs longos: começar e terminar na mesma máquina. Se um run ficou pela metade,
+  anotar no STATUS antes do `/tchau`.
+- **Papéis:** a **Karen** (desktop, GPU NVIDIA, admin OK) é a máquina de runs —
+  ambientes WSL2 e Fases 1, 3 e 4 do PLAN. O **Dell** (laptop, **sem admin**)
+  faz o trabalho sem ferramenta pesada — Fases 2, 5 e 6 (simulador, scoring,
+  análise, escrita). A identificação é por GPU no `/oi` (nunca por hostname —
+  hostname de máquina não entra em arquivo do repo).
+
 ## A primeira sessão — planejamento (antes de qualquer código)
 
-Esta pasta ainda não tem plano. A primeira sessão de trabalho:
+> **Concluída em 2026-08-27** — `docs/PLAN.md`, `docs/REFERENCES.md` e
+> `docs/BACKLOG.md` existem. O roteiro abaixo fica como registro.
 
 1. Lê `BRIEF.md` inteiro — ele é o escopo de partida, não o plano.
 2. **Pesquisa na internet, a fundo** — a seção "Open questions" do brief é o roteiro:
@@ -49,10 +71,18 @@ Esta pasta ainda não tem plano. A primeira sessão de trabalho:
 
 Executado pelo comando `/oi`.
 
-1. `git pull` e `git log --oneline -5`.
-2. Leia `docs/STATUS.md` por inteiro; na primeira vez, leia também `BRIEF.md`.
-3. `git status --short`.
-4. Diga onde paramos e qual é o próximo passo concreto.
+1. **Reconheça a máquina** e anuncie na primeira linha da resposta. Rode
+   `(Get-CimInstance Win32_VideoController).Name`:
+   - GPU NVIDIA presente (RTX 4070 Super) → **Karen** (desktop, admin OK):
+     máquina de runs — Fases 1, 3 e 4 do PLAN, ambientes WSL2.
+   - Só Intel Graphics → **Dell** (laptop, sem admin): Fases 2, 5 e 6.
+     **Nunca** tentar WSL2 ou qualquer instalação que exija admin aqui.
+   - Em dúvida (GPU inesperada), pergunte ao Igor em vez de assumir.
+2. `git pull` e `git log --oneline -5`.
+3. Leia `docs/STATUS.md` por inteiro; na primeira vez, leia também `BRIEF.md`.
+4. `git status --short`.
+5. Diga onde paramos e qual é o próximo passo concreto **para esta máquina**
+   (o STATUS e o PLAN dizem qual fase pertence a qual máquina).
 
 ## Ao encerrar a sessão
 

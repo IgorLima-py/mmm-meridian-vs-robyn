@@ -18,6 +18,12 @@ node_modules/
 build/
 dist/
 
+# Heavy model-run outputs (do not commit; small extracts go in runs/*/results/)
+outputs/
+
+# Derived scoring outputs (regenerable via analysis/scoring.py)
+analysis/out/
+
 # Editores / SO
 .vscode/
 .idea/
