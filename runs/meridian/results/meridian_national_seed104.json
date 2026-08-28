@@ -1,0 +1,254 @@
+{
+  "schema_version": "1.0",
+  "tool": "meridian",
+  "tool_version": "1.8.0",
+  "arm": "national",
+  "seed_dataset": 104,
+  "run": {
+    "tool_seed": 1,
+    "runtime_seconds": 299.4,
+    "hardware": "WSL2 Ubuntu 26.04, RTX 4070 Super 12GB, TF 2.21 XLA/CUDA",
+    "converged": true,
+    "convergence_detail": {
+      "max_rhat": 1.0166708003504794,
+      "rhat_gate": 1.1,
+      "n_divergences": 6,
+      "n_chains": 7,
+      "n_adapt": 500,
+      "n_burnin": 500,
+      "n_keep": 1000,
+      "n_knots": 28
+    }
+  },
+  "channels": {
+    "tv": {
+      "roi": {
+        "point": 1.6181484460830688,
+        "interval_low": 0.9966176748275757,
+        "interval_high": 2.707246780395508,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.6638290882110596
+      },
+      "contribution_share": {
+        "point": 0.06945748627185822,
+        "interval_low": 0.0427788682281971,
+        "interval_high": 0.11620599776506424,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          34469104.0,
+          53601712.0,
+          66416152.0,
+          75729344.0,
+          82989488.0,
+          88531440.0,
+          97030448.0,
+          103241856.0,
+          107797656.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "ooh": {
+      "roi": {
+        "point": 0.8488466739654541,
+        "interval_low": 0.22991685569286346,
+        "interval_high": 2.6722018718719482,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.2925680875778198
+      },
+      "contribution_share": {
+        "point": 0.009716250002384186,
+        "interval_low": 0.0026317236479371786,
+        "interval_high": 0.030587129294872284,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          5203521.0,
+          7822394.0,
+          9474428.0,
+          10593605.0,
+          11378813.0,
+          12020834.0,
+          12994232.0,
+          13662094.0,
+          14193568.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "social": {
+      "roi": {
+        "point": 0.701045572757721,
+        "interval_low": 0.20507507026195526,
+        "interval_high": 1.882172703742981,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.26246798038482666
+      },
+      "contribution_share": {
+        "point": 0.012036686763167381,
+        "interval_low": 0.0035210615023970604,
+        "interval_high": 0.032316192984580994,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          6101604.5,
+          9451368.0,
+          11577846.0,
+          13123573.0,
+          14263394.0,
+          15213824.0,
+          16495424.0,
+          17474236.0,
+          18160372.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "display": {
+      "roi": {
+        "point": 0.6838458776473999,
+        "interval_low": 0.2002580612897873,
+        "interval_high": 2.002471923828125,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.24992522597312927
+      },
+      "contribution_share": {
+        "point": 0.008806031197309494,
+        "interval_low": 0.002578766318038106,
+        "interval_high": 0.02578626573085785,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          4449803.5,
+          6919039.5,
+          8492484.0,
+          9601196.0,
+          10461031.0,
+          11093457.0,
+          12059806.0,
+          12774547.0,
+          13279182.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "search": {
+      "roi": {
+        "point": 0.6379026770591736,
+        "interval_low": 0.20019413530826569,
+        "interval_high": 1.640026569366455,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.2609419524669647
+      },
+      "contribution_share": {
+        "point": 0.01642882078886032,
+        "interval_low": 0.005155886057764292,
+        "interval_high": 0.04223795235157013,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          7916811.0,
+          12587145.0,
+          15662893.0,
+          17912308.0,
+          19595706.0,
+          20969732.0,
+          23094000.0,
+          24540886.0,
+          25704372.0
+        ],
+        "kind": "posterior_median"
+      }
+    }
+  },
+  "extras": {
+    "model_spec": {
+      "priors": "meridian_default",
+      "enable_aks": true,
+      "n_knots_used": 28,
+      "max_lag": 13
+    },
+    "runtime_includes_xla_compile": true
+  }
+}
