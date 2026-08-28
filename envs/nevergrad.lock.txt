@@ -1,0 +1,16 @@
+bayesian-optimization==1.4.0
+cma==4.4.4
+directsearch==1.1
+joblib==1.5.3
+nevergrad==1.0.12
+numpy==2.2.6
+pandas==2.3.3
+python-dateutil==2.9.0.post0
+pytz==2026.3.post1
+scikit-learn==1.7.2
+scipy==1.15.3
+setuptools==84.0.0
+six==1.17.0
+threadpoolctl==3.6.0
+typing-extensions==4.16.0
+tzdata==2026.3
