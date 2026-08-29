@@ -14,14 +14,16 @@ suppressPackageStartupMessages({
 })
 
 args <- commandArgs(trailingOnly = TRUE)
-seeds <- if (length(args)) as.integer(args) else c(101L, 102L, 103L, 104L, 105L)
+iter_arg <- grep("^--iterations=", args, value = TRUE)
+seed_args <- setdiff(args, iter_arg)
+seeds <- if (length(seed_args)) as.integer(seed_args) else c(101L, 102L, 103L, 104L, 105L)
 
 REPO <- getwd()
 CH <- c("tv", "ooh", "social", "display", "search")
 SPEND_VARS <- paste0(CH, "_S")
 EXPO_VARS <- paste0(CH, "_I")
 MULTIPLIERS <- c(0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0)
-ITERATIONS <- 2000L
+ITERATIONS <- if (length(iter_arg)) as.integer(sub("^--iterations=", "", iter_arg)) else 2000L
 TRIALS <- 5L
 CORES <- max(1L, parallel::detectCores() - 1L)
 HARDWARE <- sprintf("WSL2 Ubuntu 26.04, %d cores (Ryzen 5 5600G), R 4.5.2", CORES)

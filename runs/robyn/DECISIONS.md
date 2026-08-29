@@ -23,3 +23,14 @@ API-level interpretation it allows for.
 
 Deviations discovered during execution are appended below with timestamps
 rather than silently edited into the table.
+
+## Amendments
+
+- **2026-08-28 (convergence escalation, decided before any ground-truth
+  comparison):** at the pre-registered 2000×5, Robyn's own convergence check
+  passed fully only on seed105 (101/103/104 fail DECOMP.RSSD; 102 fails NRMSE
+  and DECOMP.RSSD). Symmetric with the Meridian geo-arm escalations, seeds
+  101–104 get ONE re-run at **4000 iterations × 5 trials** (same tool seeds);
+  the exported JSON is the 4000×5 run whatever its convergence outcome, and
+  the 2000×5 flags stay recorded here. seed105 keeps its converged 2000×5 run
+  (the pre-registered spec). No further escalation after this.

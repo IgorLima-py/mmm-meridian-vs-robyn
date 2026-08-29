@@ -1,0 +1,266 @@
+{
+  "schema_version": "1.0",
+  "tool": "robyn",
+  "tool_version": "3.12.1",
+  "arm": "national",
+  "seed_dataset": 104,
+  "run": {
+    "tool_seed": 126,
+    "runtime_seconds": 576.6,
+    "hardware": "WSL2 Ubuntu 26.04, 11 cores (Ryzen 5 5600G), R 4.5.2",
+    "converged": false,
+    "convergence_detail": {
+      "conv_msg": ["DECOMP.RSSD NOT converged: sd@qt.20 0.071 > 0.061 & |med@qt.20| 0.25 > 0.13", "NRMSE converged: sd@qt.20 0.027 <= 0.11 & |med@qt.20| 0.076 <= 0.086"],
+      "iterations": 2000,
+      "trials": 5,
+      "ts_validation": true,
+      "cores": 11
+    }
+  },
+  "channels": {
+    "tv": {
+      "roi": {
+        "point": 0.61267095031,
+        "interval_low": 0.61267095031,
+        "interval_high": 0.94219468184,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.64805818529
+      },
+      "contribution_share": {
+        "point": 0.026298322358,
+        "interval_low": 0.026298322358,
+        "interval_high": 0.04044281756,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 4202614.2072575577, 12122532.387506412, 20669495.409323622, 28673000.455979738, 35849035.598030217, 42223215.903038368, 52970059.533106133, 61643474.835080191, 68746081.845824003],
+        "kind": "selected_model"
+      }
+    },
+    "ooh": {
+      "roi": {
+        "point": 0.61247115596,
+        "interval_low": 0,
+        "interval_high": 0.61247115596,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.41290724152
+      },
+      "contribution_share": {
+        "point": 0.0070105990321,
+        "interval_low": 0,
+        "interval_high": 0.0070105990321,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 2475249.0658759144, 4544756.5473401658, 6235224.370713993, 7643640.0202530473, 8839102.2126246858, 9869492.0535084717, 11561774.456217309, 12899104.123212798, 13985718.712098889],
+        "kind": "selected_model"
+      }
+    },
+    "social": {
+      "roi": {
+        "point": 0.74976843543,
+        "interval_low": 0.62571381836,
+        "interval_high": 1.2082082827,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.55210824559
+      },
+      "contribution_share": {
+        "point": 0.012873241019,
+        "interval_low": 0.010743270071,
+        "interval_high": 0.020744480149,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 3883385.126201841, 7830132.9517149376, 11203426.532401117, 14035665.111301236, 16420299.767524222, 18443642.76755257, 21670268.518467534, 24110639.570694689, 26008690.88174665],
+        "kind": "selected_model"
+      }
+    },
+    "display": {
+      "roi": {
+        "point": 0.052091292789,
+        "interval_low": 0.052091292789,
+        "interval_high": 0.45505212805,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.025391994645
+      },
+      "contribution_share": {
+        "point": 0.00067079087608,
+        "interval_low": 0.00067079087608,
+        "interval_high": 0.0058598049558,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 318681.8363133256, 500375.3665257118, 630792.0797505081, 731361.7512720398, 812243.1516999007, 879182.1822749255, 984395.2647503905, 1064019.1186629846, 1126804.0448171201],
+        "kind": "selected_model"
+      }
+    },
+    "search": {
+      "roi": {
+        "point": 0.7958300618,
+        "interval_low": 0.60757720012,
+        "interval_high": 1.0949261621,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.82388053547
+      },
+      "contribution_share": {
+        "point": 0.020496152621,
+        "interval_low": 0.015647806762,
+        "interval_high": 0.028199203326,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 2369232.1536332499, 8688436.1445631646, 15908893.246925637, 22346908.119290959, 27484392.213920493, 31374019.949820276, 36404629.173009224, 39220704.51604449, 40880124.089607373],
+        "kind": "selected_model"
+      }
+    }
+  },
+  "extras": {
+    "selected_model": "2_177_4",
+    "candidates": ["2_177_4", "1_170_9", "3_174_10", "1_166_7", "1_178_10"],
+    "selection_path": "clusters",
+    "n_pareto_models": 132,
+    "outputs_clustering_seconds": 77.2,
+    "candidate_roi_table": [
+      {
+        "solID": "2_177_4",
+        "channel": "tv",
+        "roi_total": 0.61267095031
+      },
+      {
+        "solID": "2_177_4",
+        "channel": "ooh",
+        "roi_total": 0.61247115596
+      },
+      {
+        "solID": "2_177_4",
+        "channel": "social",
+        "roi_total": 0.74976843543
+      },
+      {
+        "solID": "2_177_4",
+        "channel": "display",
+        "roi_total": 0.052091292789
+      },
+      {
+        "solID": "2_177_4",
+        "channel": "search",
+        "roi_total": 0.7958300618
+      },
+      {
+        "solID": "1_170_9",
+        "channel": "tv",
+        "roi_total": 0.94219468184
+      },
+      {
+        "solID": "1_170_9",
+        "channel": "ooh",
+        "roi_total": 0.23703727452
+      },
+      {
+        "solID": "1_170_9",
+        "channel": "social",
+        "roi_total": 1.0249927628
+      },
+      {
+        "solID": "1_170_9",
+        "channel": "display",
+        "roi_total": 0.072562561723
+      },
+      {
+        "solID": "1_170_9",
+        "channel": "search",
+        "roi_total": 1.0949261621
+      },
+      {
+        "solID": "3_174_10",
+        "channel": "tv",
+        "roi_total": 0.74133592617
+      },
+      {
+        "solID": "3_174_10",
+        "channel": "ooh",
+        "roi_total": 0
+      },
+      {
+        "solID": "3_174_10",
+        "channel": "social",
+        "roi_total": 0.66658064696
+      },
+      {
+        "solID": "3_174_10",
+        "channel": "display",
+        "roi_total": 0.45505212805
+      },
+      {
+        "solID": "3_174_10",
+        "channel": "search",
+        "roi_total": 0.60757720012
+      },
+      {
+        "solID": "1_166_7",
+        "channel": "tv",
+        "roi_total": 0.71377213535
+      },
+      {
+        "solID": "1_166_7",
+        "channel": "ooh",
+        "roi_total": 0.30548292003
+      },
+      {
+        "solID": "1_166_7",
+        "channel": "social",
+        "roi_total": 0.62571381836
+      },
+      {
+        "solID": "1_166_7",
+        "channel": "display",
+        "roi_total": 0.11033621973
+      },
+      {
+        "solID": "1_166_7",
+        "channel": "search",
+        "roi_total": 0.86455806738
+      },
+      {
+        "solID": "1_178_10",
+        "channel": "tv",
+        "roi_total": 0.7326370791
+      },
+      {
+        "solID": "1_178_10",
+        "channel": "ooh",
+        "roi_total": 0.2369478232
+      },
+      {
+        "solID": "1_178_10",
+        "channel": "social",
+        "roi_total": 1.2082082827
+      },
+      {
+        "solID": "1_178_10",
+        "channel": "display",
+        "roi_total": 0.094823607457
+      },
+      {
+        "solID": "1_178_10",
+        "channel": "search",
+        "roi_total": 0.83068578984
+      }
+    ]
+  }
+}
