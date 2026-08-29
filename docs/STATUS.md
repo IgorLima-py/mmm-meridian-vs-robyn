@@ -1,58 +1,63 @@
 # Status
 
-_Atualizado: 2026-08-28 (Karen — desktop GPU)_
+_Atualizado: 2026-08-28, fim do dia (Karen — desktop GPU)_
 
 ## Onde estamos
 
-**Fase 1 CONCLUÍDA na Karen.** Os dois smoke tests passaram (gate da fase).
+**Fases 1, 3 e 4 CONCLUÍDAS na Karen** (a 4 com uma pendência opcional de
+escalada). Todos os extratos estão em `runs/*/results/` no schema
+pré-registrado; o scorer da Fase 5 já pode consumi-los.
 
-Feito nesta sessão:
-
-- **WSL2 + Ubuntu 26.04** instalados. Exigiu habilitar SVM na BIOS (virtualização
-  vinha desligada de fábrica) — reboot no meio da instalação.
-- **Ambiente Meridian:** Python 3.12.14 (uv), `google-meridian[and-cuda]==1.8.0`,
-  TF 2.21.0 com XLA/CUDA na RTX 4070 Super. O wheel do TF 2.21 não enxerga as
-  libs CUDA do pip (sem RUNPATH) — corrigido com preload via `sitecustomize.py`,
-  já dentro do `envs/setup_meridian.sh`.
-- **Ambiente Robyn:** R 4.5.2 + Robyn 3.12.1 (CRAN) + nevergrad 1.0.12 em venv
-  Python 3.10, `RETICULATE_PYTHON` pinado no `~/.Renviron`. Faltavam
-  `cmake`/`libuv1-dev`/`libnlopt-dev` no apt (a compilação CRAN morreu 2×) —
-  adicionados ao `envs/apt_base.sh`.
-- **Smoke Meridian:** modelinho nos dados-exemplo amostrou na GPU (2 chains ×
-  100 draws, 151 s — dominado por compilação XLA). **Smoke Robyn:**
-  `dt_simulated_weekly`, 200 iter × 1 trial, 26 s em **11 cores** (multi-core
-  confirmado, o motivo do WSL2).
-- `envs/`: scripts idempotentes (`apt_base.sh`, `setup_meridian.sh`,
-  `setup_robyn.sh`), smoke tests, lockfiles, `ENVIRONMENT.md` com o friction
-  log M7 (F1–F7).
-
-**Aprendizado para a Fase 4:** com exposure em `paid_media_vars`, o Robyn nomeia
-os hiperparâmetros pelos nomes de **exposição** (`facebook_I_alphas`), não pelos
-de spend — errar isso quebra fundo no `hyper_collector` com erro críptico
-(fricção F7 no ENVIRONMENT.md).
+- **Fase 3 (Meridian 1.8.0):** nacional × 5 seeds — todos convergiram
+  (max R-hat ≤ 1.02; AKS escolheu 17–36 knots; 5–11 min/run na GPU). Geo × 2
+  seeds a 7×2000/2000/1000 após 2 escaladas documentadas: seed102 convergiu
+  (1.024); seed101 ficou em 1.118 **puxado só pelos efeitos de tempo** (mu_t/
+  knot_values; mídia 1.077) — publicado assim, `rhat_by_param` no JSON.
+  Decisões e emendas: `runs/meridian/DECISIONS.md`.
+- **Fase 4 (Robyn 3.12.1):** 5 seeds no spec pré-registrado 2000×5 (commit
+  `d7f716e`): só seed105 passa o critério de convergência do próprio Robyn.
+  Emenda RD (uma escalada 4000×5 para 101–104): **seed101 re-rodou a 4000×5 e
+  convergiu por completo** (JSON atual); a escalada de 102–104 foi
+  interrompida (encerramento da sessão — "mata tudo") e **não rodou**.
+  Decisões: `runs/robyn/DECISIONS.md`. Regra de seleção aplicada conforme
+  `analysis/SELECTION_RULE.md` (caminho "clusters" em todos os seeds).
 
 ## Próximo passo imediato
 
-- **Karen:** **Fase 3** (runs Meridian sobre `data/sim/` — nacional × 5 seeds +
-  braço geo) e depois **Fase 4** (runs Robyn). Exportar no schema de
-  `analysis/RESULTS_SCHEMA.md` para `runs/<tool>/results/`; decisões em
-  `runs/<tool>/DECISIONS.md`. Outputs pesados ficam em pasta ignorada na Karen.
-- **Dell:** em espera até existirem `runs/*/results/*.json` (aí Fase 5).
+- **Karen (retomar aqui é o ideal):** terminar a escalada pendente —
+  `wsl -d Ubuntu -u igor --cd /mnt/c/<repo> -- Rscript runs/robyn/run_robyn.R --iterations=4000 102 103 104`
+  (~20 min/seed, CPU). Depois commit dos 3 JSONs e Fase 5.
+- **Dell:** a Fase 5 (scoring + gráficos) já é possível com os extratos
+  atuais — `python analysis/scoring.py --results runs --data data/sim --out
+  analysis/out` — mas 3 dos 5 JSONs do Robyn ainda podem ser substituídos
+  pela escalada; se for começar antes dela, tratar números como preliminares
+  e re-rodar o scorer depois (é barato e regenerável).
+- Fase 5 pode rodar em qualquer máquina (Python puro). Fase 6 (artigo) idem.
 
 ## Pendências
 
-- Fases 3–4 na Karen → Fases 5–6 no Dell.
-- Ambientes WSL vivem só na Karen e não viajam pelo git; qualquer máquina
-  reproduz com os scripts de `envs/` (ordem no topo do `ENVIRONMENT.md`).
+- Escalada Robyn 4000×5 para seeds 102–104 (Karen; opcional porém decidida na
+  emenda RD — os 2000×5 commitados já satisfazem o gate como "não-convergência
+  documentada").
+- Fase 5: scoring + 3 gráficos (ROI vs verdade, curvas, cobertura/spread).
+- Fase 6: artigo (~1000 palavras) + README público.
 
-## O que foi tentado e não funcionou
+## Preso a esta máquina (Karen)
 
-- `wsl --install` antes do reboot reporta sucesso do WSL mas a distro Ubuntu não
-  registra (virtualização ainda desligada) — refeito pós-BIOS com
-  `wsl --install -d Ubuntu --no-launch`.
-- TF 2.21 out-of-the-box com zero GPUs visíveis (RUNPATH ausente no wheel) —
-  diagnóstico via `LD_LIBRARY_PATH`; fix permanente no setup script.
-- Compilação CRAN interrompida deixa locks `00LOCK-*` em `~/R/library` — limpar
-  antes de retomar.
-- Primeira versão do `smoke_robyn.R` com hiperparâmetros nomeados por spend →
-  erro no `hyper_collector` (ver aprendizado acima).
+- Ambientes WSL2 (Meridian GPU, Robyn multi-core) — reproduzíveis do zero em
+  outra máquina com admin via `envs/*.sh` (ordem no topo de `ENVIRONMENT.md`).
+- Outputs pesados (gitignored): `outputs/meridian/*.pkl`,
+  `outputs/robyn/seed*/OutputModels.rds|OutputCollect.rds`.
+
+## O que foi tentado e não funcionou (hoje)
+
+- `robyn_run(quiet=TRUE)` crasha no 3.12.1 ("object 'pb' not found") — custou
+  um run 2000×5; nunca passar `quiet` (fricção F8, `envs/ENVIRONMENT.md`).
+- Primeira reconstrução de curva do Robyn pegou o elemento errado do retorno
+  de `saturation_hill` (lista `x_saturated`+`inflexion`) — o self-check em
+  m=1 vs xDecompAgg pegou o erro na hora; corrigido, agora bate < 1%.
+- Geo do Meridian não convergiu a 500/500 nem 1000/1000 (efeitos de tempo dos
+  156 knots semanais); 2000/2000 resolveu para seed102, quase para seed101 —
+  três tentativas documentadas, sem quarta.
+- Dois reboots no meio de runs (sessão esgotada + BIOS) — nada perdido além
+  de tempo de computação; runs re-rodados.
