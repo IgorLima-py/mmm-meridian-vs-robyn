@@ -78,15 +78,19 @@ def summarize(samples: np.ndarray) -> dict:
     }
 
 
-def convergence(idata) -> tuple[bool, dict]:
+def convergence(idata, n_adapt: int, n_burnin: int) -> tuple[bool, dict]:
     import arviz as az
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         rhat = az.rhat(idata)
-    max_rhat = float(
-        np.nanmax([np.nanmax(v.values) for v in rhat.data_vars.values()])
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        by_param = {
+            name: float(np.nanmax(da.values)) for name, da in rhat.data_vars.items()
+        }
+    by_param = {k: v for k, v in by_param.items() if np.isfinite(v)}
+    max_rhat = float(max(by_param.values()))
     n_div = None
     for group in ("sample_stats", "trace"):
         try:
@@ -96,17 +100,25 @@ def convergence(idata) -> tuple[bool, dict]:
             continue
     detail = {
         "max_rhat": max_rhat,
+        "rhat_by_param": {k: round(v, 4) for k, v in by_param.items()},
         "rhat_gate": RHAT_GATE,
         "n_divergences": n_div,
         "n_chains": N_CHAINS,
-        "n_adapt": N_ADAPT,
-        "n_burnin": N_BURNIN,
+        "n_adapt": n_adapt,
+        "n_burnin": n_burnin,
         "n_keep": N_KEEP,
     }
     return max_rhat < RHAT_GATE, detail
 
 
-def run_one(arm: str, seed: int, outputs_dir: Path, results_dir: Path) -> None:
+def run_one(
+    arm: str,
+    seed: int,
+    outputs_dir: Path,
+    results_dir: Path,
+    n_adapt: int = N_ADAPT,
+    n_burnin: int = N_BURNIN,
+) -> None:
     import meridian
     from meridian.analysis import analyzer
     from meridian.model import model, spec
@@ -129,14 +141,14 @@ def run_one(arm: str, seed: int, outputs_dir: Path, results_dir: Path) -> None:
     t0 = time.time()
     mmm.sample_posterior(
         n_chains=N_CHAINS,
-        n_adapt=N_ADAPT,
-        n_burnin=N_BURNIN,
+        n_adapt=n_adapt,
+        n_burnin=n_burnin,
         n_keep=N_KEEP,
         seed=TOOL_SEED,
     )
     runtime = time.time() - t0
 
-    converged, conv_detail = convergence(mmm.inference_data)
+    converged, conv_detail = convergence(mmm.inference_data, n_adapt, n_burnin)
     conv_detail["n_knots"] = int(mmm.knot_info.n_knots)
     print(
         f"    sampled in {runtime:.0f}s; max_rhat={conv_detail['max_rhat']:.4f} "
@@ -218,13 +230,15 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--arm", choices=["national", "geo"], required=True)
     p.add_argument("--seeds", type=int, nargs="+", required=True)
+    p.add_argument("--n-adapt", type=int, default=N_ADAPT)
+    p.add_argument("--n-burnin", type=int, default=N_BURNIN)
     args = p.parse_args()
 
     outputs_dir = REPO / "outputs" / "meridian"      # gitignored (heavy)
     results_dir = REPO / "runs" / "meridian" / "results"  # committed extracts
 
     for seed in args.seeds:
-        run_one(args.arm, seed, outputs_dir, results_dir)
+        run_one(args.arm, seed, outputs_dir, results_dir, args.n_adapt, args.n_burnin)
 
 
 if __name__ == "__main__":

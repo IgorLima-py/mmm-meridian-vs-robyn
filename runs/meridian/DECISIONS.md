@@ -31,3 +31,21 @@ timestamps rather than silently edited into the table.
   `competitor_index` and keeps the default knots (MD4) — statistically a no-op
   since the per-time knots span the same national-temporal space; the national
   arm keeps the control. Disclosed here rather than silently changed.
+- **2026-08-28 (geo non-convergence at MD6 settings):** at 7 × (500 adapt /
+  500 burn-in / 1000 keep), the geo arm did NOT converge: seed101 max R-hat
+  1.222 (23 divergences), seed102 max R-hat 1.301 (75 divergences). Standard
+  MCMC remedy applied — adaptation/burn-in doubled to 1000/1000 for the geo
+  arm only (sampler mechanics; priors, estimands, and data untouched). The
+  first-attempt numbers stay recorded here; the exported geo JSONs are from
+  the extended run, whose own convergence status is reported inside them
+  honestly (if still not converged, that is the published result).
+- **2026-08-28 (second and final escalation):** 1000/1000 still failed the
+  gate — seed101 max R-hat 1.228 (28 div), seed102 1.157 (23 div). Per-param
+  diagnosis: the offenders are the time-effect parameters (`mu_t`,
+  `knot_values`, i.e. the 156 weekly knots); on seed101 the media parameters
+  (`roi_m` 1.14, `beta_m` 1.12) also exceed the gate, on seed102 they do not.
+  Final attempt: 2000 adapt / 2000 burn-in, geo arm only. Exported JSONs now
+  carry `rhat_by_param` so the article can separate baseline-parameter from
+  media-parameter non-convergence. No further escalation after this — three
+  documented attempts is the honest budget; whatever status results is
+  published as-is.

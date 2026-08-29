@@ -1,0 +1,266 @@
+{
+  "schema_version": "1.0",
+  "tool": "meridian",
+  "tool_version": "1.8.0",
+  "arm": "geo",
+  "seed_dataset": 101,
+  "run": {
+    "tool_seed": 1,
+    "runtime_seconds": 842.5,
+    "hardware": "WSL2 Ubuntu 26.04, RTX 4070 Super 12GB, TF 2.21 XLA/CUDA",
+    "converged": false,
+    "convergence_detail": {
+      "max_rhat": 1.1181560215052255,
+      "rhat_by_param": {
+        "alpha_m": 1.0086,
+        "beta_gm": 1.0768,
+        "beta_m": 1.0606,
+        "ec_m": 1.0057,
+        "eta_m": 1.0333,
+        "knot_values": 1.1182,
+        "mu_t": 1.1182,
+        "roi_m": 1.0735,
+        "sigma": 1.0007,
+        "tau_g": 1.0084
+      },
+      "rhat_gate": 1.1,
+      "n_divergences": 64,
+      "n_chains": 7,
+      "n_adapt": 2000,
+      "n_burnin": 2000,
+      "n_keep": 1000,
+      "n_knots": 156
+    }
+  },
+  "channels": {
+    "tv": {
+      "roi": {
+        "point": 1.1610310077667236,
+        "interval_low": 0.4181445837020874,
+        "interval_high": 2.1852073669433594,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.5266067981719971
+      },
+      "contribution_share": {
+        "point": 0.05002807825803757,
+        "interval_low": 0.01801758073270321,
+        "interval_high": 0.09415917843580246,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          23276796.0,
+          37314536.0,
+          47052588.0,
+          54336252.0,
+          59991888.0,
+          64575048.0,
+          71581520.0,
+          76593392.0,
+          80423784.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "ooh": {
+      "roi": {
+        "point": 0.6391146779060364,
+        "interval_low": 0.19226519763469696,
+        "interval_high": 1.8416368961334229,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.21014422178268433
+      },
+      "contribution_share": {
+        "point": 0.007343743462115526,
+        "interval_low": 0.002209222177043557,
+        "interval_high": 0.021161319687962532,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          4015083.0,
+          5956396.5,
+          7183337.5,
+          7976150.5,
+          8587127.0,
+          9079850.0,
+          9744977.0,
+          10265808.0,
+          10659384.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "social": {
+      "roi": {
+        "point": 0.6462114453315735,
+        "interval_low": 0.19481123983860016,
+        "interval_high": 1.8117775917053223,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.24586272239685059
+      },
+      "contribution_share": {
+        "point": 0.011137932538986206,
+        "interval_low": 0.003357715904712677,
+        "interval_high": 0.03122732974588871,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          5521676.5,
+          8626594.0,
+          10642348.0,
+          12097077.0,
+          13215220.0,
+          14103014.0,
+          15428364.0,
+          16348634.0,
+          17023100.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "display": {
+      "roi": {
+        "point": 0.8572523593902588,
+        "interval_low": 0.2438403218984604,
+        "interval_high": 2.424675703048706,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.3506855368614197
+      },
+      "contribution_share": {
+        "point": 0.011081535369157791,
+        "interval_low": 0.003152076853439212,
+        "interval_high": 0.03134331479668617,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          5351969.0,
+          8492116.0,
+          10552150.0,
+          12035823.0,
+          13174996.0,
+          14097799.0,
+          15477420.0,
+          16466526.0,
+          17273644.0
+        ],
+        "kind": "posterior_median"
+      }
+    },
+    "search": {
+      "roi": {
+        "point": 0.5832030773162842,
+        "interval_low": 0.18509937822818756,
+        "interval_high": 1.4826242923736572,
+        "interval_kind": "credible90"
+      },
+      "mroi": {
+        "point": 0.23522436618804932
+      },
+      "contribution_share": {
+        "point": 0.015077905729413033,
+        "interval_low": 0.004785488359630108,
+        "interval_high": 0.03833119571208954,
+        "interval_kind": "credible90"
+      },
+      "response_curve": {
+        "multipliers": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.25,
+          1.5,
+          2.0,
+          2.5,
+          3.0
+        ],
+        "incremental_revenue": [
+          0.0,
+          7169384.5,
+          11454064.0,
+          14235258.0,
+          16376342.0,
+          17879396.0,
+          19137530.0,
+          21025052.0,
+          22356176.0,
+          23342540.0
+        ],
+        "kind": "posterior_median"
+      }
+    }
+  },
+  "extras": {
+    "model_spec": {
+      "priors": "meridian_default",
+      "enable_aks": false,
+      "n_knots_used": 156,
+      "max_lag": 13
+    },
+    "runtime_includes_xla_compile": true
+  }
+}
