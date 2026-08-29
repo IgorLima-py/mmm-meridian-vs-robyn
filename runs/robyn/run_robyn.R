@@ -40,18 +40,16 @@ for (v in EXPO_VARS) {
 }
 hyperparameters$train_size <- c(0.5, 0.8)
 
-as_vec <- function(x) if (is.list(x)) x[[length(x)]] else x
-
 # Window-total incremental revenue of one channel at spend multiplier m,
 # reconstructed from the selected model's own parameters. Impressions are
 # linear in spend per week (generator), so scaling spend by m scales the
 # exposure series by m. The fitted saturation curve keeps its observed
-# inflexion (x_marginal evaluates scaled inputs on the fitted curve).
+# inflexion (saturation_hill: inflexion = max(x) * gamma; x_marginal evaluates
+# the scaled series on that fitted curve).
 channel_curve <- function(expo_series, win_idx, theta, alpha, gamma, coef, m) {
-  ad <- adstock_geometric(expo_series, theta)
-  z <- as_vec(if (is.list(ad)) ad$x_decayed else ad)[win_idx]
+  z <- adstock_geometric(expo_series, theta)$x_decayed[win_idx]
   sat <- saturation_hill(x = z, alpha = alpha, gamma = gamma, x_marginal = m * z)
-  sum(coef * as_vec(sat))
+  sum(coef * sat$x_saturated)
 }
 
 error_scores_safe <- function(df, ts_validation) {
@@ -98,14 +96,15 @@ run_one <- function(seed) {
   cat(sprintf("=== robyn seed%d: robyn_run (%d iter x %d trials, seed %d) ===\n",
               seed, ITERATIONS, TRIALS, robyn_seed))
   t0 <- Sys.time()
+  # NOTE: no `quiet = TRUE` — Robyn 3.12.1 crashes with "object 'pb' not
+  # found" when quiet suppresses the progress bar (friction F8).
   OutputModels <- robyn_run(
     InputCollect = InputCollect,
     iterations = ITERATIONS,
     trials = TRIALS,
     ts_validation = TRUE,
     seed = robyn_seed,
-    cores = CORES,
-    quiet = TRUE
+    cores = CORES
   )
   runtime <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
   conv_msgs <- unlist(OutputModels$convergence$conv_msg)
@@ -124,6 +123,11 @@ run_one <- function(seed) {
     export = FALSE
   )
   outputs_seconds <- as.numeric(difftime(Sys.time(), t1, units = "secs"))
+
+  # Persist the heavy objects BEFORE metric extraction so an exporter bug
+  # never costs the modeling run itself.
+  saveRDS(OutputModels, file.path(heavy_dir, "OutputModels.rds"))
+  saveRDS(OutputCollect, file.path(heavy_dir, "OutputCollect.rds"))
 
   rhp <- as.data.frame(OutputCollect$resultHypParam)
   rhp$error_score_used <- error_scores_safe(rhp, ts_validation = TRUE)
@@ -243,9 +247,6 @@ run_one <- function(seed) {
   dir.create(res_dir, recursive = TRUE, showWarnings = FALSE)
   out_json <- file.path(res_dir, sprintf("robyn_national_seed%d.json", seed))
   write_json(result, out_json, auto_unbox = TRUE, digits = 10, pretty = TRUE)
-
-  saveRDS(OutputModels, file.path(heavy_dir, "OutputModels.rds"))
-  saveRDS(OutputCollect, file.path(heavy_dir, "OutputCollect.rds"))
   cat(sprintf("    wrote %s\n", out_json))
 }
 

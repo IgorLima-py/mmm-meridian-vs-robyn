@@ -1,0 +1,316 @@
+{
+  "schema_version": "1.0",
+  "tool": "robyn",
+  "tool_version": "3.12.1",
+  "arm": "national",
+  "seed_dataset": 101,
+  "run": {
+    "tool_seed": 123,
+    "runtime_seconds": 534.5,
+    "hardware": "WSL2 Ubuntu 26.04, 11 cores (Ryzen 5 5600G), R 4.5.2",
+    "converged": false,
+    "convergence_detail": {
+      "conv_msg": ["DECOMP.RSSD NOT converged: sd@qt.20 0.065 <= 0.08 & |med@qt.20| 0.12 > 0.088", "NRMSE converged: sd@qt.20 0.039 <= 0.093 & |med@qt.20| 0.12 <= 0.2"],
+      "iterations": 2000,
+      "trials": 5,
+      "ts_validation": true,
+      "cores": 11
+    }
+  },
+  "channels": {
+    "tv": {
+      "roi": {
+        "point": 0.96756463685,
+        "interval_low": 0.81297065197,
+        "interval_high": 0.98907851609,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 1.5462585922
+      },
+      "contribution_share": {
+        "point": 0.041691737908,
+        "interval_low": 0.035030382527,
+        "interval_high": 0.042618757128,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 2502978.3994751573, 12040367.036571354, 27413449.257408861, 45282024.96601098, 62943230.491682313, 79027773.65591915, 105162471.26656964, 124128303.65641823, 137781101.66134483],
+        "kind": "selected_model"
+      }
+    },
+    "ooh": {
+      "roi": {
+        "point": 0.95707564276,
+        "interval_low": 0.68313820658,
+        "interval_high": 0.9737815895,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.95113812025
+      },
+      "contribution_share": {
+        "point": 0.010997273075,
+        "interval_low": 0.007849596281,
+        "interval_high": 0.011189232676,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 1931681.5849331059, 5315268.6461654659, 8784935.0134833828, 11944304.050397033, 14740473.175515549, 17208429.752109993, 21336793.287923787, 24617676.364835937, 27249036.820525505],
+        "kind": "selected_model"
+      }
+    },
+    "social": {
+      "roi": {
+        "point": 1.0257441056,
+        "interval_low": 0.65931852549,
+        "interval_high": 1.06984006,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.37098448211
+      },
+      "contribution_share": {
+        "point": 0.017679461573,
+        "interval_low": 0.011363844522,
+        "interval_high": 0.018439488101,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 9903698.4131580312, 14339927.933850668, 17176655.480068382, 19201929.698614653, 20740747.272285819, 21959099.766769484, 23781617.671884924, 25091775.975703735, 26086077.930862106],
+        "kind": "selected_model"
+      }
+    },
+    "display": {
+      "roi": {
+        "point": 0.98601066684,
+        "interval_low": 0.53094768877,
+        "interval_high": 0.98601066684,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.96996692301
+      },
+      "contribution_share": {
+        "point": 0.012745969681,
+        "interval_low": 0.0068634583488,
+        "interval_high": 0.012745969681,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 1295085.5274276438, 5419393.2216357449, 9972796.5266599488, 13843589.791994374, 16812991.349171843, 18965910.964514501, 21568578.780444898, 22895764.569093421, 23615988.968854364],
+        "kind": "selected_model"
+      }
+    },
+    "search": {
+      "roi": {
+        "point": 1.0495455652,
+        "interval_low": 0.81274648589,
+        "interval_high": 1.0495455652,
+        "interval_kind": "candidate_range"
+      },
+      "mroi": {
+        "point": 0.91411378346
+      },
+      "contribution_share": {
+        "point": 0.027134546025,
+        "interval_low": 0.021012434009,
+        "interval_high": 0.027134546025,
+        "interval_kind": "candidate_range"
+      },
+      "response_curve": {
+        "multipliers": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3],
+        "incremental_revenue": [0, 6402348.8085465441, 14705948.401115173, 22548645.789904505, 29471239.439655881, 35441073.096862108, 40550427.556423068, 48667793.825681515, 54689102.800552674, 59248229.311305963],
+        "kind": "selected_model"
+      }
+    }
+  },
+  "extras": {
+    "selected_model": "2_154_2",
+    "candidates": ["2_154_2", "2_181_9", "2_172_9", "3_182_1", "5_176_9", "2_127_7", "2_115_11"],
+    "selection_path": "clusters",
+    "n_pareto_models": 113,
+    "outputs_clustering_seconds": 74.1,
+    "candidate_roi_table": [
+      {
+        "solID": "2_154_2",
+        "channel": "tv",
+        "roi_total": 0.96756463685
+      },
+      {
+        "solID": "2_154_2",
+        "channel": "ooh",
+        "roi_total": 0.95707564276
+      },
+      {
+        "solID": "2_154_2",
+        "channel": "social",
+        "roi_total": 1.0257441056
+      },
+      {
+        "solID": "2_154_2",
+        "channel": "display",
+        "roi_total": 0.98601066684
+      },
+      {
+        "solID": "2_154_2",
+        "channel": "search",
+        "roi_total": 1.0495455652
+      },
+      {
+        "solID": "2_181_9",
+        "channel": "tv",
+        "roi_total": 0.81297065197
+      },
+      {
+        "solID": "2_181_9",
+        "channel": "ooh",
+        "roi_total": 0.68313820658
+      },
+      {
+        "solID": "2_181_9",
+        "channel": "social",
+        "roi_total": 0.97247305251
+      },
+      {
+        "solID": "2_181_9",
+        "channel": "display",
+        "roi_total": 0.81065236039
+      },
+      {
+        "solID": "2_181_9",
+        "channel": "search",
+        "roi_total": 0.81274648589
+      },
+      {
+        "solID": "2_172_9",
+        "channel": "tv",
+        "roi_total": 0.82112144157
+      },
+      {
+        "solID": "2_172_9",
+        "channel": "ooh",
+        "roi_total": 0.72919194514
+      },
+      {
+        "solID": "2_172_9",
+        "channel": "social",
+        "roi_total": 0.864506947
+      },
+      {
+        "solID": "2_172_9",
+        "channel": "display",
+        "roi_total": 0.78298486252
+      },
+      {
+        "solID": "2_172_9",
+        "channel": "search",
+        "roi_total": 0.85370155462
+      },
+      {
+        "solID": "3_182_1",
+        "channel": "tv",
+        "roi_total": 0.82212822818
+      },
+      {
+        "solID": "3_182_1",
+        "channel": "ooh",
+        "roi_total": 0.91789938453
+      },
+      {
+        "solID": "3_182_1",
+        "channel": "social",
+        "roi_total": 0.65931852549
+      },
+      {
+        "solID": "3_182_1",
+        "channel": "display",
+        "roi_total": 0.62142197333
+      },
+      {
+        "solID": "3_182_1",
+        "channel": "search",
+        "roi_total": 0.85339413848
+      },
+      {
+        "solID": "5_176_9",
+        "channel": "tv",
+        "roi_total": 0.98907851609
+      },
+      {
+        "solID": "5_176_9",
+        "channel": "ooh",
+        "roi_total": 0.9737815895
+      },
+      {
+        "solID": "5_176_9",
+        "channel": "social",
+        "roi_total": 1.06984006
+      },
+      {
+        "solID": "5_176_9",
+        "channel": "display",
+        "roi_total": 0.53094768877
+      },
+      {
+        "solID": "5_176_9",
+        "channel": "search",
+        "roi_total": 0.83748234025
+      },
+      {
+        "solID": "2_127_7",
+        "channel": "tv",
+        "roi_total": 0.84319610158
+      },
+      {
+        "solID": "2_127_7",
+        "channel": "ooh",
+        "roi_total": 0.74103957826
+      },
+      {
+        "solID": "2_127_7",
+        "channel": "social",
+        "roi_total": 0.87131392718
+      },
+      {
+        "solID": "2_127_7",
+        "channel": "display",
+        "roi_total": 0.82058081156
+      },
+      {
+        "solID": "2_127_7",
+        "channel": "search",
+        "roi_total": 0.82641043917
+      },
+      {
+        "solID": "2_115_11",
+        "channel": "tv",
+        "roi_total": 0.83033189347
+      },
+      {
+        "solID": "2_115_11",
+        "channel": "ooh",
+        "roi_total": 0.85553120385
+      },
+      {
+        "solID": "2_115_11",
+        "channel": "social",
+        "roi_total": 0.87729922392
+      },
+      {
+        "solID": "2_115_11",
+        "channel": "display",
+        "roi_total": 0.74130571365
+      },
+      {
+        "solID": "2_115_11",
+        "channel": "search",
+        "roi_total": 0.83547083202
+      }
+    ]
+  }
+}

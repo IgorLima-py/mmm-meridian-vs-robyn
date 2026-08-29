@@ -53,6 +53,7 @@ bash envs/setup_robyn.sh
 | F5 | TF 2.21.0's Linux wheel ships **no RUNPATH to the pip `nvidia/*/lib` dirs**, so `tensorflow[and-cuda]`-style installs see zero GPUs out of the box. Fixed by a `sitecustomize.py` that preloads the CUDA libs with `RTLD_GLOBAL` (written by `setup_meridian.sh`) | ~40 min diagnosis |
 | F6 | Robyn's CRAN dependency tree (~90 pkgs) compiles from source on Linux and died twice on missing system libs: `fs` needs libuv headers, `RcppParallel`/`nloptr` need cmake. Added `cmake libuv1-dev libnlopt-dev` to `apt_base.sh`. Total compile time is tens of minutes even on 12 threads | ~2 restarts + long compile |
 | F7 | When `paid_media_vars` carries exposure metrics, Robyn names hyperparameters after the **exposure** variables (`facebook_I_alphas`, `search_clicks_P_thetas`), not the spend columns most docs show. Passing spend-named bounds fails deep in `hyper_collector` with a cryptic `names ... must be the same length as the vector` error | ~15 min |
+| F8 | `robyn_run(quiet = TRUE)` crashes in Robyn 3.12.1 (`object 'pb' not found`): the progress bar is only created when not quiet, but `close(pb)` runs unconditionally. Workaround: never pass `quiet` | one lost 2k×5 run |
 
 ## Versions actually installed
 
