@@ -3,9 +3,9 @@
 | id | state | machine | model | effort | objective |
 |----|-------|---------|-------|--------|-----------|
 | C0 | done | any | opus | high | Claude Code infrastructure, this roadmap, and the two session commands |
-| C1 | doing | karen | sonnet | medium | Robyn 4000x5 for seeds 102-104, so all five extracts share one spec |
+| C1 | done | karen | sonnet | medium | Robyn 4000x5 for seeds 102-104, so all five extracts share one spec |
 | C2 | next | any | sonnet | medium | Per-channel recoverability gate in the simulator checks |
-| C3 | blocked | any | opus | high | Phase 5: score every extract and build the three charts |
+| C3 | next | any | opus | high | Phase 5: score every extract and build the three charts |
 | C4 | blocked | any | opus | max | Phase 6: the ~1,000-word article |
 | C5 | blocked | any | opus | high | Public README and a fresh-clone reproducibility pass |
 | C6 | blocked | any | opus | max | Adversarial audit until the verdict is SHIP |
@@ -51,6 +51,13 @@ oracle ladder (`analysis/oracle.py`, `analysis/ORACLE.md`, `runs/oracle/`).
 ---
 
 ## C1 — Robyn escalation — all five seeds on one documented spec
+
+**Done 2026-09-09.** Seeds 102-104 ran at 4000×5. All three remained
+non-converged by Robyn's own check (only seed101 converges at 4000×5; only
+seed105 converges, at its pre-registered 2000×5). Escalation did not fix
+convergence — a finding, not a defect. RD amendment closed with the dated
+result in `runs/robyn/DECISIONS.md`. `/score` runs clean; Robyn national
+interval coverage moved to 16% (was reported as ~20% before the escalation).
 
 **Objective.** Run the pending 4000x5 escalation for seeds 102, 103 and 104 so
 the committed Robyn extracts stop being a mix of two specs.

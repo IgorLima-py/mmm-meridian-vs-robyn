@@ -4,36 +4,32 @@ Ponteiro de UMA fatia. A fila inteira está em `docs/ROADMAP.md` — este arquiv
 é só o topo dela, resolvido agora. Lido pelo hook `SessionStart` e pelo `/oi`;
 avançado pelo `/tchau` só depois que o `verificar:` abaixo estiver satisfeito.
 
-chat: C1
-titulo: Robyn escalation — all five seeds on one documented spec
+chat: C2
+titulo: Recoverability gate — the check that would have caught this
 perfil: execução mecânica
 modelo: sonnet
 esforco: medium
 forma: sessao
-maquina: karen
+maquina: any
 plan-mode: nao
-objetivo: Rodar a escalada 4000x5 pendente para os seeds 102, 103 e 104, para que os cinco extratos do Robyn parem de ser um misto de dois specs.
-verificar: `python analysis/scoring.py --results runs --data data/sim --out analysis/out` sai 0, os três JSONs `runs/robyn/results/robyn_national_seed10{2,3,4}.json` têm `run.convergence_detail.iterations == 4000` (é esse o caminho exato que o exportador usa — não fica em `extras`), e a emenda RD em `runs/robyn/DECISIONS.md` tem linha de fechamento datada nomeando o resultado de convergência de cada seed.
+objetivo: Adicionar um piso de sinal/ruído por canal ao `simulation/checks.py` e registrar o oráculo como passo pré-run, para que nenhum cenário futuro chegue a uma GPU antes de alguém saber se a verdade dele é recuperável.
+verificar: `python -m simulation.checks` sai 0 e imprime uma linha de sinal/ruído por canal para cada seed, e `grep -c 'signal-to-noise' docs/PLAN.md data/README.md` retorna diferente de zero para os dois arquivos.
 
 ## Contexto mínimo para abrir
 
-Comando, nesta máquina (Karen), ~20 min por seed, desatendido:
-
-```
-wsl -d Ubuntu -u igor -- bash -lc "cd /mnt/c/<repo> && Rscript runs/robyn/run_robyn.R --iterations=4000 102 103 104"
-```
-
-**Nunca usar `wsl --cd <path>` em processo background do Claude Code** — falha
-com `WSL/ERROR_PATH_NOT_FOUND` só em modo background (funciona em foreground).
-Usar `bash -lc "cd ... && ..."` em vez do flag `--cd`. Fricção nova, achada
-nesta sessão; nenhum seed chegou a escrever JSON quando isso aconteceu.
-
-Nunca passar `quiet` — crasha no Robyn 3.12.1 (fricção F8, `envs/ENVIRONMENT.md`).
-
-**Se esta não for a Karen:** C2 é a fatia paralela e roda em qualquer máquina
-(piso de sinal/ruído por canal no `simulation/checks.py`). Não abra C3 em
-diante — todas dependem do C1 fechar.
-
-**Se a escalada não puder rodar:** o fallback pré-registrado é reverter o
-seed101 para o run 2000x5, para que os cinco compartilhem o spec original.
-Publicar o misto sem explicar, não.
+- `python -m simulation.checks` já roda hoje um gate de variância total de mídia
+  ([0.10, 0.35]); falta o gate **por canal**. Os cinco seeds passam no gate
+  atual com ~85% do sinal de mídia concentrado num canal só e quatro canais
+  abaixo de 1% cada — o oráculo (`analysis/ORACLE.md`) já mostrou que dois
+  desses quatro (ooh, display) não são recuperáveis por nenhum estimador.
+- **Warn, não fail:** o cenário v1 tem dois canais abaixo do piso e isso é um
+  achado documentado, não uma regressão — o gate deve avisar, nunca travar
+  o pipeline por causa disso.
+- Documentar o gate em `docs/PLAN.md` §3 e `data/README.md`, e referenciar
+  `analysis/ORACLE.md` a partir do `docs/PLAN.md` como passo pré-registrado
+  para qualquer cenário futuro.
+- **C1 fechou nesta sessão** (Robyn 102-104 escalados a 4000×5, nenhum
+  convergiu — achado documentado em `runs/robyn/DECISIONS.md`). C3 também
+  está liberado agora (`next`, opus/high) — mas é trabalho de julgamento
+  analítico, perfil diferente deste ponteiro; só abrir C3 se o Igor pedir
+  explicitamente em vez de C2.

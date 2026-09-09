@@ -40,7 +40,26 @@ specified in `PLAN.md`.**
    simulation with published attention-decay findings.
 3. **Frequency:** one paragraph in "What neither tool can tell you" (neither
    tool models exposure frequency in its core regression, so the conclusion is
-   known in advance) — optionally a stretch arm. Never a phase of its own.
+   known in advance) — optionally a stretch arm. Never a phase of its own. See
+   item 5 below for the more precise version of this: Meridian *can* take
+   reach & frequency as input, just not in v1's like-for-like design.
+4. **Channel granularity — split `social`/`display` by vehicle** (Meta, Google,
+   TikTok, etc.) instead of one aggregate channel each. Not a free improvement:
+   more channels means more mutually correlated media columns to identify from
+   the same 156 weeks of national data, which is the opposite of what a
+   stress-test scenario wants. The 5 channels in v1 were chosen to probe
+   specific known asymmetries (tv's S-curve, ooh's DECOMP.RSSD trap, search's
+   near-exogeneity), not to mirror a realistic media mix — revisit only with a
+   documented reason a finer split adds a new test, not just more realism.
+5. **Give Meridian its native reach & frequency (RF) input, as a side
+   experiment.** Meridian accepts a distinct RF channel type (reach + frequency
+   instead of spend + impressions); Robyn has no equivalent. v1 gives both
+   tools the same input shape (spend + impressions) on purpose, to keep the
+   comparison like-for-like (PLAN D4, §5 fairness ledger) — so this capability
+   was deliberately left unused, not overlooked. A v2 side experiment could run
+   one Meridian-only arm with an RF channel to show what the extra input type
+   buys on its own, but it must never be blended into the head-to-head
+   Meridian-vs-Robyn numbers, since Robyn cannot receive the same input.
 
 ## Discarded (reopen only with new information)
 

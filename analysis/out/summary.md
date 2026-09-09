@@ -115,20 +115,20 @@
 | tv | -0.022 |
 
 ## robyn — national arm (5 seed(s))
-- ROI bias (mean rel err): -0.506
-- ROI |rel err| (mean): 0.538
-- interval contains truth (rate): 0.200
-- interval width / true ROI (mean): 0.263
-- contribution |err| (pp, mean): 3.054
-- pull toward spend share (mean, + = pulled): 0.060
-- curve rel err @0.5x spend (mean): -0.589
-- curve rel err @1.0x spend (mean): -0.506
-- runtime (s, mean): 654.360
+- ROI bias (mean rel err): -0.540
+- ROI |rel err| (mean): 0.555
+- interval contains truth (rate): 0.160
+- interval width / true ROI (mean): 0.277
+- contribution |err| (pp, mean): 3.180
+- pull toward spend share (mean, + = pulled): 0.067
+- curve rel err @0.5x spend (mean): -0.637
+- curve rel err @1.0x spend (mean): -0.540
+- runtime (s, mean): 1017.080
 
 | channel | mean ROI rel err |
 |---|---|
-| display | -0.483 |
-| ooh | -0.024 |
-| search | -0.764 |
-| social | -0.684 |
-| tv | -0.573 |
+| display | -0.428 |
+| ooh | -0.156 |
+| search | -0.792 |
+| social | -0.717 |
+| tv | -0.610 |

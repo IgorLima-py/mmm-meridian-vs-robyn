@@ -1,8 +1,43 @@
 # Status
 
-_Atualizado: 2026-09-09 (sessão C1 — Karen, desktop GPU, encerrada por desligamento da máquina)_
+_Atualizado: 2026-09-09 (sessão C1, retomada — Karen, desktop GPU — C1 fechado)_
 
-## Sessão C1 (09/09) — escalada Robyn interrompida, nada perdido
+## Sessão C1, retomada (09/09) — C1 fechado, escalada não resolveu convergência
+
+Reabri no mesmo dia, mesma máquina (Karen, RTX 4070 Super confirmada de novo).
+Rodei a escalada 4000×5 para os seeds 102, 103 e 104 com o comando corrigido
+(`bash -lc "cd ... && ..."` em vez de `wsl --cd`) — terminou em ~1h,
+desatendido, sem erro.
+
+**Resultado, e é um achado, não um problema:** os três seeds rodaram os 4000
+iterações completas, mas **nenhum convergiu** pelo critério próprio do Robyn
+(DECOMP.RSSD falhou nos três; NRMSE falhou só no 102). Dobrar as iterações não
+resolveu a não-convergência que já tinha sido documentada a 2000×5. Estado
+final dos cinco seeds do Robyn: 101 convergido (4000×5), 102/103/104 não
+convergidos (4000×5), 105 convergido (2000×5, spec original, nunca escalado).
+Fechei a emenda RD em `runs/robyn/DECISIONS.md` com os números exatos de cada
+seed (sd/med do DECOMP.RSSD e NRMSE, runtime).
+
+Rodei os três gates (`/score`): todos passaram limpo. A cobertura do intervalo
+do Robyn nacional caiu de ~20% (estimativa anterior, pré-escalada) para
+**16%** com o dado final. `analysis/out/summary.md` foi regenerado e
+commitado.
+
+`docs/ROADMAP.md`: C1 → `done`. C3 também desbloqueou (dependia só do C1), mas
+o ponteiro `docs/PROXIMO.md` avançou para **C2** — mesmo perfil mecânico
+(sonnet/medium) desta sessão, roda em qualquer máquina, sem pré-requisito. C3
+é opus/high (julgamento analítico) e fica pra quando o Igor pedir
+explicitamente.
+
+**Também nesta sessão:** o Igor levantou três perguntas sobre o desenho do
+dataset (granularidade de canal por veículo digital, uso do reach&frequency
+nativo do Meridian, o fato de eu ter dito impreciso que "nenhuma ferramenta
+modela frequência" — o Meridian aceita um tipo de canal RF, só não foi usado
+aqui de propósito, pra manter a comparação like-for-like). Viraram os itens 4
+e 5 do `docs/BACKLOG.md` (v2, pós-publicação), em vez de mudar o `docs/PLAN.md`
+da v1.
+
+## Sessão C1, primeira tentativa (09/09) — escalada interrompida, nada perdido
 
 Esta sessão tentou rodar a escalada 4000x5 do Robyn para os seeds 102, 103 e
 104 (a pendência do C1). O run foi **interrompido antes de terminar** porque a
@@ -222,11 +257,14 @@ spend share, e um terceiro ancora em quê?
 
 ## Pendências
 
-- **C1** escalada Robyn 4000×5 para os seeds 102–104. Enquanto não fechar, os
-  extratos commitados são um **misto de specs** (seed101 a 4000×5, os outros a
-  2000×5) e **3 dos 5 seeds do Robyn não convergiram** — os dois fatos estão
-  rotulados no `ORACLE.md` e no `REASSESSMENT`, mas precisam ser resolvidos ou
-  divulgados explicitamente na peça.
+- **C1 fechado** (09/09, sessão retomada). Os cinco extratos do Robyn seguem
+  specs documentados (101 e 102-104 a 4000×5, 105 a 2000×5 por já ter
+  convergido) — não é mais um "misto" não explicado, é um resultado
+  registrado em `runs/robyn/DECISIONS.md`. **3 dos 5 seeds do Robyn continuam
+  não convergidos** mesmo a 4000×5 — isso não muda até a peça, só fica mais
+  bem documentado. `ORACLE.md` e `REASSESSMENT` citam a cifra antiga (~20%
+  cobertura); atualizar para 16% quando qualquer um dos dois for revisado de
+  novo (não é bloqueante — só desatualizado).
 - **C2** o gate de recuperabilidade.
 - **C3–C6** scoring + gráficos, artigo, README público, auditoria final.
 - **Subagente e skill só carregam no próximo start da sessão.** Hooks e

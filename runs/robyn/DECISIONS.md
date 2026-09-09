@@ -34,3 +34,16 @@ rather than silently edited into the table.
   the exported JSON is the 4000×5 run whatever its convergence outcome, and
   the 2000×5 flags stay recorded here. seed105 keeps its converged 2000×5 run
   (the pre-registered spec). No further escalation after this.
+
+- **2026-09-09 (RD amendment closed):** seeds 102, 103 and 104 ran at 4000×5
+  as pre-registered above. **None of the three converged** by Robyn's own
+  check: seed102 fails both DECOMP.RSSD (sd 0.1 > 0.07, |med| 0.23 > 0.047) and
+  NRMSE (sd 0.088 ≤ 0.15 but |med| 0.2 > 0.034); seed103 fails DECOMP.RSSD only
+  (sd 0.039 ≤ 0.065 but |med| 0.068 > 0.049), NRMSE converged; seed104 fails
+  DECOMP.RSSD only (sd 0.089 > 0.059, |med| 0.27 > 0.12), NRMSE converged.
+  Runtimes: seed102 1037s, seed103 1026s, seed104 1436s (`robyn_run` wall-clock
+  only, RD11). Per this amendment's own terms, no further escalation follows —
+  the committed extracts are final at 4000×5 for seeds 101–104, non-convergence
+  disclosed as-is. Final convergence state across all five seeds: 101
+  converged (4000×5), 102/103/104 not converged (4000×5), 105 converged
+  (2000×5, pre-registered spec, untouched).
