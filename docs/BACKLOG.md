@@ -16,15 +16,18 @@ specified in `PLAN.md`.**
 
 ## v2 backlog (only after v1 is published)
 
-1. **PyMC-Marketing as a third estimator.** Rationale: the only existing
-   ground-truth benchmark involving Meridian was authored by PyMC Labs
-   themselves — the vendor of the winning tool. An independent three-way run
-   against the same ground truth makes this project's answer durable beyond the
-   perishable two-tool timing angle. Cost: ~3–5 h, same Python environment, no
-   new language; plugs into the harness via the results schema. Also gives a
-   second distribution event instead of one. Note: if this lands, the repo name
-   (`mmm-meridian-vs-robyn`) becomes wrong — a GitHub rename redirects old
-   URLs, so it's cheap, but that's a v2 decision.
+1. **PyMC-Marketing as a third estimator — PROMOTED 2026-09-09 to `C7` in
+   `docs/ROADMAP.md`.** Full spec, including the logistic-vs-Hill fairness trap
+   and the repo-rename decision, lives there; this entry is a pointer so the
+   two files do not drift.
+
+   What changed since this was written: PyMC-Marketing reached a stable **1.0.0
+   on 2026-08-07**, and the oracle ladder (`analysis/ORACLE.md`) took over the
+   *defensive* half of the rationale — it proves the failure is not a simulator
+   bug far better than a third tool arguing by accumulation. What survives is
+   the open question a third estimator alone can answer: Meridian shrinks toward
+   its ROI prior and Robyn toward spend share, so does a third tool have an
+   anchor of its own? Still strictly post-publication.
 2. **Attention-weighted MMM — a separate piece, not this repo's scope.**
    Simulate a world where the *truth* is attention-weighted exposure, fit the
    tools on raw spend, measure the bias. A live industry debate (attention

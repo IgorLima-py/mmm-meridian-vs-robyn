@@ -9,6 +9,7 @@
 | C4 | blocked | any | opus | max | Phase 6: the ~1,000-word article |
 | C5 | blocked | any | opus | high | Public README and a fresh-clone reproducibility pass |
 | C6 | blocked | any | opus | max | Adversarial audit until the verdict is SHIP |
+| C7 | blocked | any | opus | high | Post-publication: PyMC-Marketing as an independent third estimator |
 
 <!-- HEADER-END -->
 
@@ -224,12 +225,74 @@ is to find what every earlier pass missed.
 
 ## Not in this roadmap
 
-Stretch arms S1-S4 and everything in `docs/BACKLOG.md`, including
-PyMC-Marketing as a third estimator and a Meridian GeoX calibration arm. The
-scope guard stands: the Robyn-dormancy timing angle is perishable and nothing
-below v1 may delay publication. Reopen the backlog after C6 ships.
+Stretch arms S1-S4 and the rest of `docs/BACKLOG.md`, including a Meridian
+GeoX calibration arm. The scope guard stands: the Robyn-dormancy timing angle
+is perishable and nothing below v1 may delay publication. Reopen the backlog
+after C6 ships.
+
+The one backlog item that has been promoted into the queue is PyMC-Marketing,
+now **C7** — still post-publication, still blocked behind C6, but written down
+with its fairness trap so it does not have to be rediscovered.
 
 One adjacent item worth queuing later: a git `pre-commit` hook mirroring
 `.claude/hooks/guard_publication.py`, so the same protections apply to commits
 made outside Claude Code. It belongs in the idempotent `envs/` setup scripts,
 because `.git/hooks/` does not travel through git.
+
+---
+
+## C7 — Third estimator — PyMC-Marketing, after v1 ships
+
+**Objective.** Run PyMC-Marketing on the same simulated data through the same
+pre-registered harness, and find out what value *it* collapses toward.
+
+**Model/effort: opus, high.** The exporter is mechanical, but the input mapping
+is a fairness decision with a known trap (below), and interpreting a third
+anchor is the analytical part.
+
+**Prerequisites.** C6. **This is explicitly post-publication** — it must not
+delay v1. The Robyn-dormancy timing angle is perishable; this is not.
+
+**Why it is worth doing at all, given the oracle already exists.** The oracle
+settled the defensive question — it proves the failure is not a simulator bug,
+which is what a third tool would only have argued by accumulation. What remains
+is a genuinely open question the oracle cannot answer: Meridian shrinks toward
+the median of its ROI prior (~1.22), Robyn toward a single spend-proportional
+ROI. **A third independent estimator either collapses toward an anchor of its
+own — which makes "the estimate is the tool's prior, not a measurement" a
+pattern instead of a coincidence — or it does not, which is more interesting
+still.** Secondary: the only published benchmark involving Meridian was written
+by PyMC Labs, the vendor of the tool that won it. A run by someone with no horse
+in the race is worth something.
+
+**The trap, and it is the whole fairness problem.** PyMC-Marketing's default
+saturation is **logistic**, not Hill. The generator uses geometric adstock +
+Hill precisely because that is the intersection of Meridian's and Robyn's model
+families (PLAN D3) — it is *not* inside PyMC's default. Running PyMC on its
+defaults would hand it a functional form it does not have, and any resulting
+error would be a statement about the mismatch, not about the tool. Two honest
+options, and the choice must be pre-registered before the first run, in a
+`runs/pymc/DECISIONS.md` written the way MD1-MD11 and RD1-RD13 were:
+
+1. Configure PyMC with a Hill saturation transform, matching the others, and
+   disclose that this is not its default; or
+2. Run it on its default logistic and report it as a *third* scenario — the
+   "nobody's functional form" question, which is stretch arm S4 — never mixed
+   into the same table as the other two.
+
+Option 1 keeps the comparison like-for-like and is the recommended one. Do not
+average the two.
+
+**Also decide before starting.** The repo name `mmm-meridian-vs-robyn` becomes
+wrong. A GitHub rename redirects old URLs, so it is cheap — but it is a decision
+to make deliberately, not a side effect, and the published article's links point
+here.
+
+**verificar:** `runs/pymc/results/pymc_national_seed10{1..5}.json` exist in the
+v1.0 schema, `python analysis/scoring.py --results runs --data data/sim --out <tmp>`
+scores them alongside the existing tool-arms without any change to
+`analysis/scoring.py`, `runs/pymc/DECISIONS.md` records the saturation choice
+with a date **before** the first run's timestamp, and the pinned version is in
+`envs/`.
+
+**Estimate.** 4 h, plus environment setup on a machine with the Python stack.
