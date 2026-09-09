@@ -1,6 +1,47 @@
 # Status
 
-_Atualizado: 2026-09-09 (sessão C1, retomada — Karen, desktop GPU — C1 fechado)_
+_Atualizado: 2026-09-09 (sessão C2 — Karen, desktop GPU — C2 fechado)_
+
+## Sessão C2 (09/09) — gate de sinal/ruído por canal, C2 fechado
+
+Mesma máquina da sessão C1 anterior (Karen, RTX 4070 Super). Trabalho
+puramente de código/docs, não precisou de GPU nem de WSL2.
+
+**O que foi feito:** adicionado o check **C7** em `simulation/checks.py` —
+sinal-to-noise por canal (desvio padrão da contribuição nacional verdadeira do
+canal / desvio padrão do ruído de receita nacional, janela de medição), com
+piso `SNR_FLOOR = 0.15` definido no topo do módulo. É **WARN, nunca FAIL**:
+imprime uma linha por canal por seed e só adiciona a warnings list se abaixo
+do piso — nunca ao `failures`, então nunca derruba o exit code.
+
+Rodei `python -m simulation.checks` nos 5 seeds: exit 0 em todos, e os
+números batem com `analysis/ORACLE.md` (tv ~1.7-2.1, search ~0.34-0.46, social
+~0.31-0.37 — todos acima do piso; ooh ~0.09-0.12 e display ~0.09-0.11 — os
+dois abaixo do piso, em **todo** seed, sem exceção). Isso é exatamente o
+achado que o oráculo já tinha isolado por outro caminho (fit OLS com os
+parâmetros verdadeiros) — o gate barato concorda com o gate caro.
+
+Documentei o gate em `docs/PLAN.md` §3 (novo parágrafo depois do bullet de
+"Simulator checks") e `data/README.md` (nova seção depois da variance share),
+os dois citando `analysis/oracle.py` como o passo de verdade-terreno
+pré-registrado que qualquer cenário futuro deve rodar antes de comprometer
+uma GPU — deixei explícito que C7 é um proxy barato, não substitui o oráculo.
+
+**Nada ficou pela metade.** Não houve nada tentado e abandonado nesta
+sessão — a mudança era pequena e totalmente especificada no `docs/PROXIMO.md`,
+rodou de primeira.
+
+**Verificação do `verificar:`** confirmada linha a linha:
+`python -m simulation.checks` → exit 0; `grep -c 'signal-to-noise' docs/PLAN.md
+data/README.md` → `1` e `2` (ambos não-zero).
+
+**Arquivos tocados:** `simulation/checks.py`, `docs/PLAN.md`, `data/README.md`.
+Nenhum dado gerado foi tocado (`data/sim/` não muda com este check).
+
+`docs/ROADMAP.md`: C2 → `done`. `docs/PROXIMO.md` avançou para **C3** —
+opus/high (julgamento analítico), já desbloqueado desde que C1 fechou na
+sessão anterior. Nada preso a esta máquina: C3 é escrita e análise, roda em
+qualquer PC.
 
 ## Sessão C1, retomada (09/09) — C1 fechado, escalada não resolveu convergência
 

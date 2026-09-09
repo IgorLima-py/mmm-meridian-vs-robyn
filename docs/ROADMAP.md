@@ -4,7 +4,7 @@
 |----|-------|---------|-------|--------|-----------|
 | C0 | done | any | opus | high | Claude Code infrastructure, this roadmap, and the two session commands |
 | C1 | done | karen | sonnet | medium | Robyn 4000x5 for seeds 102-104, so all five extracts share one spec |
-| C2 | next | any | sonnet | medium | Per-channel recoverability gate in the simulator checks |
+| C2 | done | any | sonnet | medium | Per-channel recoverability gate in the simulator checks |
 | C3 | next | any | opus | high | Phase 5: score every extract and build the three charts |
 | C4 | blocked | any | opus | max | Phase 6: the ~1,000-word article |
 | C5 | blocked | any | opus | high | Public README and a fresh-clone reproducibility pass |
@@ -96,6 +96,17 @@ so all five share the pre-registered spec. Do not publish the mix.
 ---
 
 ## C2 — Recoverability gate — the check that would have caught this
+
+**Done 2026-09-09.** Added C7 to `simulation/checks.py`: per-channel
+signal-to-noise (std of true national contribution / std of national revenue
+noise), printed for every seed, WARN-only below floor 0.15. All 5 seeds: ooh
+and display fall under the floor in every seed (~0.09-0.12), matching
+`analysis/ORACLE.md`'s independent finding that those two are unrecoverable;
+`python -m simulation.checks` still exits 0. Documented in `docs/PLAN.md` §3
+and `data/README.md`, both referencing `analysis/oracle.py` as the
+pre-registered ground-truth step any future scenario should run before a GPU
+commitment — C7 is disclosed as a cheap proxy, not a replacement for the
+oracle.
 
 **Objective.** Add a per-channel signal-to-noise floor to `simulation/checks.py`
 and register the oracle as a pre-run step, so no future scenario reaches a GPU

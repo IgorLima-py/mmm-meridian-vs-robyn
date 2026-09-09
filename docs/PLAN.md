@@ -106,6 +106,19 @@ Key facts the plan rests on (full citations in `REFERENCES.md`):
 - **Simulator checks before freezing data:** spend-spans-K check per channel,
   target correlation matrix realized, variance decomposition report, seed
   determinism test.
+- **Per-channel recoverability gate (C7 in `simulation/checks.py`, added
+  2026-09-09):** the *total* media-variance check above only bounds the sum
+  across channels — v1 passed it with ~85% of the media signal in one channel
+  and four channels under 1% each, and two of those four turned out to be
+  unrecoverable by any estimator, tools included (`analysis/ORACLE.md`). C7
+  prints signal-to-noise per channel (std of the channel's true national
+  contribution / std of national revenue noise) and **warns**, never fails,
+  below a floor of 0.15 — v1 itself has two channels (ooh, display) under it,
+  disclosed as a finding rather than fixed. C7 is a cheap proxy; `python
+  analysis/oracle.py` is the pre-registered ground-truth check any future
+  scenario should run *before* committing a GPU run to it — see
+  `analysis/ORACLE.md` for what it actually measures and why C7 cannot
+  replace it.
 
 ## 4. Metrics (pre-registered in Phase 2)
 

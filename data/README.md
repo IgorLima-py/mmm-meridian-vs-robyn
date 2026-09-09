@@ -55,6 +55,16 @@ intentional, not a bug.
 Known media variance share of national revenue: ~0.23–0.35 across seeds
 (reported per seed in `variance_decomposition`).
 
+**Per-channel signal-to-noise (C7 gate, WARN only):** the variance share above
+is a *total*, and it hid that two of the five channels carry almost no
+recoverable signal. `simulation.checks` prints, per seed, each channel's
+signal-to-noise (std of true national contribution / std of national revenue
+noise) and warns below a floor of 0.15. v1 has ooh (~0.10–0.12) and display
+(~0.09–0.11) under that floor in every seed — confirmed unrecoverable by the
+oracle in `analysis/ORACLE.md`, not just noisy. Any future scenario should run
+`python analysis/oracle.py` before spending GPU time on it; see that file for
+what it measures and why C7 is only a cheap proxy for it.
+
 ## Files per seed (`data/sim/seed<NNN>/`)
 
 | file | grain | consumer |

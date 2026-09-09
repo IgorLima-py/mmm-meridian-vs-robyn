@@ -14,6 +14,14 @@ Checks per seed (FAIL = exit code 1; WARN = printed only):
   C4 positivity: min weekly geo revenue > 0.
   C5 ROI calibration: counterfactual true ROI == config target (1e-6).
   C6 determinism: regenerating the seed reproduces byte-identical CSVs.
+  C7 recoverability gate: per-channel signal-to-noise (std of the channel's
+     true national contribution / std of national revenue noise, window
+     weeks). WARN only, floor 0.15 — this does not fail the pipeline. It is
+     the check `analysis/ORACLE.md` shows was missing before the v1 tool
+     runs: the total media-variance check (C3) hid two channels (ooh,
+     display) with almost no recoverable signal, later confirmed
+     unrecoverable by the oracle. Run `analysis/oracle.py` for the ground
+     truth this floor only approximates cheaply.
 """
 
 import argparse
@@ -27,6 +35,10 @@ import pandas as pd
 from .config import CONFIG, SEEDS
 from .core import World
 from .generate import frames
+
+# C7 floor: below this, `analysis/ORACLE.md` found the oracle itself cannot
+# recover the channel (ooh, display in v1) — WARN, not a scenario defect.
+SNR_FLOOR = 0.15
 
 
 def _hash(df):
@@ -88,6 +100,17 @@ def check_seed(seed, data_root):
                / world.geo_spend[ch][:, win].sum())
         if abs(roi - spec["true_roi"]) > 1e-6:
             failures.append(f"C5 {ch}: roi {roi} != target {spec['true_roi']}")
+
+    # C7 per-channel signal-to-noise (recoverability gate; WARN only)
+    noise_sd = world.noise[:, win].sum(0).std()
+    for ch in cfg["channels"]:
+        media_sd = world.media[ch][:, win].sum(0).std()
+        snr = media_sd / noise_sd
+        print(f"  C7 {ch}: signal-to-noise = {snr:.2f} (floor {SNR_FLOOR})")
+        if snr < SNR_FLOOR:
+            warnings.append(
+                f"C7 {ch}: signal-to-noise {snr:.2f} below floor "
+                f"{SNR_FLOOR} — see analysis/ORACLE.md")
 
     # C6 determinism vs files on disk
     seed_dir = Path(data_root) / f"seed{seed}"
