@@ -79,7 +79,7 @@ Robyn 3.12.1 (friction F8).
   including any seed that still fails Robyn's own convergence check.
 - `/score` runs clean over the updated extracts.
 
-**verificar:** `python analysis/scoring.py --results runs --data data/sim --out analysis/out` exits 0, the three JSONs `runs/robyn/results/robyn_national_seed10{2,3,4}.json` each record 4000 iterations, and the RD amendment in `runs/robyn/DECISIONS.md` carries a dated close line naming each seed's convergence outcome.
+**verificar:** `python analysis/scoring.py --results runs --data data/sim --out analysis/out` exits 0, the three JSONs `runs/robyn/results/robyn_national_seed10{2,3,4}.json` each carry `run.convergence_detail.iterations == 4000` (that is the exact path the exporter writes it to — it is not under `extras`), and the RD amendment in `runs/robyn/DECISIONS.md` carries a dated close line naming each seed's convergence outcome.
 
 **Estimate.** 1.5 h, mostly unattended.
 

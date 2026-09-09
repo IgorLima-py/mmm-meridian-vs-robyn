@@ -1,6 +1,6 @@
 # Status
 
-_Atualizado: 2026-09-09, madrugada (sessão iniciada em 08/09 — Karen, desktop GPU)_
+_Atualizado: 2026-09-09 (sessão iniciada em 08/09 — Karen, desktop GPU)_
 
 ## Onde estamos
 
@@ -124,6 +124,68 @@ Rodei o `publication-auditor` contra o `analysis/ORACLE.md` recém-escrito:
 qualquer texto pronto, não depois. Ele achou erro numérico real em documento
 que eu tinha acabado de escrever e revisar.
 
+## Colisão com o canon do playbook — resolvida, leia antes de mexer em `.claude/`
+
+No fim desta sessão o push foi **rejeitado**: o commit `2d3fd21` ("instala o
+canon do playbook") tinha subido do outro lado enquanto o trabalho corria, e
+colidia com a infraestrutura recém-construída em quatro arquivos.
+
+Resolução, decidida pelo Igor e aplicada por rebase (`eb8fd1f`):
+
+- **O canon vence nos comandos.** `/oi`, `/tchau`, `/360`, `hooks/sessao-abre.ps1`
+  e `.gitattributes` ficaram **idênticos** ao canon — verificado com
+  `git diff origin/main -- <arquivo>` em cada um. As versões que esta sessão
+  havia escrito para `/oi` e `/tchau` foram descartadas.
+- **`settings.json` virou união:** os `deny` do canon (que incluem
+  `git reset --hard` e `git clean -fd`, que a versão local não tinha) mais os
+  `allow` dos três gates de Python, `git push` em `ask`, os caminhos de chaves
+  negados, `PYTHONUTF8=1`, e os **três** hooks convivendo (o `SessionStart` do
+  canon + os dois desta sessão).
+- **`.gitignore`:** as duas versões tinham feito **a mesma correção de forma
+  independente** (negações para `.claude/settings.json|skills|agents|hooks`).
+  Ficou a do canon, que ainda ignora `settings.local.json` explicitamente.
+- **O que é só deste repo ficou por cima:** `guard_publication.py`,
+  `warn_py_syntax.py`, `publication-auditor`, a skill `/score`, o oráculo e a
+  reavaliação.
+
+**Regra que sai disso:** mudança de infraestrutura que vale para todo projeto
+do Igor vai para o **playbook**, não para cá. Só o que é específico deste repo
+mora em `.claude/` local. Está escrito no `CLAUDE.md`.
+
+Consequências estruturais:
+
+- `ROADMAP.md` saiu da raiz e virou **`docs/ROADMAP.md`**, que é onde o canon
+  procura, com um campo **`verificar:`** checável por fatia (o `/tchau` usa ele
+  para decidir se avança o ponteiro).
+- **`docs/PROXIMO.md`** passa a ser o ponteiro de UMA fatia. Os nomes das
+  chaves não foram inventados: saíram do consumidor real, o parser em
+  `.claude/hooks/sessao-abre.ps1` (`perfil`, `modelo`, `esforco`, `chat`,
+  `titulo`, `forma`, `maquina`, `plan-mode`, `objetivo`) mais `verificar:`, que
+  o `/tchau` lê. Os templates oficiais vivem no playbook e **não estão neste
+  repo** — se divergirem, o playbook manda.
+- **`docs/DESVIOS.md`** criado, sem nenhuma linha (não houve desvio).
+
+**Não é preciso rodar o `/360` para formatar isto.** A análise 360 e o desenho
+das fatias já foram feitos à mão nesta sessão; o `/360` serve para *refazer* o
+roadmap, e o próprio comando avisa que refazer um roadmap bom é queimar
+opus/max para chegar no mesmo lugar.
+
+## C7 — PyMC-Marketing promovido do backlog
+
+`d63afc9`. Continua **pós-publicação** e `blocked` atrás do C6, mas agora está
+escrito com a armadilha que ninguém deve redescobrir: **o PyMC-Marketing usa
+saturação logística por padrão, não Hill**. O gerador usa Hill exatamente
+porque Hill é a interseção das famílias do Meridian e do Robyn (PLAN D3) — e
+não é a default do PyMC. Rodar no default mediria o descasamento de forma
+funcional, não a ferramenta. A escolha (configurar Hill e declarar, ou tratar o
+logístico como cenário separado) tem de ser pré-registrada num
+`runs/pymc/DECISIONS.md` **antes** do primeiro run.
+
+O motivo de fazer o C7 mudou: a metade *defensiva* ("três ferramentas erraram,
+logo não é bug meu") foi absorvida pelo oráculo, que prova a mesma coisa melhor.
+O que sobra é a pergunta aberta — Meridian ancora no prior de ROI, Robyn no
+spend share, e um terceiro ancora em quê?
+
 ## Próximo passo imediato
 
 - **Karen (esta máquina):** **C1** — a escalada do Robyn.
@@ -144,7 +206,14 @@ que eu tinha acabado de escrever e revisar.
 - **C3–C6** scoring + gráficos, artigo, README público, auditoria final.
 - **Subagente e skill só carregam no próximo start da sessão.** Hooks e
   `settings.json` recarregam na hora (verificado). `publication-auditor` e
-  `/score` aparecem a partir do próximo `/oi`.
+  `/score` já apareceram no fim desta sessão, então estão ativos.
+- **A detecção de máquina por GPU vai pedir permissão uma vez por sessão.** A
+  regra `PowerShell(...)` foi tirada do `allow` por não ter sido possível
+  verificá-la; o hook `SessionStart` do canon injeta o estado do repositório
+  mas **não** detecta a GPU, então o passo continua sendo do `/oi`.
+- **`verificar:` do C1 corrigido:** a contagem de iterações fica em
+  `run.convergence_detail.iterations`, não em `extras`. A primeira versão do
+  campo apontava para o lugar errado e foi consertada antes de qualquer uso.
 
 ## Preso a esta máquina (Karen)
 

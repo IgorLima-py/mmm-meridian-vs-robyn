@@ -13,7 +13,7 @@ forma: sessao
 maquina: karen
 plan-mode: nao
 objetivo: Rodar a escalada 4000x5 pendente para os seeds 102, 103 e 104, para que os cinco extratos do Robyn parem de ser um misto de dois specs.
-verificar: `python analysis/scoring.py --results runs --data data/sim --out analysis/out` sai 0, os três JSONs `runs/robyn/results/robyn_national_seed10{2,3,4}.json` registram 4000 iterações cada, e a emenda RD em `runs/robyn/DECISIONS.md` tem linha de fechamento datada nomeando o resultado de convergência de cada seed.
+verificar: `python analysis/scoring.py --results runs --data data/sim --out analysis/out` sai 0, os três JSONs `runs/robyn/results/robyn_national_seed10{2,3,4}.json` têm `run.convergence_detail.iterations == 4000` (é esse o caminho exato que o exportador usa — não fica em `extras`), e a emenda RD em `runs/robyn/DECISIONS.md` tem linha de fechamento datada nomeando o resultado de convergência de cada seed.
 
 ## Contexto mínimo para abrir
 
