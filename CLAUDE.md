@@ -69,28 +69,78 @@ entre eles é **git + `docs/STATUS.md`** — nunca outra coisa:
 
 ## Ao abrir a sessão
 
-Executado pelo comando `/oi`.
+Executado pelo comando `/oi`. **Ele é deliberadamente barato** — existe para
+dizer qual é o próximo trabalho, e com que modelo e esforço rodá-lo, *enquanto
+trocar ainda sai de graça*. Se gastar contexto analisando, destrói a própria
+razão de ser.
 
-1. **Reconheça a máquina** e anuncie na primeira linha da resposta. Rode
+1. `git pull`. **Conflito → pare e avise** antes de qualquer outra coisa.
+   Mudança local não commitada não é motivo para parar: diga quais arquivos e
+   siga (trabalho em andamento na mesma máquina é o caso normal).
+2. **Reconheça a máquina** e anuncie na primeira linha da resposta. Rode
    `(Get-CimInstance Win32_VideoController).Name`:
    - GPU NVIDIA presente (RTX 4070 Super) → **Karen** (desktop, admin OK):
-     máquina de runs — Fases 1, 3 e 4 do PLAN, ambientes WSL2.
-   - Só Intel Graphics → **Dell** (laptop, sem admin): Fases 2, 5 e 6.
+     máquina de runs — ambientes WSL2, tudo que precisa de GPU ou de R.
+   - Só Intel Graphics → **Dell** (laptop, sem admin): análise e escrita.
      **Nunca** tentar WSL2 ou qualquer instalação que exija admin aqui.
    - Em dúvida (GPU inesperada), pergunte ao Igor em vez de assumir.
-2. `git pull` e `git log --oneline -5`.
-3. Leia `docs/STATUS.md` por inteiro; na primeira vez, leia também `BRIEF.md`.
-4. `git status --short`.
-5. Diga onde paramos e qual é o próximo passo concreto **para esta máquina**
-   (o STATUS e o PLAN dizem qual fase pertence a qual máquina).
+3. O ponteiro é o `docs/PROXIMO.md` e a fila inteira é o `docs/ROADMAP.md`
+   (tabela até `<!-- HEADER-END -->`). **Se o hook `SessionStart` já injetou o
+   bloco `docs/PROXIMO.md pede:`, use-o — não releia o arquivo.** Se o
+   ponteiro apontar uma `maquina:` que não é esta, isso é a primeira coisa da
+   resposta, e a alternativa é a primeira fatia `next` cuja `machine` seja
+   `any`.
+4. `git status --short` (idem: se veio na injeção, não rode de novo).
+5. Responda em poucas linhas: o ID, o nome, o **modelo** e o **esforço**
+   recomendados, e uma linha de objetivo. Pergunte se o Igor quer seguir assim.
+
+**Não** leia `docs/STATUS.md`, `docs/PLAN.md` nem `BRIEF.md` na abertura. Eles
+são lidos sob demanda, depois que a fatia foi escolhida — o `docs/ROADMAP.md`
+traz o detalhe de cada C abaixo do marcador, e o `STATUS.md` traz o que falhou
+e o que está preso a esta máquina.
 
 ## Ao encerrar a sessão
 
 Executado pelo comando `/tchau`.
 
-1. Escreva o handoff em `docs/STATUS.md`: o que foi feito, o que ficou pela metade,
-   o que falhou e por quê, o próximo passo concreto.
-2. Confira `git status --porcelain`: nenhum segredo, nenhum arquivo acima de 50 MB
-   (outputs de model run grandes ficam em pasta ignorada).
-3. Reaplique o teste do público a tudo que está entrando.
-4. `git add -A`, commit descritivo em inglês, `git push`.
+1. **`docs/ROADMAP.md`**: atualize a coluna `state` — o que fechou vira `done`,
+   o próximo vira `next`, o que ficou pela metade vira `doing`. A tabela é a
+   fila e nada mais; ela nunca explica.
+2. **`docs/PROXIMO.md`**: avance o ponteiro **só se o `verificar:` da fatia
+   aberta estiver satisfeito de verdade**. Se faltar qualquer item, não avance
+   e diga o que faltou. `modelo:` e `esforco:` do ponteiro novo saem da tabela
+   do roadmap, resolvidos na hora — nunca copiados do ponteiro anterior.
+3. **`docs/STATUS.md`**: escreva o handoff narrativo — o que foi feito e em
+   quais arquivos, o que ficou pela metade e onde exatamente parou, **o que foi
+   tentado e falhou e por quê**, e o que está preso a esta máquina.
+4. Confira `git status --porcelain`: nenhum segredo, nenhum arquivo acima de
+   50 MB (outputs pesados de model run ficam em pasta ignorada).
+5. Reaplique o teste do público a tudo que está entrando.
+6. `git add -A`, commit descritivo em inglês, `git push`.
+7. Termine dizendo a **próxima fase: ID, nome, modelo e esforço.** É a última
+   coisa que o Igor lê na sessão.
+
+O hook `guard_publication.py` recusa o commit se aparecer arquivo acima de
+50 MB, caminho sob `outputs/`, ou a frase proibida. Bloqueio dele é sinal para
+corrigir — nunca para contornar com `git add -f` ou mexendo no `.gitignore`.
+
+## Infraestrutura Claude Code deste repo
+
+Versionada em `.claude/` (o `.gitignore` deixa passar tudo menos o estado
+local). Duas camadas: o **canon do playbook**, padronizado entre os projetos do
+Igor (`/oi`, `/tchau`, `/360`, `hooks/sessao-abre.ps1`, os `deny` de segurança
+e o par `docs/PROXIMO.md` + `docs/ROADMAP.md`), e o que é **só deste repo**,
+abaixo. Ao mexer na infraestrutura: mudança que vale para todo projeto vai para
+o playbook, não para cá.
+
+- **`settings.json`** — união das duas camadas: os `deny` do canon, mais os
+  três gates de Python liberados, `git push` sempre pergunta, `C:\chaves` /
+  `~/chaves` negados, e `PYTHONUTF8=1`.
+- **`hooks/guard_publication.py`** — bloqueia commit com arquivo grande,
+  `outputs/`, ou a frase proibida na mensagem ou no diff.
+- **`hooks/warn_py_syntax.py`** — avisa (não bloqueia) se um `.py` editado
+  ficou com erro de sintaxe.
+- **`/score`** — roda os três gates na ordem obrigatória: `simulation.checks`
+  → `analysis/oracle.py` → `analysis/scoring.py`.
+- **`publication-auditor`** — subagente adversarial. Rode antes de publicar
+  qualquer coisa: ele tenta **reprovar** a peça, e devolve `SHIP` ou `BLOCK`.

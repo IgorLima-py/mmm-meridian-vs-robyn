@@ -21,8 +21,12 @@ dist/
 # Heavy model-run outputs (do not commit; small extracts go in runs/*/results/)
 outputs/
 
-# Derived scoring outputs (regenerable via analysis/scoring.py)
-analysis/out/
+# Derived scoring outputs (regenerable via analysis/scoring.py).
+# Exclude the CONTENTS, not the directory: git will not descend into an
+# excluded directory, so a negation inside one never takes effect.
+analysis/out/*
+!analysis/out/summary.md
+!analysis/out/summary.csv
 
 # Editores / SO
 .vscode/
@@ -31,11 +35,12 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# Config do Claude Code: os comandos são versionados, o resto é local
+# Claude Code: a infraestrutura do repo é versionada, o estado local não
+# (settings.local.json continua ignorado — é por máquina, de propósito)
 .claude/*
+!.claude/settings.json
 !.claude/commands/
 !.claude/skills/
 !.claude/agents/
 !.claude/hooks/
-!.claude/settings.json
 .claude/settings.local.json

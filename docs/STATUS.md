@@ -1,63 +1,165 @@
 # Status
 
-_Atualizado: 2026-08-28, fim do dia (Karen — desktop GPU)_
+_Atualizado: 2026-09-09, madrugada (sessão iniciada em 08/09 — Karen, desktop GPU)_
 
 ## Onde estamos
 
-**Fases 1, 3 e 4 CONCLUÍDAS na Karen** (a 4 com uma pendência opcional de
-escalada). Todos os extratos estão em `runs/*/results/` no schema
-pré-registrado; o scorer da Fase 5 já pode consumi-los.
+**Fases 1, 3 e 4 concluídas** (a 4 com uma pendência de escalada). Esta sessão
+não rodou modelo nenhum: ela reavaliou o projeto depois do lançamento do
+Meridian GeoX, construiu o teste que faltava para a peça ser publicável, e
+montou a infraestrutura de Claude Code do repo.
 
-- **Fase 3 (Meridian 1.8.0):** nacional × 5 seeds — todos convergiram
-  (max R-hat ≤ 1.02; AKS escolheu 17–36 knots; 5–11 min/run na GPU). Geo × 2
-  seeds a 7×2000/2000/1000 após 2 escaladas documentadas: seed102 convergiu
-  (1.024); seed101 ficou em 1.118 **puxado só pelos efeitos de tempo** (mu_t/
-  knot_values; mídia 1.077) — publicado assim, `rhat_by_param` no JSON.
-  Decisões e emendas: `runs/meridian/DECISIONS.md`.
-- **Fase 4 (Robyn 3.12.1):** 5 seeds no spec pré-registrado 2000×5 (commit
-  `d7f716e`): só seed105 passa o critério de convergência do próprio Robyn.
-  Emenda RD (uma escalada 4000×5 para 101–104): **seed101 re-rodou a 4000×5 e
-  convergiu por completo** (JSON atual); a escalada de 102–104 foi
-  interrompida (encerramento da sessão — "mata tudo") e **não rodou**.
-  Decisões: `runs/robyn/DECISIONS.md`. Regra de seleção aplicada conforme
-  `analysis/SELECTION_RULE.md` (caminho "clusters" em todos os seeds).
+A partir de agora a **fila de trabalho vive no `docs/ROADMAP.md`** (C0–C6, com
+máquina, modelo e esforço recomendados por tarefa). Este arquivo continua sendo
+a narrativa: o que falhou, o que ficou pela metade, o que está preso a esta
+máquina. O `/oi` lê só a tabela do roadmap; este documento é lido sob demanda.
+
+## O que esta sessão fez
+
+**1. Reavaliação 360 → `docs/REASSESSMENT_2026-09-08.md`.** Reverificação de
+Meridian, Robyn, GeoX, GeoLift e PyMC-Marketing contra fontes primárias em
+08/09. O que mudou desde o planejamento de 27/08:
+
+- **Meridian 2.0.0 saiu em 03/09** (mudou o backend padrão de TensorFlow para
+  JAX, mais 6 breaking changes). Os runs deste repo são **1.8.0** — decisão:
+  ficar na 1.8.0 para a v1 e tratar a defasagem como achado sobre churn de
+  ferramenta, não como dívida.
+- **Meridian GeoX foi 0.1.1 → 1.0.0 → 1.0.1 em 48 h.** O extra de instalação
+  funciona; o nome correto é `geox` (`pip install "google-meridian[geox]"`),
+  não `meridian-geox`. Decisão: **sem braço GeoX na v1** — exigiria subir para
+  2.0.0 e re-rodar tudo, e o Robyn só aceita point-estimate como calibração, o
+  que transformaria a comparação em demo de feature do Meridian.
+- **Robyn:** último commit no `main` em 27/06/2025, CRAN 3.12.1 em 02/07/2025,
+  não arquivado. Estrelas: Meridian 1522 × Robyn 1513 — passou, mas por nove.
+  A afirmação defensável é sobre cadência de manutenção, não popularidade.
+- **PyMC-Marketing chegou a 1.0.0 estável em 07/08/2026** (backlog v2 fica mais
+  barato e mais credível, mas continua fora da v1).
+- **Heusch (arXiv 2608.21128, 21/08/2026) NÃO rodou as ferramentas** — ele
+  implementou o próprio modelo observacional. O gap que este projeto ocupa
+  continua aberto.
+
+**2. O oráculo — o teste que faltava.** `analysis/oracle.py` +
+`analysis/ORACLE.md` + `runs/oracle/results/` (20 JSONs, 4 degraus × 5 seeds,
+no mesmo schema, pontuados pelo mesmo harness).
+
+Motivo: as duas ferramentas erraram o ROI em ~50% na mesma direção, e isso é
+indistinguível de um bug nosso na ground truth. O oráculo recebe a forma
+funcional e os parâmetros verdadeiros e só estima os betas.
+
+- **O harness está limpo:** com receita sem ruído, o oráculo recupera os betas
+  com erro máximo de 1,2e-14. Gerador, ground truth, schema e scorer concordam.
+- **Recuperabilidade é por canal.** tv (sinal/ruído 1,91), search (0,39) e
+  social (0,34) são recuperáveis — o oráculo erra 4%, 15% e 24%, e as
+  ferramentas erram 34–76%. ooh (0,11) e display (0,10) **não são** — o oráculo
+  erra 97% e 76%, e nenhum estimador faria melhor.
+- **A armadilha:** as ferramentas *parecem* melhores justamente em ooh e
+  display, porque os ROIs verdadeiros ali (0,8 e 1,2) estão perto do valor para
+  onde cada uma encolhe. Ler a tabela de erro de uma ferramenta sozinha inverte
+  a ordem — completamente no Robyn, parcialmente no Meridian.
+- **O encolhimento é das ferramentas:** viés do oráculo −0,01 a +0,12; Meridian
+  −0,31; Robyn −0,51. E o degrau do oráculo que estima o próprio baseline cobre
+  a verdade 92% das vezes contra 90% nominal, enquanto Meridian cobre 60% e
+  Robyn 20% — "o dado era difícil" não desculpa.
+
+Consequência para a peça: a tese deixa de ser "qual ferramenta chegou mais
+perto" (empate técnico: 0,533 × 0,538) e passa a ser "a verdade estava nos
+dados? em quais canais? e o que cada ferramenta faz quando não estava".
+
+**3. Infraestrutura Claude Code (C0).** `.claude/settings.json`, dois hooks,
+o subagente `publication-auditor`, a skill `/score`, o `docs/ROADMAP.md`, e `/oi` e
+`/tchau` reescritos junto com as seções correspondentes do `CLAUDE.md`.
+
+## O que foi tentado e falhou — leia antes de repetir
+
+- **O `.gitignore` engolia toda a infraestrutura.** Ele terminava com
+  `.claude/*` + `!.claude/commands/`, então `settings.json`, `agents/`,
+  `skills/` e `hooks/` seriam ignorados e **nunca chegariam à outra máquina**.
+  Corrigido com negações explícitas. Verificado com `git check-ignore -v`.
+- **`!analysis/out/summary.csv` não funcionava** sob `analysis/out/`: o git não
+  desce em diretório excluído, então negação lá dentro nunca vale. A regra teve
+  de virar `analysis/out/*` (o conteúdo, não o diretório).
+- **Prometi `analysis/out/summary.csv` e o scorer gera `summary.md`.** Alinhado
+  para o arquivo que existe de verdade, em quatro lugares.
+- **O hook de commit bloqueou meu próprio comando de teste**, porque a string
+  de teste continha a frase proibida e o matcher pegou. Os testes tiveram de
+  montar a frase em runtime. É a prova mais forte de que ele funciona.
+- **`attribution` não existe na doc de settings.** Procurei a página inteira:
+  nenhum campo controla o trailer `Co-Authored-By`. Não gravei campo não
+  verificado — o default já mantém o trailer, que é o comportamento desejado.
+- **`.git/index.lock` órfão de 31/08**, 0 bytes, sem processo git — resíduo de
+  um dos reboots registrados no handoff anterior. **Ele teria feito o `/tchau`
+  falhar.** Removido. Se `git add` reclamar de lock, cheque a data do arquivo e
+  se há processo git antes de remover.
+- **A auditoria adversarial reprovou o meu próprio trabalho** — ver abaixo.
+
+## A auditoria que reprovou o ORACLE.md (e o que foi corrigido)
+
+Rodei o `publication-auditor` contra o `analysis/ORACLE.md` recém-escrito:
+`VERDICT: BLOCK`, 7 achados bloqueantes, todos verificados e reais:
+
+1. **A coluna "Meridian" na tabela por canal misturava os braços national e
+   geo**, enquanto oráculo e Robyn eram national-only — denominador diferente
+   para uma ferramenta numa comparação de três, e o pool incluía um run não
+   convergido. Corrigido para national-only. O ooh do Meridian é **0,55**, não
+   0,44, o que enfraquece parte da afirmação original sobre "melhores canais".
+   **O mesmo erro estava no `REASSESSMENT`** e foi corrigido lá também.
+2. **"57–76%"** era 34–76%: o piso escolhido inflava a falha das ferramentas.
+3. **Convergência subdeclarada.** Eu citava só Meridian geo seed101. São
+   **quatro** runs: mais Robyn national 102, 103 e 104. Usar "Robyn cobre 20%"
+   como evidência sem dizer que 3 dos 5 seeds não convergiram era exatamente a
+   acusação de cherry-picking que este projeto existe para evitar. Rotulado em
+   todo lugar onde número do Robyn aparece.
+4. **Proveniência.** Sinal/ruído, CV do regressor, correlações e o teste sem
+   ruído não saíam de nenhum script commitado — foram gerados no terminal.
+   Violação direta da regra dura nº 3. Corrigido na raiz: `python
+   analysis/oracle.py --diagnostics` agora emite todos eles.
+5. **Ao regenerar, as correlações publicadas estavam erradas:** eu disse
+   0,79–0,95 (é **0,66–0,94**) e 0,02–0,24 para os demais pares (é **−0,05 a
+   0,09**, com um par negativo, ooh–search, que eu havia omitido).
+6. Viés do oráculo "+0,07 a +0,12" contradizia a própria tabela (L3 = −0,008).
+7. Citação errada (`PLAN D5` onde é `PLAN §3`), √8 onde é √6, e "erro 0,0" onde
+   é 1,2e-14.
+
+**Lição para as próximas sessões:** rodar o auditor **antes** de considerar
+qualquer texto pronto, não depois. Ele achou erro numérico real em documento
+que eu tinha acabado de escrever e revisar.
 
 ## Próximo passo imediato
 
-- **Karen (retomar aqui é o ideal):** terminar a escalada pendente —
+- **Karen (esta máquina):** **C1** — a escalada do Robyn.
   `wsl -d Ubuntu -u igor --cd /mnt/c/<repo> -- Rscript runs/robyn/run_robyn.R --iterations=4000 102 103 104`
-  (~20 min/seed, CPU). Depois commit dos 3 JSONs e Fase 5.
-- **Dell:** a Fase 5 (scoring + gráficos) já é possível com os extratos
-  atuais — `python analysis/scoring.py --results runs --data data/sim --out
-  analysis/out` — mas 3 dos 5 JSONs do Robyn ainda podem ser substituídos
-  pela escalada; se for começar antes dela, tratar números como preliminares
-  e re-rodar o scorer depois (é barato e regenerável).
-- Fase 5 pode rodar em qualquer máquina (Python puro). Fase 6 (artigo) idem.
+  (~20 min/seed, CPU, desatendido). Nunca passar `quiet` (fricção F8).
+- **Qualquer máquina, em paralelo:** **C2** — piso de sinal/ruído por canal no
+  `simulation/checks.py`.
+- Detalhe, definition of done e estimativa de cada um: `docs/ROADMAP.md`.
 
 ## Pendências
 
-- Escalada Robyn 4000×5 para seeds 102–104 (Karen; opcional porém decidida na
-  emenda RD — os 2000×5 commitados já satisfazem o gate como "não-convergência
-  documentada").
-- Fase 5: scoring + 3 gráficos (ROI vs verdade, curvas, cobertura/spread).
-- Fase 6: artigo (~1000 palavras) + README público.
+- **C1** escalada Robyn 4000×5 para os seeds 102–104. Enquanto não fechar, os
+  extratos commitados são um **misto de specs** (seed101 a 4000×5, os outros a
+  2000×5) e **3 dos 5 seeds do Robyn não convergiram** — os dois fatos estão
+  rotulados no `ORACLE.md` e no `REASSESSMENT`, mas precisam ser resolvidos ou
+  divulgados explicitamente na peça.
+- **C2** o gate de recuperabilidade.
+- **C3–C6** scoring + gráficos, artigo, README público, auditoria final.
+- **Subagente e skill só carregam no próximo start da sessão.** Hooks e
+  `settings.json` recarregam na hora (verificado). `publication-auditor` e
+  `/score` aparecem a partir do próximo `/oi`.
 
 ## Preso a esta máquina (Karen)
 
 - Ambientes WSL2 (Meridian GPU, Robyn multi-core) — reproduzíveis do zero em
   outra máquina com admin via `envs/*.sh` (ordem no topo de `ENVIRONMENT.md`).
-- Outputs pesados (gitignored): `outputs/meridian/*.pkl`,
+- Outputs pesados (gitignored, ~1,2 GB): `outputs/meridian/*.pkl`,
   `outputs/robyn/seed*/OutputModels.rds|OutputCollect.rds`.
+- **C1 só roda aqui** (precisa do R no WSL2). C2 em diante roda em qualquer
+  máquina — Python puro sobre arquivos commitados.
 
-## O que foi tentado e não funcionou (hoje)
+## Fricções anteriores que continuam valendo
 
-- `robyn_run(quiet=TRUE)` crasha no 3.12.1 ("object 'pb' not found") — custou
-  um run 2000×5; nunca passar `quiet` (fricção F8, `envs/ENVIRONMENT.md`).
-- Primeira reconstrução de curva do Robyn pegou o elemento errado do retorno
-  de `saturation_hill` (lista `x_saturated`+`inflexion`) — o self-check em
-  m=1 vs xDecompAgg pegou o erro na hora; corrigido, agora bate < 1%.
-- Geo do Meridian não convergiu a 500/500 nem 1000/1000 (efeitos de tempo dos
-  156 knots semanais); 2000/2000 resolveu para seed102, quase para seed101 —
-  três tentativas documentadas, sem quarta.
-- Dois reboots no meio de runs (sessão esgotada + BIOS) — nada perdido além
-  de tempo de computação; runs re-rodados.
+- `robyn_run(quiet=TRUE)` crasha no 3.12.1 (`object 'pb' not found`) — nunca
+  passar `quiet` (F8, `envs/ENVIRONMENT.md`).
+- Geo do Meridian não convergiu a 500/500 nem 1000/1000; 2000/2000 resolveu
+  para seed102 e quase para seed101 — três tentativas documentadas, sem quarta.
+- Reconstrução de curva do Robyn: pegar o elemento certo do retorno de
+  `saturation_hill`; o self-check em m=1 vs `xDecompAgg` pega o erro na hora.

@@ -1,0 +1,239 @@
+{
+ "schema_version": "1.0",
+ "tool": "oracle_nat_truebase",
+ "tool_version": "1.0.0",
+ "arm": "national",
+ "seed_dataset": 102,
+ "run": {
+  "tool_seed": 0,
+  "runtime_seconds": 0.0,
+  "hardware": "OLS, any CPU",
+  "converged": true,
+  "convergence_detail": {
+   "method": "closed-form OLS",
+   "r2": 0.7941395718613908
+  }
+ },
+ "channels": {
+  "tv": {
+   "roi": {
+    "point": 1.821109117020794,
+    "interval_low": 1.671341832073562,
+    "interval_high": 1.9708764019680258,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 1.92239805983319
+   },
+   "contribution_share": {
+    "point": 0.07825974250072945
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     10219071.174458068,
+     34039386.8059251,
+     60831447.401586786,
+     85227906.67657314,
+     105892499.48006882,
+     123000085.01748405,
+     148733712.8813066,
+     166432301.5780277,
+     178873503.8076426
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "ooh": {
+   "roi": {
+    "point": 1.2511869368208717,
+    "interval_low": 0.1485102677341299,
+    "interval_high": 2.3538636059076135,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 0.6202333534120594
+   },
+   "contribution_share": {
+    "point": 0.014338158591479916
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     6372023.348643311,
+     10479897.630395416,
+     13404815.797241168,
+     15614812.971524477,
+     17352919.211380284,
+     18760368.31020887,
+     20908187.389704388,
+     22475562.953322064,
+     23672777.46511506
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "social": {
+   "roi": {
+    "point": 2.767691118969386,
+    "interval_low": 1.7578402138285754,
+    "interval_high": 3.7775420241101973,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 1.127914739433262
+   },
+   "contribution_share": {
+    "point": 0.04757513808869187
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     24582464.413152307,
+     37270634.13628209,
+     45691421.0297313,
+     51811177.74710691,
+     56506379.68415241,
+     60244585.14193736,
+     65858888.72730381,
+     69902074.88704103,
+     72968911.53845496
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "display": {
+   "roi": {
+    "point": 0.14650242343785322,
+    "interval_low": -1.534110462894123,
+    "interval_high": 1.8271153097698296,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 0.056239511054821785
+   },
+   "contribution_share": {
+    "point": 0.001888724046267291
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     1043532.8944690065,
+     1517132.5356289227,
+     1829052.0137212,
+     2056894.025067459,
+     2233236.6788089066,
+     2375031.0685783755,
+     2591119.762092199,
+     2749751.0664377348,
+     2872204.6334321136
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "search": {
+   "roi": {
+    "point": 3.638234184811531,
+    "interval_low": 2.8069267463912326,
+    "interval_high": 4.469541623231829,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 1.2022892386376582
+   },
+   "contribution_share": {
+    "point": 0.09380896547039275
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     57574338.79478454,
+     78846736.4660081,
+     92390073.0649659,
+     102161615.9095078,
+     109693856.64424932,
+     115749755.54790415,
+     125010452.9106545,
+     131859998.0285853,
+     137194109.15834042
+    ],
+    "kind": "selected_model"
+   }
+  }
+ },
+ "extras": {
+  "rung": "L2",
+  "what_the_oracle_knows": "national aggregate regressors, true baseline and control removed",
+  "n_rows": 156,
+  "n_params": 5,
+  "r2": 0.7941395718613908,
+  "beta_rel_err": {
+   "tv": 0.006994478745880242,
+   "ooh": 0.560900260332045,
+   "social": 0.10381192705431137,
+   "display": -0.8784545991947014,
+   "search": 0.03566771322793824
+  },
+  "note": "Diagnostic, not a competing estimator: these models are handed the true adstock and saturation parameters and (L1/L2) the true baseline. They bound what is knowable from this dataset; they are not a tool anyone can run."
+ }
+}
