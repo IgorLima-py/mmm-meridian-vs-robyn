@@ -20,8 +20,13 @@ verificar: `python analysis/scoring.py --results runs --data data/sim --out anal
 Comando, nesta máquina (Karen), ~20 min por seed, desatendido:
 
 ```
-wsl -d Ubuntu -u igor --cd /mnt/c/<repo> -- Rscript runs/robyn/run_robyn.R --iterations=4000 102 103 104
+wsl -d Ubuntu -u igor -- bash -lc "cd /mnt/c/<repo> && Rscript runs/robyn/run_robyn.R --iterations=4000 102 103 104"
 ```
+
+**Nunca usar `wsl --cd <path>` em processo background do Claude Code** — falha
+com `WSL/ERROR_PATH_NOT_FOUND` só em modo background (funciona em foreground).
+Usar `bash -lc "cd ... && ..."` em vez do flag `--cd`. Fricção nova, achada
+nesta sessão; nenhum seed chegou a escrever JSON quando isso aconteceu.
 
 Nunca passar `quiet` — crasha no Robyn 3.12.1 (fricção F8, `envs/ENVIRONMENT.md`).
 

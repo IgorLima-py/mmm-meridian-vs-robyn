@@ -1,6 +1,31 @@
 # Status
 
-_Atualizado: 2026-09-09 (sessão iniciada em 08/09 — Karen, desktop GPU)_
+_Atualizado: 2026-09-09 (sessão C1 — Karen, desktop GPU, encerrada por desligamento da máquina)_
+
+## Sessão C1 (09/09) — escalada Robyn interrompida, nada perdido
+
+Esta sessão tentou rodar a escalada 4000x5 do Robyn para os seeds 102, 103 e
+104 (a pendência do C1). O run foi **interrompido antes de terminar** porque a
+máquina (Karen) precisa ser desligada. **Nenhum JSON foi escrito** — o processo
+foi morto durante o feature engineering do seed102 (~1% do trabalho de um
+único seed), então `runs/robyn/results/` está exatamente como estava:
+seed101 em 4000x5, seeds 102–105 em 2000x5. `git status` limpo, nada para
+reverter.
+
+**Fricção nova, documentada para não ser redescoberta:** `wsl -d Ubuntu -u igor
+--cd <path> -- <comando>` funciona em **foreground** mas falha em
+**background** com `WSL/ERROR_PATH_NOT_FOUND` (código de saída 127) — testado
+três vezes, inclusive com um comando trivial (`pwd`) sem nada de específico do
+Robyn. A forma que funciona em background é trocar o flag `--cd` por
+`bash -lc "cd <path> && <comando>"`. `docs/PROXIMO.md` já foi atualizado com o
+comando corrigido.
+
+**Próximo passo, ao reabrir nesta máquina:** rodar de novo o comando corrigido
+em `docs/PROXIMO.md` para os três seeds (102, 103, 104) — nenhum progresso
+parcial existe para aproveitar, é um restart limpo. `docs/ROADMAP.md` marca o
+C1 como `doing` (não `next`) para deixar claro que já foi tentado uma vez. O
+ponteiro `docs/PROXIMO.md` **não avançou** — o `verificar:` do C1 continua
+insatisfeito.
 
 ## Onde estamos
 
