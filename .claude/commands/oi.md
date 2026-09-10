@@ -15,13 +15,15 @@ e sem me perguntar nada:
       projeto não tem ponteiro: pule o passo 0 inteiro e não invente perfil.
    c. **Modelo.** O modelo desta sessão está no seu prompt de sistema. Compare com o `modelo:`
       do ponteiro. **Bater é igualdade exata.**
-   d. **Esforço.** Não é conferível na abertura — o `SessionStart` roda antes do laço agentico
-      e o app de desktop não exporta `CLAUDE_EFFORT`. Então **anuncie** o que o ponteiro pede e
-      siga. Nunca escreva que conferiu o esforço: não dá. Se em algum momento você conseguir
-      lê-lo, a regra é a mesma do modelo — igualdade exata, e **esforço maior também está
-      errado**, porque é token a mais cobrado em todo turno.
+   d. **Esforço.** O hook confere sozinho, lendo `$env:CLAUDE_EFFORT`, e a linha vem pronta no
+      bloco: `BATE`, `NAO BATE`, ou `NAO CONSEGUI CONFERIR`. Repita o que veio. **Bater é
+      igualdade exata**, e **esforço maior também está errado** — é token a mais cobrado em todo
+      turno, não margem de segurança. Se o bloco não veio, meça você: uma chamada só,
+      `echo $CLAUDE_EFFORT` (ou `$env:CLAUDE_EFFORT` no PowerShell).
    e. **Vazio, ausente ou ilegível nunca é «está certo».** É «não consegui conferir», e você diz
-      isso com essas palavras.
+      isso com essas palavras. Vale para o modelo e para o esforço, e não é formalidade: até o
+      C6 este comando afirmava que o esforço *não era conferível* — a variável existia o tempo
+      todo, e 16 projetos receberam a afirmação errada.
    f. **Se o modelo NÃO bater: PARE TUDO.** Não rode mais nada, não leia mais nada, não comece a
       trabalhar. Responda só com o que está errado, o que deveria ser, e como trocar: `/model
       <modelo>` na interface, ou fechar e reabrir. Termine dizendo que é para me chamar de novo

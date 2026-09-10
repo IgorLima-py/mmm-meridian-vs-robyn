@@ -61,6 +61,19 @@
         "hooks": [
           {
             "type": "command",
+            "command": "powershell",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/git-destrutivo.ps1"
+            ],
+            "timeout": 15,
+            "statusMessage": "Conferindo o comando git..."
+          },
+          {
+            "type": "command",
             "if": "Bash(git commit *)",
             "command": "python",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard_publication.py"]

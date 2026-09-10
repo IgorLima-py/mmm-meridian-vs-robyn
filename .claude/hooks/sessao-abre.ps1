@@ -21,16 +21,30 @@
 # barrar: erro ao **ler a entrada** deixa passar, erro ao **verificar** barra. Nao confunda as
 # duas -- e nunca faca deste hook a unica trava de nada.
 #
-# ## O que da' para conferir de verdade, medido em 08/09/2026
+# ## O que da' para conferir de verdade
 #
 # - **`model` VEM na carga do stdin** -- e so' no `SessionStart`, e nem sempre. Quando vem, o
 #   modelo e' conferivel de verdade. Isto contradiz o que os dois projetos originais concluiram
 #   ("modelo e' dito, nunca conferido"), e a documentacao oficial e' a fonte.
-# - **`effort` NAO vem**, e `$env:CLAUDE_EFFORT` esta **vazio no app de desktop** (medido nesta
-#   maquina em 08/09/2026, `CLAUDE_CODE_ENTRYPOINT=claude-desktop`). O `SessionStart` roda antes
-#   do laco agentico. Entao o esforco e' **dito, nunca conferido** -- o inverso do que se supunha.
+# - **`effort` VEM, por `$env:CLAUDE_EFFORT`** -- valores `low|medium|high|xhigh|max`. A
+#   documentacao a lista entre as variaveis garantidas para hook, `SessionStart` incluido.
+#
+#   **CORRECAO DO C6, e ela importa.** Ate 08/09/2026 este arquivo afirmava, aqui, que a
+#   variavel estava "vazia no app de desktop" e que o esforco era "dito, nunca conferido". Isso
+#   estava ERRADO: medido no C6, no mesmo app (`CLAUDE_CODE_ENTRYPOINT=claude-desktop`), ela
+#   vale `xhigh` e bate com o ponteiro. Quem estava certo desde o comeco era o
+#   `app-financas/.claude/commands/oi.md`, que lia `${CLAUDE_EFFORT}` e foi tratado como
+#   contradicao a resolver. **Duas medicoes discordaram e a errada virou canon** -- e o custo
+#   disso e' que 16 projetos receberam um `/oi` dizendo para nao conferir uma coisa conferivel.
+#
+#   Por isso a ausencia continua sendo tratada como "nao consegui conferir", nunca como "esta
+#   certo": se a variavel sumir num outro entrypoint, o hook diz que nao mediu, em vez de
+#   afirmar de novo o que nao sabe.
 # - Nenhum campo de saida de hook troca modelo ou esforco. Quem abre a sessao no perfil certo e'
-#   o `.claude/settings.json` (chaves `model` e `effortLevel`), escrito pelo `/tchau`.
+#   o `.claude/settings.json` (chaves `model` e `effortLevel`), que e' o **piso do projeto** e
+#   se escreve a mao. O `/tchau` **nao** mexe nele -- decisao do C4, mantida pelo C6: escrever
+#   ali a cada sessao dava diff toda sessao e conflito garantido entre as duas maquinas. A
+#   excecao da fatia mora no `docs/PROXIMO.md`, e quem anuncia e' o `/oi`.
 
 $ErrorActionPreference = 'Continue'
 
@@ -140,7 +154,25 @@ if (-not $ponteiroExiste) {
         $partes.Add('modelo desta sessao: NAO VEIO na carga do hook. Confira voce mesmo: o modelo esta no seu prompt de sistema. Ausente nunca e "esta certo".')
     }
 
-    $partes.Add('esforco desta sessao: NAO E CONFERIVEL na abertura -- o SessionStart roda antes do laco agentico e o app de desktop nao exporta CLAUDE_EFFORT. Anuncie o que o ponteiro pede e siga; nao invente que conferiu.')
+    # Esforco, pelo mesmo contrato do modelo: so' existe "BATE", "NAO BATE" e "nao consegui
+    # conferir". Vazio nunca e' "esta certo".
+    $esforcoDaSessao = $env:CLAUDE_EFFORT
+    if ([string]::IsNullOrWhiteSpace($esforcoDaSessao)) {
+        $partes.Add('esforco desta sessao: NAO CONSEGUI CONFERIR -- $env:CLAUDE_EFFORT veio vazia neste processo. Anuncie o que o ponteiro pede e siga, e diga com essas palavras que nao deu para conferir. Nunca escreva que conferiu.')
+    } else {
+        $partes.Add('esforco desta sessao, lido de $env:CLAUDE_EFFORT: ' + $esforcoDaSessao)
+        if ($esforcoPedido) {
+            # Igualdade exata, ao contrario do modelo. Aqui os dois lados falam o mesmo
+            # vocabulario (`low|medium|high|xhigh|max`), entao comparacao frouxa so' esconderia
+            # erro -- e `high` casando dentro de `xhigh` seria justamente o alarme que nao toca.
+            if ($esforcoDaSessao.Trim().ToLower() -eq $esforcoPedido.Trim().ToLower()) {
+                $partes.Add('esforco: BATE.')
+            } else {
+                $partes.Add('esforco: NAO BATE. A sessao esta em ' + $esforcoDaSessao + ' e o ponteiro pede ' + $esforcoPedido + '.')
+                $partes.Add('Esforco MAIOR tambem esta errado: e token a mais cobrado em todo turno, nao margem de seguranca.')
+            }
+        }
+    }
 
     foreach ($par in @(@('chat', 'chat'), @('titulo', 'titulo'), @('forma', 'forma'), @('maquina', 'maquina'), @('plan-mode', 'plan mode'), @('persona', 'persona'), @('objetivo', 'objetivo'))) {
         $valor = Campo $par[0]
