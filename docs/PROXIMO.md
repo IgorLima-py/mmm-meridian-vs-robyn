@@ -4,47 +4,46 @@ Ponteiro de UMA fatia. A fila inteira está em `docs/ROADMAP.md` — este arquiv
 é só o topo dela, resolvido agora. Lido pelo hook `SessionStart` e pelo `/oi`;
 avançado pelo `/tchau` só depois que o `verificar:` abaixo estiver satisfeito.
 
-chat: C5
-titulo: README público e passe de reprodutibilidade
-perfil: escrita pública + verificação mecânica em clone limpo
+chat: C6
+titulo: Auditoria adversarial até o veredito SHIP
+perfil: leitura adversarial da peça inteira + correção do que ela reprovar
 modelo: opus
-esforco: high
+esforco: max
 forma: sessao
 maquina: any
 plan-mode: nao
-objetivo: Reescrever o README para o leitor externo — a pergunta, a resposta condicional, os limites e como re-rodar — e provar num clone limpo que os quatro comandos rodam do zero numa máquina sem os ambientes de modelo. É o que transforma "confie em mim" em "rode você mesmo".
+objetivo: Rodar o `publication-auditor` contra a peça terminada — artigo, README, figuras e resultados — e agir em cada achado até o veredito ser SHIP. É o último portão antes de publicar, e o trabalho dele é achar o que todas as passadas anteriores deixaram passar.
 
 ## Contexto mínimo para abrir
 
-- **C4 fechou.** `article/meridian-vs-robyn.md` (1.299 palavras) passou por três
-  rodadas do `publication-auditor` e está em `VERDICT: SHIP`. **Não reabra o
-  artigo** sem motivo forte: cada frase dele carrega uma ressalva que a
-  auditoria exigiu, e há **1 palavra de folga** até o teto de 1300 — qualquer
-  acréscimo estoura o `verificar:` do C4.
-- **O README atual tem 8 linhas** e diz "work in progress — not yet released".
-  Ele é o arquivo a reescrever. O `docs/ROADMAP.md` abaixo do `<!-- HEADER-END -->`
-  traz a definition of done completa do C5.
-- **O que o README precisa carregar, e nada disso é opcional:** a pergunta, a
-  resposta condicional (sem vencedor), a tabela de versões pinadas **incluindo
-  a esquisitice do `tfp-nightly`**, e o limite honesto de reprodutibilidade —
-  **o lado R não é pinado** (`install.packages("Robyn")` sem versão,
-  `nevergrad.lock.txt` é escrito e não lido). Isso está dito em
-  `envs/ENVIRONMENT.md` na seção "Where 'pinned' stops being true" e é item 7
-  do `docs/BACKLOG.md`. Repetir no README, não esconder.
-- **O passe de reprodutibilidade é mecânico, não retórico.** Clone em
-  diretório vazio, `pip install -r envs/analysis.lock.txt`, e os quatro
-  comandos do `verificar:` com exit 0 — sem WSL2, sem R, sem GPU. Só a camada
-  de análise (Python puro) precisa rodar.
-- **Atenção ao primeiro comando:** `python -m simulation.generate` reescreve
-  `data/sim/`, que **já está commitado**. Se o clone limpo gerar bytes
-  diferentes dos commitados, isso não é ruído — é falha do check C6
-  (determinismo) e vira achado, não conserto silencioso.
-- **`analysis/out/diagnostics.md` é novo** (fechou no C4) e é fonte citada pelo
-  artigo. É gerado por `python analysis/oracle.py --diagnostics` e está
-  des-ignorado por negação explícita no `.gitignore`.
-- **Última etapa do C5 é o teste do público sobre o histórico inteiro:** nenhum
-  hostname, nenhum caminho local absoluto, nenhum dado real, nenhuma frase
-  proibida, em nenhum commit. O repo nasceu privado mas vai a público **com o
-  histórico**.
+- **C5 fechou.** O `README.md` agora tem ~215 linhas e é a porta de entrada
+  pública: pergunta, resposta condicional sem vencedor, duas tabelas de número
+  com legenda de proveniência, fig1 embutida, duas camadas de reprodução,
+  tabela de versões com o risco do `tfp-nightly`, e o limite do lado R. O
+  artigo (`article/meridian-vs-robyn.md`, 1.299 palavras) **não foi tocado** —
+  ele já está em `VERDICT: SHIP` e tem 1 palavra de folga até o teto do C4.
+- **A auditoria agora tem uma superfície maior do que no C4.** Ela precisa
+  cobrir o README também, e o README repete números do artigo: os agregados por
+  braço, a tabela de recuperabilidade por canal e os tempos de run. Todo número
+  repetido é uma chance nova de divergir de `analysis/out/summary.md`.
+- **Como rodar o auditor, pelo que o C4 aprendeu:** a forma ampla (mandar ele
+  auditar tudo de uma vez) **estoura o limite de turnos** e volta sem veredito
+  — aconteceu no C3 e no C4. O que funciona é **rodada estreita**: um alvo por
+  chamada (o artigo; depois o README; depois as figuras/legendas), 7-17
+  chamadas cada, cada uma voltando com veredito próprio.
+- **Ele indicia, não conserta.** Cada BLOCK vira correção feita à mão aqui, ou
+  vira ressalva explícita na seção de limitações com o motivo de não ter sido
+  corrigida. As duas saídas são aceitáveis; ignorar não é.
+- **A saída da auditoria é commitada** sob `analysis/` — é isso que mostra ao
+  leitor que a peça foi revisada adversarialmente e contra o quê.
+- **Duas decisões abertas que o Igor precisa fechar, e o auditor vai bater
+  nelas:** (1) **não existe `LICENSE`** — repo público sem licença é repo que
+  ninguém pode reusar legalmente; (2) o README não diz mais "work in progress",
+  então publicar passa a ser uma decisão de data, não de estado.
+- **Item opcional herdado do C5, não bloqueante:** o gerador escreve CRLF no
+  Windows enquanto o git guarda LF, então `git status` acusa os CSVs como
+  modificados depois de re-gerar. O conteúdo é idêntico e o README documenta
+  isso honestamente. Fazer o gerador escrever LF explícito eliminaria a
+  ressalva — é meia hora e não pertence ao C6.
 
-**verificar:** um clone em diretório vazio roda `python -m simulation.generate`, `python -m simulation.checks`, `python analysis/oracle.py` e `python analysis/scoring.py` com exit 0 usando só as instruções do README, numa máquina sem os ambientes de modelo.
+**verificar:** a saída do `publication-auditor` está commitada sob `analysis/` e sua última linha lê `VERDICT: SHIP`.

@@ -1,6 +1,92 @@
 # Status
 
-_Atualizado: 2026-09-10 (sessão C4 — Karen, desktop GPU — C4 fechado)_
+_Atualizado: 2026-09-10 (sessão C5 — Karen, desktop GPU — C5 fechado)_
+
+## Sessão C5 (10/09) — README público e o passe de reprodutibilidade
+
+Karen (RTX 4070 Super), mas **nada aqui precisou de GPU, WSL2 ou R** — de
+propósito: a fatia inteira existe para provar que a camada de análise não
+precisa deles. Roda igual no Dell.
+
+### O que foi feito
+
+**`README.md`, 8 → ~215 linhas.** Reescrito para quem chega de fora: a
+pergunta, a resposta condicional (sem vencedor, com a tabela de agregados por
+braço e a de recuperabilidade por canal, cada uma com legenda dizendo que o
+dado é simulado e apontando o artefato de onde veio), `fig1` embutida, duas
+camadas de reprodução, tabela de versões completa com **o pino `tfp-nightly` e
+o risco dele escrito por extenso** (nightly pode ser yanked; se sumir, o
+`setup_meridian.sh` para de reproduzir o ambiente destes resultados), a seção
+"where 'pinned' stops being true" sobre o lado R repetida de
+`envs/ENVIRONMENT.md`, o mapa do repo e um "Scope, honestly" final. O artigo
+**não foi tocado** — continua nas 1.299 palavras com `VERDICT: SHIP` do C4.
+
+**O passe do clone limpo foi executado, não afirmado.** Clone em diretório
+vazio dentro do scratchpad, venv criado do zero contendo só
+`envs/analysis.lock.txt`, Meridian e R fora do caminho. Os quatro comandos do
+`verificar:` mais `figures.py` e `oracle.py --diagnostics`: **todos exit 0, 13 s
+no total**. Mais forte que o pedido: **todo artefato rastreado voltou idêntico**
+— os 20 arquivos de `data/sim/`, os 20 JSONs de `runs/oracle/results/`,
+`summary.md`, `diagnostics.md` e os três PNGs (esses byte a byte, inclusive).
+O check C6 de determinismo, portanto, se sustenta num ambiente que nunca viu
+este repo.
+
+**Varredura do histórico inteiro (19 commits, `git log -p --all`).** Zero
+hostname (o hostname desta máquina não aparece em lugar nenhum), zero caminho
+local absoluto (`C:\Users`, `/mnt/c/Users`, `/home/*`), zero segredo, zero IP.
+A frase proibida aparece 4 vezes e **todas as quatro são a própria regra que a
+proíbe** (BRIEF.md, CLAUDE.md, "does not claim…"). Único dado pessoal é o
+e-mail de autor dos commits, que é o do Igor e é o normal num repo público sob
+o nome dele.
+
+### Duas coisas que o passe revelou e viraram correção
+
+1. **`tzdata` não estava pinado.** É dependência transitiva do pandas no
+   Windows, e um `requirements.txt` simples deixa o pip resolvê-la sozinho —
+   buraco num arquivo cuja função é fechar buracos. Pinado em
+   `envs/analysis.lock.txt` (`tzdata==2026.3`) com o porquê no cabeçalho, e o
+   passe foi **re-rodado do zero com o lock corrigido**: o `pip list` do venv
+   novo bate exatamente com o lock, e os seis comandos deram exit 0 de novo.
+2. **CRLF vs LF.** O gerador escreve CRLF no Windows enquanto o git guarda os
+   arquivos com LF (`.gitattributes`), então `git status` acusa os 20 CSVs/JSONs
+   como modificados depois de re-gerar. **O conteúdo é idêntico** —
+   `git diff --ignore-cr-at-eol --quiet` retorna 0. Isso está documentado no
+   README como a forma honesta da promessa de determinismo, em vez de escondido.
+   **Dá para eliminar** fazendo o gerador escrever LF explícito
+   (`to_csv(..., lineterminator="\n")` e afins); não foi feito por ser fora do
+   escopo do C5.
+
+### O que quase passou batido
+
+O README chegou a afirmar que `analysis/out/diagnostics.md` "voltou idêntico"
+depois do passe — **afirmação vazia**, porque `analysis/oracle.py` só escreve
+esse arquivo com a flag `--diagnostics` (sem ela o `main()` faz `return` antes
+de gerar), e a sequência documentada não a tinha. Corrigido nos dois lados: o
+comando entrou na sequência do README com a explicação de que `--diagnostics`
+**substitui** o ajuste em vez de somar a ele, e a verificação foi refeita
+apagando `diagnostics.md` no clone e regerando — volta idêntico.
+
+### Correções de comando na camada 2 do README
+
+`runs/meridian/run_meridian.py` exige `--arm` e `--seeds` (a primeira versão do
+README passava seeds soltos, que não roda). O braço geo precisa de
+`--n-adapt 2000 --n-burnin 2000` para bater com o spec dos extratos commitados.
+Robyn ficou em dois comandos, 4000×5 para as seeds 101-104 e 2000×5 para a 105,
+que é o spec misto real — está dito no README, não escondido.
+
+### Nada ficou pela metade, e nada está preso a esta máquina
+
+O clone de teste vive no scratchpad da sessão e é descartável. Nenhum run
+pesado foi iniciado.
+
+### Duas decisões que são do Igor e o C6 vai cobrar
+
+- **Não existe `LICENSE`.** Repo público sem licença é repo que ninguém pode
+  reusar legalmente. A escolha é dele.
+- **O README não diz mais "work in progress".** O texto está terminado, então
+  publicar virou decisão de data, não de estado — mas a auditoria do C6 ainda
+  não passou sobre ele.
+
 
 ## Sessão C4 (10/09) — Fase 6: o artigo, e o que três auditorias forçaram
 

@@ -13,6 +13,10 @@
 #     from whatever it resolved rather than installing from it. Both files
 #     record what a run used; neither reproduces it. The run JSONs carry the
 #     resolved version (Robyn 3.12.1). See envs/ENVIRONMENT.md.
+#
+# tzdata is a transitive pandas dependency on Windows. It is pinned here
+# explicitly because a plain requirements file otherwise lets pip resolve it
+# freely, which is a hole in a file whose whole job is to close them.
 contourpy==1.3.3
 cycler==0.12.1
 fonttools==4.64.0
@@ -25,3 +29,4 @@ pillow==12.3.0
 pyparsing==3.3.2
 python-dateutil==2.9.0.post0
 six==1.17.0
+tzdata==2026.3

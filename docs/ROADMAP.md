@@ -7,8 +7,8 @@
 | C2 | done | any | sonnet | medium | Per-channel recoverability gate in the simulator checks |
 | C3 | done | any | opus | high | Phase 5: score every extract and build the three charts |
 | C4 | done | any | opus | max | Phase 6: the ~1,000-word article |
-| C5 | next | any | opus | high | Public README and a fresh-clone reproducibility pass |
-| C6 | blocked | any | opus | max | Adversarial audit until the verdict is SHIP |
+| C5 | done | any | opus | high | Public README and a fresh-clone reproducibility pass |
+| C6 | next | any | opus | max | Adversarial audit until the verdict is SHIP |
 | C7 | blocked | any | opus | high | Post-publication: PyMC-Marketing as an independent third estimator |
 
 <!-- HEADER-END -->
@@ -194,6 +194,18 @@ costs the whole piece and cannot be patched after publication.
 ---
 
 ## C5 — Public README and reproducibility
+
+**Done 2026-09-10.** `README.md` rewritten for the external reader (8 -> ~215
+lines): question, conditional answer with both tables sourced to
+`analysis/out/summary.md` and `diagnostics.md`, fig1 inline, two reproduction
+layers, the full version table with the `tfp-nightly` risk spelled out, and the
+"where pinned stops being true" limit repeated from `envs/ENVIRONMENT.md`. The
+fresh-clone pass was **executed**, twice (before and after the lock fix): clone
+into an empty directory, venv built from scratch from `envs/analysis.lock.txt`
+alone, six commands exit 0 in under 15 s, and every tracked artifact came back
+identical to the committed copy — the three PNGs byte-for-byte. History scan
+over all 19 commits: no hostname, no absolute local path, no secret, and the
+forbidden phrase appears only as the rule forbidding it.
 
 **Objective.** Rewrite the README for a public audience and prove a fresh clone
 reproduces the analysis.
