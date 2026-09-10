@@ -259,7 +259,8 @@ def run_rung(world, rung, gt):
     }
 
 
-def diagnostics(seeds, data_root):
+def diagnostics(seeds, data_root,
+                out_path="analysis/out/diagnostics.md"):
     """Every scenario number ORACLE.md quotes, derived here rather than by hand.
 
     Four blocks: the noiseless-recovery check that validates the harness, the
@@ -303,23 +304,73 @@ def diagnostics(seeds, data_root):
         dem = M3 - M3.mean(axis=2, keepdims=True)
         dem_c.append(np.corrcoef(dem.reshape(len(channels), -1))[iu])
 
-    print("== harness check: noiseless geo recovery ==")
-    print(f"  max |beta rel err| over {len(seeds)} seed(s): "
-          f"{max(noiseless):.2e}  (machine precision => harness sound)\n")
-
-    print("== per-channel visibility (mean over seeds) ==")
     v = (pd.DataFrame(vis).groupby("channel").mean(numeric_only=True)
          .sort_values("signal_to_noise", ascending=False))
-    print(v.round(4).to_string(), "\n")
-
     pairs = [f"{channels[i]}-{channels[j]}"
              for i, j in zip(*np.triu_indices(len(channels), 1))]
+
+    out = [
+        "# Scenario diagnostics",
+        "",
+        "Written by `python analysis/oracle.py --diagnostics`. These are the",
+        "scenario numbers `analysis/ORACLE.md`, `analysis/FIGURES.md` and the",
+        "article quote that the scoring harness does **not** produce -- so they",
+        "need a committed artifact of their own instead of living only in this",
+        "command's stdout.",
+        "",
+        f"Seeds: {', '.join(str(x) for x in seeds)}. Generator configuration:",
+        "`simulation/config.py`.",
+        "",
+        "## Harness check -- noiseless geo recovery",
+        "",
+        "Fitting L1's design to `y = M @ beta_true`, with no noise term, must",
+        "return the true betas.",
+        "",
+        f"    max |beta rel err| over {len(seeds)} seed(s): {max(noiseless):.2e}",
+        "",
+        "That is machine precision, so the generator, the ground truth, the",
+        "results schema and the scorer agree with each other. Whatever the",
+        "tools' error is, it is not an artifact of this pipeline.",
+        "",
+        "## Per-channel visibility (mean over seeds)",
+        "",
+        "`signal_to_noise` is the standard deviation of the channel's true",
+        "national contribution over the standard deviation of national revenue",
+        "noise, computed on the national-aggregate regressor the national oracle",
+        "actually sees. `simulation.checks.channel_snr` -- the C7 gate -- applies",
+        "the same definition to the geo-level contribution summed to national and",
+        "lands within 0.02 of it on every channel.",
+        "",
+        "```",
+        v.round(4).to_string(),
+        "```",
+        "",
+    ]
+
     for label, arr in (("raw geo", raw_c), ("time-demeaned", dem_c)):
         m = np.array(arr).mean(axis=0)
         lo, hi = pairs[int(m.argmin())], pairs[int(m.argmax())]
-        print(f"== cross-channel correlation, {label} (pair means over seeds) ==")
-        print(f"  range {m.min():.3f} ({lo}) .. {m.max():.3f} ({hi})")
-        print("  " + "  ".join(f"{p}={x:.3f}" for p, x in zip(pairs, m)) + "\n")
+        out += [
+            f"## Cross-channel correlation, {label} (pair means over seeds)",
+            "",
+            f"    range {m.min():.3f} ({lo}) .. {m.max():.3f} ({hi})",
+            "    " + "  ".join(f"{p}={x:.3f}" for p, x in zip(pairs, m)),
+            "",
+        ]
+
+    out += [
+        "The raw geo correlations are inflated by the population factor every",
+        "geo-level regressor carries; the time-demeaned view removes it, and is",
+        "the one to read for cross-channel collinearity.",
+        "",
+    ]
+
+    text = "\n".join(out)
+    print(text)
+    dest = Path(out_path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(text, encoding="utf-8")
+    print(f"wrote {dest}")
 
 
 def main():

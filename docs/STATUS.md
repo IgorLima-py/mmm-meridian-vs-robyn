@@ -1,6 +1,108 @@
 # Status
 
-_Atualizado: 2026-09-09 (sessão C3 — Karen, desktop GPU — C3 fechado)_
+_Atualizado: 2026-09-10 (sessão C4 — Karen, desktop GPU — C4 fechado)_
+
+## Sessão C4 (10/09) — Fase 6: o artigo, e o que três auditorias forçaram
+
+Karen (RTX 4070 Super), mas **nada aqui precisou de GPU, WSL2 ou R** — C4 é
+escrita sobre arquivos commitados e roda no Dell igual.
+
+**O que foi feito.** `article/meridian-vs-robyn.md` (novo), **1.299 palavras**,
+`VERDICT: SHIP` do `publication-auditor`. Estrutura: setup → o empate que não é
+o resultado → recuperabilidade por canal → ler a tabela de erro da própria
+ferramenta inverte a resposta → intervalos → guia de decisão condicional →
+"What neither tool can tell you" → reprodução. Os cinco itens do `verificar:`
+do C4 foram conferidos um a um e passam.
+
+**Efeito colateral que virou correção de raiz.** A coluna signal/noise do
+artigo (tv 1.91 … display 0.10) só existia no **stdout** de `oracle.py
+--diagnostics` — não em `summary.md` nem em JSON. Isso reprovaria o "todo
+número traça para artefato commitado". `analysis/oracle.py` agora **escreve**
+`analysis/out/diagnostics.md` (negação explícita no `.gitignore`), e o
+`analysis/ORACLE.md` ganhou um parágrafo dizendo qual documento é fonte de quê
+— fecha também a observação não-bloqueante da primeira auditoria desta sessão.
+
+**Gates:** os três passaram e **nada se moveu** — `analysis/out/summary.md` e
+os 20 JSONs de `runs/oracle/results/` saíram byte-idênticos aos commitados,
+confirmado por `git status` limpo nesses caminhos depois de re-rodar. Figuras
+**não** foram redesenhadas, de propósito: nenhum valor plotado mudou.
+
+### A auditoria reprovou duas vezes. As 13 correções eram todas reais.
+
+Três rodadas estreitas (15, 17 e 7 chamadas — todas com veredito; a forma ampla
+continua estourando o limite de turnos, como no C3). A primeira, sobre o estado
+**commitado** do C3, deu SHIP com zero mismatches — a pendência que o C3 deixou
+está encerrada. As duas seguintes, sobre o artigo, deram BLOCK. O que importa
+para quem continuar:
+
+- **O número mais citável do artigo estava inflado, e a favor da nossa tese.**
+  O guia comparava "Meridian 432s × Robyn 1017s". A média do Robyn é dominada
+  por **quatro runs escalados a 4000×5**; o único seed na spec pré-registrada
+  (105) rodou **566,4s**. Na spec pré-registrada a diferença é 1,3×, não 2,4×.
+  Pior: a ressalva de spec mista dizia "every Robyn number **above**" e o bullet
+  de runtime ficava **abaixo** dela — a ressalva estava onde o número não
+  estava. Regra que sai daí: **ressalva com escopo posicional ("acima",
+  "a seguir") é ressalva que vaza.** Trocado por "here".
+- **Eu quebrei o guardrail que o próprio artigo enuncia.** O texto manda ler
+  ooh e display como empatados em "não recuperável", nunca ordenados — e sete
+  linhas depois chamava ooh de "the least recoverable channel here", ordem que
+  a **própria tabela do artigo** contradiz (display 0.10 abaixo de ooh 0.11).
+- **"Upper bound" sobre um erro lê ao contrário.** Eu escrevia que o spend
+  exógeno faz de cada número "an upper bound" — sobre um *erro*, isso diz que
+  dado real erraria menos, o oposto do pretendido. Virou "flatters both tools".
+- **Uma afirmação contradizia o corpo do próprio artigo:** o bullet de
+  limitações dizia que *as duas* ferramentas parecem melhores nos canais não
+  mensuráveis. Falso para o braço **national** do Meridian, cujo melhor canal é
+  tv (0.336), o mais recuperável — lá há achatamento, não inversão. O
+  `ORACLE.md` já dizia isso; eu não segui. Escopo corrigido para Robyn + geo do
+  Meridian.
+- **Erros meus pegos antes da auditoria, na conferência contra `summary.md`:**
+  eu havia escrito que as cinco células menores que o `ooh 0.161` eram "todas
+  em tv" (são quatro em tv e uma em search) e que o braço geo do Meridian
+  **não** tinha batido o national (bateu: 0.499 × 0.533 — o que muda o
+  argumento e agora aparece qualificado pelos dois seeds e pelo não-convergido).
+- Menores, todos corrigidos: `8.69pp` sem dizer de qual rung (é o L3), o
+  `ooh 0.161` sem a ressalva dos dois seeds **inline**, um número de run
+  não-convergido dentro de uma **recomendação**, e `analysis/ORACLE.md`
+  ausente da lista de fontes.
+
+### O que foi tentado e falhou — não repita
+
+- **Heredoc `<<'PYEOF'` com `
+` dentro de string Python falhou de novo**,
+  mesmo com o delimitador entre aspas. O bloco grande não casou e o `assert`
+  abortou (corretamente, sem gravar nada). **O que funcionou:** editar por
+  **intervalo de linhas**, localizando início e fim por âncora e imprimindo as
+  linhas encontradas antes de substituir; e construir o backslash-n com
+  `chr(92) + "n"` quando ele precisa aparecer no código gerado. Isso refina a
+  fricção já registrada no C3 — o problema não é só a expansão do heredoc.
+- **Cortar palavras por passadas incrementais é desperdício.** Foram **sete**
+  passadas para tirar ~560 palavras (1858 → 1299), e as passadas de aperto de
+  frase rendiam 5 a 20 palavras cada. O que rendeu de verdade foi cortar
+  **conteúdo**: transformar a tabela de bandas em prosa, encolher a seção de
+  reprodução, remover repetição entre título de seção e primeiro parágrafo.
+  Da próxima vez: medir primeiro, decidir o que **sai**, e só então redigir.
+- **Reenviar o artigo ao Igor a cada revisão não foi feito de propósito** — só
+  duas entregas, o primeiro rascunho e o final. Cada correção intermediária
+  teria sido ruído.
+
+### Pendências que o C5 herda
+
+- **O SHIP era condicional a `analysis/out/diagnostics.md` entrar no mesmo
+  commit que o artigo** — senão a frase "traces to a committed artifact" fica
+  falsa. Este commit resolve; se alguém reverter o `.gitignore`, a frase volta
+  a ser mentira.
+- **O artigo tem 1 palavra de folga** até o teto de 1300 do `verificar:` do C4.
+  Qualquer acréscimo estoura. Se precisar acrescentar, corte antes.
+- **Os literais de legenda em `figures.py` continuam à mão** (lista exaustiva
+  em `analysis/FIGURES.md`). Nada mudou aqui, mas o risco segue.
+- **O lado R continua não pinado** — e agora é obrigação do README do C5 dizer
+  isso, não só do `envs/ENVIRONMENT.md`.
+- O `docs/BACKLOG.md` não foi tocado nesta sessão.
+
+**Nada preso a esta máquina.** C5 é escrita mais um clone limpo com Python
+puro — roda no Dell sem admin.
+
 
 ## Sessão C3 (09/09) — Fase 5: scoring, os três gráficos, e oito rodadas de auditoria
 

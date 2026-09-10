@@ -1,12 +1,20 @@
 # The oracle check — is the truth recoverable at all?
 
-Every number on this page is regenerable from committed code:
+Every number on this page is regenerable from committed code, and lands in a
+committed artifact rather than only in a terminal:
 
 ```
 python analysis/oracle.py                              # fits the four rungs
-python analysis/oracle.py --diagnostics                # the scenario numbers
+python analysis/oracle.py --diagnostics                # -> analysis/out/diagnostics.md
 python analysis/scoring.py --results runs --data data/sim --out analysis/out
 ```
+
+Scored metrics — every ROI error, coverage and interval width below — come from
+`analysis/out/summary.md`. The scenario numbers the harness does *not* produce
+(the noiseless-recovery check, the per-channel signal-to-noise and regressor CV
+columns, and the two cross-channel correlation views) come from
+`analysis/out/diagnostics.md`. Both are committed, so every figure on this page
+can be checked against a file rather than re-derived by the reader.
 
 Results below are from 2026-09-09, all 5 seeds, generator 1.0.0, scored by the
 same pre-registered harness as the tools. The Robyn columns are the final

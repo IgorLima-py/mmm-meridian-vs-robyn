@@ -27,6 +27,7 @@ outputs/
 analysis/out/*
 !analysis/out/summary.md
 !analysis/out/summary.csv
+!analysis/out/diagnostics.md
 
 # Editores / SO
 .vscode/
