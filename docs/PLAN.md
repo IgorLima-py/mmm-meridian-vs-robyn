@@ -219,12 +219,24 @@ regression, so it gets a paragraph in the article, not a phase (see `BACKLOG.md`
 - [ ] Same exports + `runs/robyn/DECISIONS.md`. **Gate:** converged runs (or
       documented non-convergence) for all 5 seeds.
 
-### Phase 5 — Scoring & comparison (est. 2 h)
-- [ ] Run the pre-registered harness over both tools' extracts → metrics tables.
-- [ ] Charts: (1) estimated vs true ROI per channel per tool (the money chart);
+### Phase 5 — Scoring & comparison (est. 2 h) — DONE 2026-09-09
+- [x] Run the pre-registered harness over both tools' extracts → metrics tables.
+      `analysis/scoring.py` over all seven tool-arms (both tools plus the four
+      oracle rungs) → `analysis/out/metrics_long.csv` and the committed
+      `analysis/out/summary.md`.
+- [x] Charts: (1) estimated vs true ROI per channel per tool (the money chart);
       (2) response curves est vs truth; (3) coverage/spread visualization.
+      `analysis/figures.py` → the three PNGs in `analysis/figures/`. The oracle
+      is a third series in charts 1 and 2 — without it chart 1 is a tie
+      (0.533 vs 0.555 mean absolute ROI error) rather than a result. Every
+      design choice is recorded in `analysis/FIGURES.md`.
 - [ ] Optional if time: one sensitivity mini-arm (Meridian ROI-prior tweak OR
-      Robyn bounds widened) — pick ONE.
+      Robyn bounds widened) — pick ONE. **Not done, and not planned for v1.**
+      The oracle answers the question the mini-arm was there to answer — is the
+      miss the tool's or the data's — with five seeds behind it instead of one
+      arm. Re-running either tool with different settings after seeing the
+      results is also the move this project's pre-registration exists to avoid.
+      It stays in `docs/BACKLOG.md` for v2, where it would be pre-registered.
 
 ### Phase 6 — Writing (est. 2–3 h)
 - [ ] `article/` ~1,000 words: setup, results (conditional verdict — who was

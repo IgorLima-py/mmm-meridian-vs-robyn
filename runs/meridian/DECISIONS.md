@@ -49,3 +49,17 @@ timestamps rather than silently edited into the table.
   media-parameter non-convergence. No further escalation after this — three
   documented attempts is the honest budget; whatever status results is
   published as-is.
+
+- **2026-09-09 (divergence counts for the runs that actually shipped).** The
+  amendments above report divergence counts for the *superseded* geo attempts
+  (500/500 and 1000/1000) and never for the 2000/2000 runs that were exported
+  and scored. Recording them now, read straight from the committed extracts'
+  `run.convergence_detail.n_divergences` — no re-run, no change to any number:
+  **geo seed101 = 64 divergences** (max R-hat 1.118, not converged) and **geo
+  seed102 = 122 divergences** (max R-hat 1.024, counted as converged by the
+  pre-registered 1.1 gate). The national arm, at the pre-registered 500/500,
+  runs 1 to 6 divergences per seed. seed102 therefore passes the gate this
+  project pre-registered while carrying a divergence count an order of
+  magnitude above the national runs; it is published as-is per those gates,
+  with the count disclosed rather than the gate revised after the fact.
+  Raised by the pre-publication audit, not by a re-run.

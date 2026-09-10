@@ -5,8 +5,8 @@
 | C0 | done | any | opus | high | Claude Code infrastructure, this roadmap, and the two session commands |
 | C1 | done | karen | sonnet | medium | Robyn 4000x5 for seeds 102-104, so all five extracts share one spec |
 | C2 | done | any | sonnet | medium | Per-channel recoverability gate in the simulator checks |
-| C3 | next | any | opus | high | Phase 5: score every extract and build the three charts |
-| C4 | blocked | any | opus | max | Phase 6: the ~1,000-word article |
+| C3 | done | any | opus | high | Phase 5: score every extract and build the three charts |
+| C4 | next | any | opus | max | Phase 6: the ~1,000-word article |
 | C5 | blocked | any | opus | high | Public README and a fresh-clone reproducibility pass |
 | C6 | blocked | any | opus | max | Adversarial audit until the verdict is SHIP |
 | C7 | blocked | any | opus | high | Post-publication: PyMC-Marketing as an independent third estimator |

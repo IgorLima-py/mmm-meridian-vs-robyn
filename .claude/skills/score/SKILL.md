@@ -1,7 +1,7 @@
 ---
-description: Runs this repo's three gates in the required order — simulation.checks, then the oracle ladder, then the scoring harness — stopping at the first failure and saying what that specific failure means. Use whenever results need regenerating, after any tool run is exported, or before quoting a number.
+description: Runs this repo's three gates in the required order — simulation.checks, then the oracle ladder, then the scoring harness — stopping at the first failure and saying what that specific failure means, and optionally redrawing the three figures. Use whenever results need regenerating, after any tool run is exported, or before quoting a number.
 argument-hint: "[--selftest]"
-allowed-tools: Bash(python -m simulation.checks *), Bash(python analysis/oracle.py *), Bash(python analysis/scoring.py *), Read
+allowed-tools: Bash(python -m simulation.checks *), Bash(python analysis/oracle.py *), Bash(python analysis/scoring.py *), Bash(python analysis/figures.py *), Read
 disable-model-invocation: false
 ---
 
@@ -51,6 +51,19 @@ scorer can tell an honest stub from a spend-share-biased one and prints
 number it has ever produced is suspect.
 
 Arguments passed to this command: $ARGUMENTS
+
+## 4. The figures (only if a number moved)
+
+```
+python analysis/figures.py
+```
+
+Re-runs step 3 internally and redraws the three PNGs in `analysis/figures/`.
+Run it whenever `analysis/out/summary.md` changed — a committed chart that
+disagrees with the committed summary is the kind of contradiction the
+`publication-auditor` exists to catch. Skip it when the gates only confirmed
+that nothing moved. Needs matplotlib (`envs/analysis.lock.txt`); the three
+gates above do not. `analysis/FIGURES.md` records what each chart shows.
 
 ## Then report
 

@@ -1,0 +1,27 @@
+# Analysis layer — simulation/, analysis/ (scoring, oracle, figures).
+# Plain CPython on the host, NO WSL2 and no admin rights: this is the layer
+# that has to run on either machine (CLAUDE.md, "Duas máquinas").
+#
+# Python 3.14.3 (Windows, CPython). Reproduce with:
+#     python -m pip install -r envs/analysis.lock.txt
+#
+# The heavy tool environments are separate and live in WSL2. They are NOT
+# pinned to the same standard, and the difference matters:
+#   envs/meridian.lock.txt  — a real pin: Meridian 1.8.0 and its whole tree.
+#   envs/setup_robyn.sh     — NOT a pin. It runs install.packages("Robyn")
+#     against CRAN with no version, and it *writes* envs/nevergrad.lock.txt
+#     from whatever it resolved rather than installing from it. Both files
+#     record what a run used; neither reproduces it. The run JSONs carry the
+#     resolved version (Robyn 3.12.1). See envs/ENVIRONMENT.md.
+contourpy==1.3.3
+cycler==0.12.1
+fonttools==4.64.0
+kiwisolver==1.5.1
+matplotlib==3.11.1
+numpy==2.4.3
+packaging==26.0
+pandas==3.0.1
+pillow==12.3.0
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+six==1.17.0

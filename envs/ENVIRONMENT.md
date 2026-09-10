@@ -10,6 +10,36 @@ bash envs/setup_meridian.sh
 bash envs/setup_robyn.sh
 ```
 
+## Analysis layer (no WSL2, no admin)
+
+`simulation/`, `analysis/scoring.py`, `analysis/oracle.py` and
+`analysis/figures.py` run on plain host CPython — that is deliberate, because
+these are the steps that have to work on the laptop without admin rights as
+well as on the GPU desktop. Nothing here needs WSL2, R, or a GPU.
+
+```
+python -m pip install -r envs/analysis.lock.txt
+python -m simulation.checks
+python analysis/oracle.py
+python analysis/figures.py       # re-scores, then redraws analysis/figures/
+```
+
+Pinned in `envs/analysis.lock.txt`: Python 3.14.3, numpy 2.4.3, pandas 3.0.1,
+matplotlib 3.11.1. matplotlib is needed only by `analysis/figures.py`; the
+three gates run without it.
+
+**Where "pinned" stops being true.** The Python side is genuinely pinned —
+`analysis.lock.txt` and `meridian.lock.txt` are inputs you install *from*. The
+R side is not: `envs/setup_robyn.sh` calls `install.packages("Robyn")` against
+CRAN with no version, and it *writes* `envs/nevergrad.lock.txt` from whatever
+pip resolved instead of installing from it. Those two files **record** an
+environment; they do not reproduce one. A fresh setup today would pick up
+whatever CRAN currently serves, which is not necessarily the Robyn 3.12.1 the
+committed run JSONs were produced with. Closing that gap (`remotes::
+install_version("Robyn", "3.12.1")`, and installing nevergrad from the lock)
+is tracked in `docs/BACKLOG.md`; until then this is a stated limit of the
+reproducibility claim, not a silent one.
+
 ## Host
 
 | Component | Version / value |

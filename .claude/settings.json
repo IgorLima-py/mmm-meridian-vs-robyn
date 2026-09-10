@@ -6,6 +6,7 @@
       "Bash(python -m simulation.generate *)",
       "Bash(python analysis/scoring.py *)",
       "Bash(python analysis/oracle.py *)",
+      "Bash(python analysis/figures.py *)",
       "Bash(git pull)"
     ],
     "ask": [

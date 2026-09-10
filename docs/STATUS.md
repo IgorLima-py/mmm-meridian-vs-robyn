@@ -1,6 +1,123 @@
 # Status
 
-_Atualizado: 2026-09-09 (sessão C2 — Karen, desktop GPU — C2 fechado)_
+_Atualizado: 2026-09-09 (sessão C3 — Karen, desktop GPU — C3 fechado)_
+
+## Sessão C3 (09/09) — Fase 5: scoring, os três gráficos, e oito rodadas de auditoria
+
+Karen (RTX 4070 Super), mas **nada aqui precisou de GPU, WSL2 ou R** — C3 é
+Python puro sobre arquivos commitados e roda no Dell igual.
+
+**O que foi feito.** `analysis/figures.py` (novo) desenha os três gráficos da
+Fase 5 em `analysis/figures/`; ele chama `scoring.run_scoring()` em vez de
+recalcular, e importa `simulation.checks.channel_snr` para ordenar os canais,
+de modo que gráfico e gate C7 não conseguem divergir. Para isso o cálculo do
+C7 virou função reutilizável em `simulation/checks.py` (saída idêntica,
+verificada). `analysis/FIGURES.md` (novo) registra as seis decisões de desenho
+(D-F1..D-F6). `docs/PLAN.md` Fase 5 fechada. `envs/analysis.lock.txt` (novo)
+pina a camada de análise — matplotlib era a dependência que faltava — e
+`envs/ENVIRONMENT.md` ganhou a seção correspondente.
+
+**Decisão de desenho que manda no resto:** a terceira série dos gráficos 1 e 2
+é o oráculo **L3** (estima o próprio baseline, como as duas ferramentas
+precisam fazer), não o L2. O `analysis/ORACLE.md` continua usando L2 na tabela
+por canal, porque lá a pergunta é de teto ("era recuperável por alguém?"). Os
+dois documentos agora explicam essa divisão em vez de se contradizerem.
+
+**O scorer mudou e o `summary.md` ficou mais informativo.** `analysis/scoring.py`
+agora imprime, por tool-arm: quantos seeds passaram no check de convergência da
+própria ferramenta, a **spec de run** (lida de `run.convergence_detail` — Robyn
+em iterations x trials, Meridian em adapt/burnin, com aviso explícito quando a
+spec é mista) e, por canal, o erro relativo **com sinal e absoluto** mais a
+coluna `effect share − spend share (pp)`. Nada disso altera M1–M5; o
+`rssd_pull` pré-registrado ficou intocado.
+
+### A auditoria reprovou oito vezes. Leia isto antes do C4.
+
+Rodei o `publication-auditor` oito vezes: BLOCK com 6, 2, 1, 2, (sem veredito),
+(sem veredito), 1 e 3 achados. **Todos os achados numéricos eram reais.** Os
+que importam para quem continuar:
+
+- **A coluna do Robyn no `ORACLE.md` estava desatualizada** desde a escalada do
+  C1: cobertura 0.20 → **0.16**, viés −0.506 → **−0.540**, |erro| 0.538 →
+  **0.555**, e todos os cinco erros por canal mudaram. A afirmação "search e tv
+  são os piores do Robyn" ficou falsa (são search e social).
+- **A história de convergência do Robyn estava errada por um seed.** O
+  `runs/robyn/DECISIONS.md` registra **quatro** seeds falhando a 2000×5; o
+  seed101 só convergiu depois da escalada. E os extratos commitados são **spec
+  mista** (101–104 a 4000×5, 105 a 2000×5) — coisa que não estava em lugar
+  nenhum e agora viaja nas três legendas e no `summary.md`.
+- **Assimetria de divulgação, e era contra nós.** As ressalvas do Robyn estavam
+  em todo lugar; as do Meridian, em lugar nenhum. O braço **geo** do Meridian
+  rodou a **2000/2000** (4x a spec pré-registrada, terceira tentativa) com
+  **64 e 122 divergências** contra 1–6 por run national, e o seed102 conta como
+  convergido carregando 122. O `runs/meridian/DECISIONS.md` registrava
+  divergências das tentativas **descartadas** e nunca das publicadas — corrigido
+  por emenda datada, lida dos extratos, sem re-run.
+- **A inversão aparece nas DUAS ferramentas.** O braço geo do Meridian inverte
+  por completo: ooh **0.161** é o canal mais preciso dele e o menor erro por
+  canal que qualquer uma das duas ferramentas alcança — em cima do canal menos
+  recuperável do cenário. As cinco células menores da tabela são todas do
+  oráculo e todas em tv. Isso muda o enquadramento do artigo e é o gancho mais
+  forte do C4.
+- **O dial de correlação tv–ooh nunca acertou o alvo.** Realizado 0.34, 0.37,
+  0.38, 0.38, 0.61 contra alvo pré-registrado de ~0.4–0.5: **zero de cinco**
+  dentro. O que segurou os dados foi o gate C2, mais largo, [0.30, 0.65].
+- **O mecanismo de encolhimento estava mal descrito.** "Cada ferramenta encolhe
+  para um valor característico" não descreve o Meridian: ele **comprime** para
+  a banda 0.74–1.24 (fator 1.7 contra 4.4 da verdade), com a mediana do prior
+  (1.22) no **teto** da banda, não no centro. O Robyn sim colapsa: banda
+  0.68–0.73, fator 1.08.
+
+### O que foi tentado e falhou — não repita
+
+- **Script de patch que faz vários `replace` e grava só no fim.** Uma asserção
+  falha no meio e **descarta as edições anteriores**, silenciosamente. Isso
+  aconteceu duas vezes e nas duas eu relatei correções que não existiam no
+  disco. Regra que sai daí: **um arquivo por script, e `grep` de verificação
+  depois de gravar** — nunca confiar no "ok" impresso.
+- **`replace()` sem asserção.** Um `s.replace(a, b)` que não casa imprime "ok" e
+  não faz nada. Toda substituição precisa de `assert a in s`.
+- **Heredoc do Bash com `
+` dentro de string Python:** o `
+` chega como
+  newline real e a busca nunca casa. Construir com `chr(92) + "n"`.
+- **Auditoria ampla estoura o limite de 40 turnos sem dar veredito** — aconteceu
+  duas vezes seguidas, ~200k tokens sem resultado. **Auditoria estreita** (três
+  arquivos, uma pergunta, orçamento de turnos declarado, "veredito parcial se
+  faltar turno") deu veredito em 15–25 chamadas. Usar só essa forma.
+- **`SendMessage` para subagente não existe neste build** — não dá para retomar
+  um auditor que estourou o limite; só relançar.
+- **Média entre seeds antes do módulo cancela sinal e lisonjeia.** Foi assim que
+  publiquei "0.4pp" onde o valor honesto por célula canal-seed é **0.54pp**.
+  Agregação sempre por célula, e a agregação usada tem de estar dita.
+
+### Pendências que o C4 herda
+
+- **Uma auditoria só teve veredito parcial.** O último BLOCK tinha 3 achados;
+  dois foram corrigidos e o terceiro era "os arquivos novos estão untracked",
+  que este commit resolve por construção. **Não houve rodada de auditoria sobre
+  o estado commitado** — vale rodar uma estreita no início do C4.
+- **A limitação do M5 está documentada, não corrigida.** O `rssd_pull` pontua o
+  Meridian (0.085) acima do Robyn (0.067) porque mede deslocamento sem teto: o
+  Meridian passa do spend share, o Robyn pousa em cima. A métrica ficou como
+  pré-registrada e a coluna nova `effect share − spend share` foi posta ao lado.
+- **Números na prosa das legendas são literais escritos à mão** em
+  `figures.py` (64, 122, 2000/2000, 4000x5, 92%, as razões da curva de tv, as
+  versões das ferramentas). Foram lidos dos JSONs commitados, mas **nada no
+  pipeline pega um literal obsoleto** se um run for re-exportado. Lista
+  exaustiva no `analysis/FIGURES.md`.
+- **O lado R não é pinado** (`install.packages("Robyn")` sem versão;
+  `nevergrad.lock.txt` é escrito pelo script, não lido). Dito em dois lugares e
+  virou item 7 do `docs/BACKLOG.md`.
+- **`docs/REASSESSMENT_2026-09-08.md` ganhou nota de snapshot** em vez de ser
+  reescrito: os números do Robyn nele estão superados, e a nota diz para onde ir.
+- O mini-arm de sensibilidade da Fase 5 foi **descartado da v1** de propósito
+  (o oráculo responde a mesma pergunta com cinco seeds, e re-rodar ferramenta
+  depois de ver resultado é o que a pré-registração existe para impedir). Item
+  6 do backlog, para a v2, pré-registrado.
+
+**Nada preso a esta máquina.** C4 é escrita e roda em qualquer PC.
+
 
 ## Sessão C2 (09/09) — gate de sinal/ruído por canal, C2 fechado
 

@@ -38,6 +38,24 @@ def _curve_value(curve, m):
                            curve["incremental_revenue"]))
 
 
+def _spec(detail):
+    """The run spec, in whichever vocabulary the tool records it.
+
+    Robyn reports iterations x trials; Meridian reports adapt/burnin draws.
+    Both are reported, because a spec that differs across seeds — or across
+    arms of the same tool — must never hide inside a mean, and disclosing one
+    tool's escalation but not the other's is the asymmetry this project exists
+    to avoid.
+    """
+    it, tr = detail.get("iterations"), detail.get("trials")
+    if it and tr:
+        return f"{it}x{tr} iterations x trials"
+    ad, bu = detail.get("n_adapt"), detail.get("n_burnin")
+    if ad and bu:
+        return f"{ad}/{bu} adapt/burnin"
+    return None
+
+
 def score_result(res, gt):
     """Rows of per-channel metrics for one result file."""
     rows = []
@@ -62,6 +80,11 @@ def score_result(res, gt):
             "true_roi": t["true_roi"],
             "converged": res.get("run", {}).get("converged"),
             "runtime_seconds": res.get("run", {}).get("runtime_seconds"),
+            # Robyn's committed extracts are not one spec (seed105 ran at the
+            # pre-registered 2000x5, 101-104 at 4000x5). The spec is in the
+            # run artifact, so summary.md can state it instead of relying on
+            # prose in runs/robyn/DECISIONS.md.
+            "spec": _spec(res.get("run", {}).get("convergence_detail") or {}),
         }
         # M1 ROI recovery + interval containment
         roi = r.get("roi", {})
@@ -96,6 +119,13 @@ def score_result(res, gt):
         if ch in est_eff:
             direction = np.sign(t["spend_share"] - true_eff[ch])
             row["rssd_pull"] = (est_eff[ch] - true_eff[ch]) * direction
+            # Diagnostic added 2026-09-09 (does NOT alter M5 above): how far
+            # the estimated media-effect share sits from spend share, per
+            # channel per seed. M5 measures displacement in the spend-share
+            # direction and does not cap at it, so a tool that overshoots
+            # spend share scores higher than one that lands on it; this
+            # column says plainly where each tool ended up.
+            row["spend_share_gap_pp"] = (est_eff[ch] - t["spend_share"]) * 100
         rows.append(row)
     return rows
 
@@ -106,12 +136,14 @@ def summarize(df):
         "roi_rel_err": ["mean"], "roi_abs_rel_err": ["mean"],
         "roi_covered": ["mean"], "roi_interval_width_rel": ["mean"],
         "contrib_abs_err_pp": ["mean"], "rssd_pull": ["mean"],
+        "spend_share_gap_abs_pp": ["mean"],
         "curve_rel_err_m0.5": ["mean"], "curve_rel_err_m1.0": ["mean"],
         "runtime_seconds": ["mean"],
     }
     df = df.copy()
     df["roi_abs_rel_err"] = df.get("roi_rel_err", np.nan).abs()
     df["contrib_abs_err_pp"] = df.get("contrib_err_pp", np.nan).abs()
+    df["spend_share_gap_abs_pp"] = df.get("spend_share_gap_pp", np.nan).abs()
     present = {k: v for k, v in agg_spec.items() if k in df.columns}
     for (tool, arm), grp in df.groupby(["tool", "arm"]):
         lines.append(f"## {tool} — {arm} arm "
@@ -124,6 +156,8 @@ def summarize(df):
             "roi_interval_width_rel": "interval width / true ROI (mean)",
             "contrib_abs_err_pp": "contribution |err| (pp, mean)",
             "rssd_pull": "pull toward spend share (mean, + = pulled)",
+            "spend_share_gap_abs_pp": ("distance from spend share "
+                                       "(pp, mean |gap| per channel-seed)"),
             "curve_rel_err_m0.5": "curve rel err @0.5x spend (mean)",
             "curve_rel_err_m1.0": "curve rel err @1.0x spend (mean)",
             "runtime_seconds": "runtime (s, mean)",
@@ -132,12 +166,41 @@ def summarize(df):
             v = agg[k]
             if pd.notna(v):
                 lines.append(f"- {rename.get(k, k)}: {v:.3f}")
+        # Convergence travels with every aggregate: this file is quoted on its
+        # own, without the caveats that live in analysis/ORACLE.md.
+        conv = grp.groupby("seed")["converged"].first()
+        n_ok = int(conv.fillna(False).astype(bool).sum())
+        lines.append(f"- seeds passing the tool's own convergence check: "
+                     f"{n_ok} of {conv.size}"
+                     + ("" if n_ok == conv.size else
+                        f" (not converged: "
+                        f"{', '.join(str(s) for s in conv[~conv.fillna(False).astype(bool)].index)})"))
+        # A run spec that differs across seeds must never hide inside a mean.
+        specs = grp.groupby("seed")["spec"].first()
+        if specs.notna().any():
+            by_spec = {}
+            for seed, spec in specs.items():
+                by_spec.setdefault(spec if pd.notna(spec) else "unknown",
+                                   []).append(str(seed))
+            lines.append("- run spec: "
+                         + "; ".join(f"{k} — seeds {', '.join(v)}"
+                                     for k, v in sorted(by_spec.items()))
+                         + ("" if len(by_spec) == 1 else
+                            "  **mixed spec: means below blend them**"))
         lines.append("")
-        by_ch = grp.groupby("channel")["roi_rel_err"].mean()
-        lines.append("| channel | mean ROI rel err |")
-        lines.append("|---|---|")
-        for ch, v in by_ch.items():
-            lines.append(f"| {ch} | {v:.3f} |")
+        agg_ch = {"signed": ("roi_rel_err", "mean"),
+                  "absolute": ("roi_abs_rel_err", "mean")}
+        if "spend_share_gap_pp" in grp.columns:
+            agg_ch["gap"] = ("spend_share_gap_pp", "mean")
+        by_ch = grp.groupby("channel").agg(**agg_ch)
+        has_gap = "gap" in by_ch.columns
+        lines.append(r"| channel | mean ROI rel err | mean \|ROI rel err\| "
+                     + ("| effect share − spend share (pp) |" if has_gap
+                        else "|"))
+        lines.append("|---|---|---|" + ("---|" if has_gap else ""))
+        for ch, row in by_ch.iterrows():
+            lines.append(f"| {ch} | {row.signed:.3f} | {row.absolute:.3f} |"
+                         + (f" {row.gap:+.2f} |" if has_gap else ""))
         lines.append("")
     return "\n".join(lines)
 

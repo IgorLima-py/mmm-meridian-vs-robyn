@@ -1,5 +1,21 @@
 # Reassessment — 2026-09-08
 
+> **Snapshot, not a live document (added 2026-09-09).** Everything below is the
+> state of the project on 2026-09-08, and it is left unedited on purpose — it
+> is the record of what was known when the decisions were made. Two things
+> moved afterwards, so do not quote its Robyn figures:
+>
+> - The Robyn escalation this document recommended has since run. Seeds 102,
+>   103 and 104 went to 4000x5 and still fail Robyn's own convergence check
+>   (`runs/robyn/DECISIONS.md`). The mixed-spec risk R6 is closed: every seed's
+>   spec is now documented rather than mixed-and-unexplained.
+> - With those final extracts the Robyn row of the scoring table is
+>   −0.540 / 0.555 / 0.16 / 0.277, not the −0.506 / 0.538 / 0.20 / 0.263 quoted
+>   below, and the Meridian-vs-Robyn gap is 0.533 vs 0.555, not 0.533 vs 0.538.
+>
+> The current numbers of record are `analysis/out/summary.md` and
+> `analysis/ORACLE.md`; the charts built on them are in `analysis/figures/`.
+
 A 360° review of this project after Google shipped Meridian GeoX (2026-09-01)
 and Meridian 2.0.0 (2026-09-03). Written before any implementation decision;
 every external claim was re-verified against a primary source on 2026-09-08 and

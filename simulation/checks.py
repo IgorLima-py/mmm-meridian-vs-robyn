@@ -46,6 +46,19 @@ def _hash(df):
         df.to_csv(index=False).encode("utf-8")).hexdigest()
 
 
+def channel_snr(world):
+    """C7 signal-to-noise per channel: std of the channel's true national
+    contribution over std of national revenue noise, measurement window.
+
+    Single source of truth — `analysis/figures.py` orders channels by it,
+    so the charts and this gate can never disagree.
+    """
+    win = world.win
+    noise_sd = world.noise[:, win].sum(0).std()
+    return {ch: world.media[ch][:, win].sum(0).std() / noise_sd
+            for ch in world.cfg["channels"]}
+
+
 def check_seed(seed, data_root):
     world = World(seed)
     cfg = world.cfg
@@ -102,10 +115,7 @@ def check_seed(seed, data_root):
             failures.append(f"C5 {ch}: roi {roi} != target {spec['true_roi']}")
 
     # C7 per-channel signal-to-noise (recoverability gate; WARN only)
-    noise_sd = world.noise[:, win].sum(0).std()
-    for ch in cfg["channels"]:
-        media_sd = world.media[ch][:, win].sum(0).std()
-        snr = media_sd / noise_sd
+    for ch, snr in channel_snr(world).items():
         print(f"  C7 {ch}: signal-to-noise = {snr:.2f} (floor {SNR_FLOOR})")
         if snr < SNR_FLOOR:
             warnings.append(

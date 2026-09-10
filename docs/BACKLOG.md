@@ -61,6 +61,26 @@ specified in `PLAN.md`.**
    buys on its own, but it must never be blended into the head-to-head
    Meridian-vs-Robyn numbers, since Robyn cannot receive the same input.
 
+6. **The sensitivity mini-arm PLAN Phase 5 left optional.** One re-run of a
+   single tool with a changed setting — Meridian's ROI prior, or Robyn's
+   hyperparameter bounds — to show how much of the shrinkage is the setup
+   rather than the tool. Dropped from v1 on 2026-09-09 for two reasons: the
+   oracle answers the same question with five seeds behind it instead of one
+   arm, and re-running a tool with different settings *after* seeing its
+   results is precisely the move the pre-registration exists to prevent. In v2
+   it must be pre-registered before the run, on both tools symmetrically or on
+   neither.
+
+7. **Pin the R side the way the Python side is pinned.** `envs/setup_robyn.sh`
+   installs Robyn from CRAN with no version and *writes* `nevergrad.lock.txt`
+   from the resolved environment instead of installing from it — so the R half
+   of the stack records rather than reproduces. Fix is
+   `remotes::install_version("Robyn", "3.12.1")` plus installing nevergrad from
+   the committed lock, then re-running one seed to confirm the extract is
+   unchanged. Not blocking v1: the resolved versions are recorded in the run
+   JSONs and the limitation is stated in `envs/ENVIRONMENT.md`. Raised by the
+   pre-publication audit on 2026-09-09.
+
 ## Discarded (reopen only with new information)
 
 - **Commercial SaaS (e.g., Recast) as a compared tool.** Closed-source, paid,
