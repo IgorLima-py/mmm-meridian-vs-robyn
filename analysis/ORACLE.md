@@ -61,8 +61,10 @@ all five seeds — machine precision. The generator, the ground-truth definition
 the results schema and `scoring.py` therefore agree with each other. Whatever
 the tools' error is, it is not an artifact of our pipeline.
 
-Add the simulated noise back (7% CV per geo) and the same design loses three of
-the five betas. That is the whole finding.
+Add the simulated noise back (7% CV per geo) and the same design loses two of the
+five betas — ooh and display, each off by about 100% on average. That is the whole
+finding. *(Corrected during the pre-publication audit, 2026-09-10/11: this sentence
+said "three", which contradicted the per-channel table below and the C7 floor.)*
 
 ## Second result: recoverability is per channel, not per dataset
 
@@ -92,8 +94,9 @@ against a local CSV.
 | ooh | 0.8 | 0.9% | 0.233 | 0.11 | 0.97 | 0.55 | 0.23 |
 | display | 1.2 | 1.6% | 0.126 | 0.10 | 0.76 | 0.38 | 0.43 |
 
-> **Robyn's numbers carry two caveats that must travel with them, and this is
-> the full version** (`runs/robyn/DECISIONS.md`).
+> **Robyn's numbers carry three caveats that must travel with them, and this is
+> the full version** (`runs/robyn/DECISIONS.md`; this said "two" until the
+> pre-publication audit added the third, 2026-09-11).
 >
 > *Convergence.* At the pre-registered 2000x5, **four** of five seeds failed
 > Robyn's own check — 101, 103 and 104 on DECOMP.RSSD, 102 on both DECOMP.RSSD
@@ -109,6 +112,18 @@ against a local CSV.
 > `analysis/figures/` averages those five runs. It is disclosed rather than
 > smoothed over, but a reader has to know that is what "mean over 5 seeds"
 > means for Robyn.
+>
+> *Adstock bounds.* On ooh and display Robyn's pre-registered θ bounds exclude
+> the true retention (0.6 against 0.1–0.4; 0.4 against 0–0.3), so it cannot
+> express the true carryover there — the ooh 0.23 and display 0.43 in the table
+> above included (dated amendment to `docs/PLAN.md` D5).
+
+> **Meridian's numbers carry one of the same kind.** Its default priors fix
+> every Hill slope at 1 (`slope_m` is `Deterministic(1.0)`), so it cannot
+> express the true slope on tv, search, social or display — tv's S-shape (2)
+> furthest off. The oracle rungs are handed the true slopes, so they cannot say
+> how much of Meridian's error that explains (dated amendment to MD2 in
+> `runs/meridian/DECISIONS.md`, 2026-09-11).
 
 **The oracle's error is ordered by signal-to-noise; the tools' error is not.**
 Above the floor the ordering is strict — tv 0.04, search 0.15, social 0.24, in
@@ -154,16 +169,18 @@ tight:
   inside 1pp of spend share. M5 is left exactly
   as pre-registered; the "distance from spend share" line was added beside it
   to say where each tool actually ended up.
-- **Meridian's band is wider and its prior median is the ceiling, not the
+- **Meridian's band is wider and its prior median sits near the top, not the
   centre.** 0.74 to 1.24, with the default ROI prior's median — `LogNormal(0.2,
   0.9)`, median e^0.2 ≈ 1.22, in
   [`prior_distribution.py`](https://github.com/google/meridian/blob/main/meridian/model/prior_distribution.py)
-  — sitting at the top of it. The channel it most over-estimates lands there
-  (ooh 1.24 against a true 0.8); the channels it under-estimates are pulled far
-  below it (social 0.76 against a true 2.5). So "Meridian collapses to 1.22" is
+  — sitting just below the top of it. Its five channel means: ooh 1.24 (true
+  0.8; the one channel it over-estimates, lifted by one seed's 2.21), tv 1.20,
+  search 1.06, social 0.76, display 0.74 (true 2.5 and 1.2 for the last two). So "Meridian collapses to 1.22" is
   too strong a claim for these five estimates, and this page does not make it.
-  What it does say is that Meridian compresses, and that the compressed band's
-  upper edge is where its prior median sits.
+  What it does say is that Meridian compresses, and that the compressed band tops
+  out just above its prior median, 1.24 against 1.22. *(Corrected during the
+  pre-publication audit, 2026-09-11: this bullet called the prior median the
+  band's ceiling, which the ooh mean exceeds.)*
 
 This splits the five channels into two regimes, and they must never be read
 together:
@@ -171,9 +188,14 @@ together:
 - **tv, search, social — the truth is in the data.** L2 recovers them with errors of
   0.04, 0.15 and 0.24; L3, which also has to estimate its own baseline, 0.10,
   0.32 and 0.38. Meridian and Robyn miss them by **34% to 79%** — worse than
-  either rung, on every one of the three. Here the failure belongs to the tools.
+  either rung, on every one of the three. Here the failure belongs to the tools as
+  configured. The rungs are handed the true parameters and neither tool's
+  configuration is — Meridian's slope is fixed at 1; Robyn's ooh cap can reach tv
+  through the designed tv–ooh correlation, and its γ coverage was not checked — so
+  this ladder cannot say how much of either tool's miss is the setup's.
 - **ooh, display — the truth is not in the data.** L2 misses ooh by 97% and
-  display by 76%; L3 by 97% and 122%. No estimator could have done better.
+  display by 76%; L3 by 98% and 122%. A tool that lands closer there — Robyn's
+  0.23 on ooh — is lucky, not measuring.
 
 **Which rung belongs in which argument.** The table above uses **L2**, the rung
 handed the true baseline, because the question it answers is a ceiling
@@ -239,6 +261,15 @@ which of its channels are in which regime.
 | Meridian geo (2 seeds; seed101 max R-hat 1.118, not converged) | −0.499 | 0.499 | 0.50 | 1.196 |
 | Robyn national (3 of 5 seeds non-converged) | −0.540 | 0.555 | 0.16 | 0.277 |
 
+*Added during the pre-publication audit, 2026-09-10/11.* Meridian geo's 0.499 is a
+two-seed mean and is not an upgrade on the national arm: on those same two seeds
+Meridian national scores 0.470 (`analysis/out/summary.md`). The arms also differ
+in more than geography — a baseline knot per week against automatic knot
+selection, and 2000/2000 adaptation/burn-in against 500/500. The geo arm's
+dropped competitor control is not one of the differences that matter: under a
+knot per week it is redundant, and `runs/meridian/DECISIONS.md` (amendment of
+2026-08-28) records dropping it as a statistical no-op.
+
 Two things the aggregate error column hides:
 
 1. **The oracles are unbiased; the tools are not.** Oracle bias spans −0.01 to
@@ -246,7 +277,7 @@ Two things the aggregate error column hides:
    *variance* — noise pushes individual estimates around a correct centre. The
    tools are wrong by *systematic shrinkage*. Similar average error, opposite
    pathology.
-2. **Well-calibrated intervals were available in this dataset.** L3 — the rung
+2. **Well-calibrated intervals were available on the national aggregate.** L3 — the rung
    that estimates its own baseline, the fairest comparison to a real tool —
    covers the truth 92% of the time against a nominal 90%. Meridian covers 60%,
    Robyn 16%. "The data were hard" does not explain the tools' interval
@@ -302,7 +333,8 @@ its information on 156 weekly knots and did not converge on seed101.
 second chance, and the record has to say so symmetrically. Meridian's **geo**
 arm did not converge at the pre-registered 500/500 adapt/burnin, nor at
 1000/1000; the exported geo runs are the third attempt, at **2000/2000** — four
-times the pre-registered spec (`runs/meridian/DECISIONS.md` MD6 and its
+times the pre-registered adaptation and burn-in, with the 1000 kept draws
+unchanged (`runs/meridian/DECISIONS.md` MD6 and its
 amendments). Its national arm needed no escalation and shipped at 500/500.
 
 The exported geo runs also carry divergent transitions the national runs do
@@ -321,9 +353,9 @@ pre-registered gates.
 ## What this does and does not license us to say
 
 **Licensed.** That for tv, search and social this dataset contains the truth and
-neither tool found it. That **Robyn** collapses to a single characteristic
+neither tool, as configured, found it. That **Robyn** collapses to a single characteristic
 value — its own portfolio ROI — while **Meridian** compresses into a band (0.74
-to 1.24) whose upper edge is its prior median: different behaviours, different
+to 1.24) whose upper edge sits just above its prior median, 1.22: different behaviours, different
 mechanisms. The stronger claim that Meridian too collapses to one value is not
 licensed by these five seeds. That the tools' uncertainty intervals are
 miscalibrated in a way the data do not excuse.
@@ -336,13 +368,21 @@ recoverability check.
   real data.
 - **That any of this describes the hard regime.** Spend here is exogenous — no
   budget chasing demand, no targeting feedback. That is the *easy* case for MMM;
-  the measured accuracy is an upper bound on what these tools do in production.
-- **That the tools were given a hard setup.** Both were handed generosities,
-  documented in the decision logs: Meridian got `max_lag=13`, matching the
-  generator's true adstock support instead of its default 8
+  the measured accuracy likely flatters what these tools would do in production.
+- **That the setup was uniformly generous.** Both were meant to be handed
+  generosities, documented in the decision logs: Meridian got `max_lag=13`,
+  matching the generator's true adstock support instead of its default 8
   (`runs/meridian/DECISIONS.md` MD5), and Robyn's hyperparameter bounds were
-  chosen to *contain* the true adstock and Hill values (`docs/PLAN.md` D5). A
-  setup that hid the truth outside those bounds would have failed worse.
+  meant to *contain* the true adstock and Hill values (`docs/PLAN.md` D5). For
+  adstock they do on tv, social and search; on ooh and display they exclude the
+  true retention (0.6 against 0.1–0.4; 0.4 against 0–0.3) — the arrangement D5
+  was written to prevent, caught only in the pre-publication audit and recorded
+  in dated amendments to D5 and both decision logs. The true Hill shapes all
+  fall inside Robyn's α range; its γ is set relative to each series' range, so
+  whether the true half-saturation points fall inside was not checked.
+  Meridian's default priors fix every Hill slope at 1 (`slope_m` is
+  `Deterministic(1.0)`), so only ooh's true slope is expressible there, and
+  tv's S-shape (slope 2) is not.
 - That OLS is a better MMM — it is not an MMM, it was given the answers.
 - That ooh and display were estimated well by anyone.
 - That Robyn's figures here describe a converged Robyn: three of its five seeds

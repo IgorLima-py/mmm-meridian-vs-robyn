@@ -25,9 +25,10 @@ specified in `PLAN.md`.**
    on 2026-08-07**, and the oracle ladder (`analysis/ORACLE.md`) took over the
    *defensive* half of the rationale — it proves the failure is not a simulator
    bug far better than a third tool arguing by accumulation. What survives is
-   the open question a third estimator alone can answer: Meridian shrinks toward
-   its ROI prior and Robyn toward spend share, so does a third tool have an
-   anchor of its own? Still strictly post-publication.
+   the open question a third estimator alone can answer: Robyn's effect shares land
+   0.54pp from spend share, by design (DECOMP.RSSD), and whether Meridian's estimates shrink toward its
+   ROI prior is untested — so does a third tool have an anchor of its own? Still
+   strictly post-publication.
 2. **Attention-weighted MMM — a separate piece, not this repo's scope.**
    Simulate a world where the *truth* is attention-weighted exposure, fit the
    tools on raw spend, measure the bias. A live industry debate (attention
@@ -80,6 +81,20 @@ specified in `PLAN.md`.**
    unchanged. Not blocking v1: the resolved versions are recorded in the run
    JSONs and the limitation is stated in `envs/ENVIRONMENT.md`. Raised by the
    pre-publication audit on 2026-09-09.
+8. **An oracle rung with the Hill slope fixed at 1.** Meridian's default priors
+   fix every Hill slope at 1 (`Deterministic(1.0)`; `docs/PLAN.md` amendment of
+   2026-09-11), while every oracle rung is handed the true slopes — so the ladder
+   cannot say how much of Meridian's miss on tv, search and social comes from
+   that constraint. A rung built like L3 but with slope 1 would measure it on the
+   analysis layer, in seconds. Proposed by the pre-publication audit on
+   2026-09-11 and not run: a new rung is new analysis, not a correction.
+9. **Re-run with D5's contradiction removed.** The pre-registration set ooh's and
+   display's true adstock outside Robyn's recommended bounds (`docs/PLAN.md`
+   amendment of 2026-09-11). Removing it means moving those two truths inside
+   the bounds, regenerating the data and re-running both tools on all five seeds
+   — every published number changes. v1 discloses the contradiction instead;
+   this is worth doing only if the disclosure comes to dominate how the result
+   is read.
 
 ## Discarded (reopen only with new information)
 

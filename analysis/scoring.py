@@ -187,6 +187,16 @@ def summarize(df):
                                      for k, v in sorted(by_spec.items()))
                          + ("" if len(by_spec) == 1 else
                             "  **mixed spec: means below blend them**"))
+        # An arm run on a subset of a sibling arm's seeds is compared on those
+        # seeds only: a 2-seed mean against a 5-seed mean compares seed draws,
+        # not arms.
+        seeds = set(grp["seed"].unique())
+        for other, ogrp in df[df["tool"] == tool].groupby("arm"):
+            if other != arm and seeds < set(ogrp["seed"].unique()):
+                same = ogrp[ogrp["seed"].isin(seeds)]["roi_abs_rel_err"].mean()
+                lines.append(f"- same seeds, {other} arm: ROI |rel err| (mean) "
+                             f"{same:.3f} — seeds "
+                             f"{', '.join(str(s) for s in sorted(seeds))}")
         lines.append("")
         agg_ch = {"signed": ("roi_rel_err", "mean"),
                   "absolute": ("roi_abs_rel_err", "mean")}

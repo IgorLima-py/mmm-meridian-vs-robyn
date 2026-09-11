@@ -11,10 +11,12 @@ Where the numbers come from, precisely (`analysis/FIGURES.md` says the same):
     same call that writes the committed `analysis/out/summary.md`;
   * the response curves -> the committed result JSONs, interpolated onto the
     ground-truth multiplier grid;
-  * two numbers are derived HERE and nowhere else — the channel ordering, via
-    `simulation.checks.channel_snr` (the C7 gate's own function), and Robyn's
-    portfolio-level ROI anchor in figure 1. Both are printed to stdout on
-    every run so they can be checked.
+  * three things are derived HERE and nowhere else — the channel ordering,
+    via `simulation.checks.channel_snr` (the C7 gate's own function), Robyn's
+    portfolio-level ROI anchor in figure 1, and the curve numbers figure 2's
+    caption quotes, whose claims about the curves `curve_facts()` asserts.
+    All are printed to stdout on every run so they can be checked. Figure 1's
+    caption claims are asserted the same way, by `roi_facts()`.
 
 The three figures:
   fig1_roi_per_channel.png  estimated vs true ROI per channel, per estimator,
@@ -75,7 +77,14 @@ SIMULATED = ("Simulated data — 8 geos x 156 weeks, generator 1.0.0, 5 seeds. "
 # in runs/robyn/DECISIONS.md and must not live only there.
 ROBYN_CAVEAT = ("Robyn: 3 of its 5 seeds fail its own convergence check, and "
                 "the five are not one spec — seeds 101-104 ran at 4000x5,\n"
-                "seed105 at its converged 2000x5 (runs/robyn/DECISIONS.md).")
+                "seed105 at its converged 2000x5; and its adstock bounds exclude the "
+                "true retention on ooh (0.6) and display (0.4) (runs/robyn/DECISIONS.md).")
+
+# Its counterpart, travelling with every Meridian series: the default priors
+# fix the Hill slope (runs/meridian/DECISIONS.md, MD2 and its amendment).
+MERIDIAN_CAVEAT = ("Meridian: its default priors fix every Hill slope at 1, so it "
+                   "cannot express the true slope on four of the five channels — "
+                   "tv's S-shape (2) furthest off (runs/meridian/DECISIONS.md).")
 
 
 def channel_order(data_root):
@@ -117,6 +126,28 @@ def _caption(fig, title, subtitle):
 
 # ---------------------------------------------------------------------------
 # Figure 1 — estimated vs true ROI per channel, oracle as third series.
+
+def roi_facts(df, order, n_recoverable):
+    """Figure 1's caption claims, asserted like figure 2's: left of the
+    divider the oracle comes closer than either tool, and below the floor its
+    own estimates scatter, some below zero. A re-export that breaks one stops
+    the figure instead of shipping a stale caption."""
+    mer, rob, orc = (s[0] for s in SERIES)
+    d = df[df.arm == "national"]
+    err = d.assign(e=d.roi_rel_err.abs()).groupby(["tool", "channel"]).e.mean()
+    claims = {}
+    for ch in order[:n_recoverable]:
+        claims[f"the oracle comes closer than either tool on {ch}"] = bool(
+            err[orc, ch] < min(err[mer, ch], err[rob, ch]))
+    for ch in order[n_recoverable:]:
+        pts = d[(d.tool == orc) & (d.channel == ch)].roi_point
+        claims[f"some oracle estimates are below zero on {ch}"] = \
+            bool((pts < 0).any())
+    stale = [c for c, ok in claims.items() if not ok]
+    if stale:
+        sys.exit("figure 1's caption no longer matches the estimates; rewrite "
+                 "it before redrawing:\n  " + "\n  ".join(stale))
+
 
 def fig_roi_per_channel(df, gts, order, mean_snr, n_recoverable, path):
     d = df[df.arm == "national"]
@@ -177,9 +208,9 @@ def fig_roi_per_channel(df, gts, order, mean_snr, n_recoverable, path):
             bbox=box, zorder=7)
 
     ax.set_xticks(range(len(order)))
-    ax.set_xticklabels([f"{ch}\nS/N {mean_snr[ch]:.2f}" for ch in order],
+    ax.set_xticklabels([f"{ch}\nC7 S/N {mean_snr[ch]:.2f}" for ch in order],
                        fontsize=9.5)
-    ax.set_ylabel("ROI (incremental revenue per unit of spend)")
+    ax.set_ylabel("ROI (simulated incremental revenue per unit of spend)")
     ax.set_xlim(-0.6, len(order) - 0.4)
     ax.grid(axis="y", color="#e6e6e6", lw=0.8, zorder=0)
     ax.set_axisbelow(True)
@@ -192,7 +223,7 @@ def fig_roi_per_channel(df, gts, order, mean_snr, n_recoverable, path):
     if n_recoverable < len(order):
         ax.text(n_recoverable - 0.42, top,
                 f"signal-to-noise below the C7 floor of {SNR_FLOOR}:\n"
-                "the oracle misses these too — nobody could recover them",
+                "the oracle misses these too: this data alone cannot recover them",
                 fontsize=8.4, color="#555555", va="top", ha="left")
 
     handles = [Line2D([], [], color=C_TRUTH, lw=2.6, label="true ROI")]
@@ -208,14 +239,16 @@ def fig_roi_per_channel(df, gts, order, mean_snr, n_recoverable, path):
 
     _caption(
         fig, "Both tools miss the ROIs that this dataset does contain",
-        SIMULATED + "\nOne dot per seed, national arm only. The oracle is not "
-        "a competing estimator: it is handed the generator's true adstock and "
-        "Hill parameters and only fits the five betas.\nWhere the oracle "
-        "lands on the true ROI, the data held the answer and the tool missed "
-        "it. Where the oracle misses too, no estimator could have done "
-        "better.\n" + ROBYN_CAVEAT)
+        SIMULATED + "\nOne dot per seed, national arm only. The oracle is no "
+        "competitor: handed the generator's true adstock and Hill parameters, "
+        "it fits only the betas and its own baseline.\nLeft of the divider "
+        "the oracle comes closer than either tool: the data held the answer, "
+        "and the tools as configured missed it.\nBelow the S/N floor its own "
+        "dots scatter, some below zero: the data did not hold the answer, and "
+        "landing close there — for anyone — is luck.\n" + ROBYN_CAVEAT + "\n"
+        + MERIDIAN_CAVEAT)
     _provenance(fig)
-    fig.subplots_adjust(top=0.79, bottom=0.205, left=0.062, right=0.985)
+    fig.subplots_adjust(top=0.745, bottom=0.205, left=0.062, right=0.985)
     fig.savefig(path, dpi=200)
     plt.close(fig)
     return rb_portfolio
@@ -224,7 +257,84 @@ def fig_roi_per_channel(df, gts, order, mean_snr, n_recoverable, path):
 # ---------------------------------------------------------------------------
 # Figure 2 — response curves against truth.
 
-def fig_response_curves(results, gts, order, n_recoverable, path):
+def _curve(obj, ch, mult):
+    c = obj["channels"][ch]["response_curve"]
+    return np.interp(mult, c["multipliers"], c["incremental_revenue"])
+
+
+def curve_facts(results, gts):
+    """The numbers figure 2's caption quotes, derived from the interpolation
+    the figure draws, and the claims it makes about the curves, asserted. A
+    re-export that breaks a claim stops the figure instead of shipping a stale
+    caption; the numbers cannot go stale because the caption formats them."""
+    first = gts[list(gts)[0]]
+
+    def ratios(tool, ch):
+        # mean curve / mean truth and per-seed curves / mean truth, on the
+        # figure's grid; m=0 is dropped, being 0/0 by construction
+        mult = np.array(first["channels"][ch]["response_curve"]["multipliers"])
+        truth = np.mean([_curve(g, ch, mult) for g in gts.values()], axis=0)
+        per = np.array([_curve(r, ch, mult) for r in results
+                        if r["tool"] == tool and r["arm"] == "national"])
+        on = mult > 0
+        return mult[on], per.mean(0)[on] / truth[on], per[:, on] / truth[on]
+
+    def crossing(mult, q, upward):
+        for a, b, qa, qb in zip(mult, mult[1:], q, q[1:]):
+            if (qa < 1 <= qb) if upward else (qa > 1 >= qb):
+                return float(a), float(b)
+        return None
+
+    f, claims = {}, {}
+    m, q, per = ratios("meridian", "tv")
+    at = {x: int(np.flatnonzero(np.isclose(m, x))[0]) for x in (0.25, 0.5)}
+    f["mer_tv_025"], f["mer_tv_05"] = q[at[0.25]], q[at[0.5]]
+    f["mer_tv_cross"] = crossing(m, q, upward=False)
+    claims["Meridian's mean tv curve is above the truth up to 0.5x"] = \
+        bool((q[m <= 0.5] > 1).all())
+    claims["...crosses under once and stays under"] = (
+        f["mer_tv_cross"] is not None
+        and bool((q[m > f["mer_tv_cross"][0]] < 1).all()))
+    claims["all five Meridian seeds are above the truth on tv at 0.25x"] = (
+        per.shape[0] == 5 and bool((per[:, at[0.25]] > 1).all()))
+    claims["Robyn's mean is below the truth everywhere on tv"] = \
+        bool((ratios("robyn", "tv")[1] < 1).all())
+    for ch in ("search", "social"):
+        (_, qm, pm), (_, qr, pr) = ratios("meridian", ch), ratios("robyn", ch)
+        claims[f"both means are below the truth everywhere on {ch}"] = \
+            bool((qm < 1).all() and (qr < 1).all())
+        claims[f"no seed of either tool is above the truth on {ch}"] = \
+            bool((pm < 1).all() and (pr < 1).all())
+
+    # One reference for every claim: the drawn line, the five-seed mean truth.
+    # The graze comes from the one seed near that line; its distance from its
+    # own seed's truth is reported alongside, not instead.
+    drawn = np.mean([_curve(g, "tv", 0.25) for g in gts.values()])
+    rb = {r["seed_dataset"]: _curve(r, "tv", 0.25) for r in results
+          if r["tool"] == "robyn" and r["arm"] == "national"}
+    near = [s for s, v in rb.items() if abs(v / drawn - 1) < 0.05]
+    claims["exactly one Robyn seed is within 5% of the truth on tv at "
+           "0.25x"] = len(near) == 1
+    claims["every other Robyn seed is below the truth on tv at 0.25x"] = all(
+        v < drawn for s, v in rb.items() if s not in near)
+    if len(near) == 1:
+        s = near[0]
+        f["rb_graze_seed"] = s
+        f["rb_graze"] = rb[s] / drawn - 1
+        f["rb_graze_own"] = rb[s] / _curve(gts[s], "tv", 0.25) - 1
+    mo, qo, _ = ratios("robyn", "ooh")
+    f["rb_ooh_cross"] = crossing(mo, qo, upward=True)
+    claims["Robyn's mean ooh curve crosses the truth"] = \
+        f["rb_ooh_cross"] is not None
+
+    stale = [c for c, ok in claims.items() if not ok]
+    if stale:
+        sys.exit("figure 2's caption no longer matches the curves; rewrite "
+                 "it before redrawing:\n  " + "\n  ".join(stale))
+    return f
+
+
+def fig_response_curves(results, gts, order, n_recoverable, facts, path):
     fig, axes = plt.subplots(1, len(order), figsize=(14.2, 6.8))
     scale = 1e6
 
@@ -270,7 +380,7 @@ def fig_response_curves(results, gts, order, n_recoverable, path):
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
         if i == 0:
-            ax.set_ylabel("incremental revenue (millions)")
+            ax.set_ylabel("incremental revenue (millions, simulated)")
 
     axes[0].text(0.05, 0.95, "scored at 0.5x and 1.0x",
                  transform=axes[0].transAxes, fontsize=7.4, color="#777777",
@@ -291,20 +401,22 @@ def fig_response_curves(results, gts, order, n_recoverable, path):
                fontsize=8.6, bbox_to_anchor=(0.5, 0.012))
 
     _caption(
-        fig, "On the channels this data can measure, the curves are wrong at every budget",
+        fig, "On the channels this data can measure, both tools' curves are wrong almost everywhere on the budget range",
         SIMULATED
         + "\nMean over 5 seeds, national arm only; the band is the seed-to-seed range. Panels are ordered by signal-to-noise;"
         + "\nthe two shaded panels sit below the recoverability floor, where the oracle fails as well."
         + "\nThe plotted means: Robyn sits below the truth everywhere on tv, search and social; Meridian does on search and social,"
-        + "\nbut over-states tv up to 0.5x spend (2.4x the truth at 0.25x, 1.16x at 0.5x), crossing under between 0.5x and 0.75x."
+        + f"\nbut over-states tv up to 0.5x spend ({facts['mer_tv_025']:.1f}x the truth at 0.25x, {facts['mer_tv_05']:.2f}x at 0.5x),"
+        + " crossing under between {:g}x and {:g}x.".format(*facts["mer_tv_cross"])
+        + "\nMeridian's default priors fix its Hill slope at 1, so its tv curve cannot take tv's S-shape (true slope 2)."
         + "\nBands, not means, are what individual seeds do: all five Meridian seeds are above the truth on tv at 0.25x, and one"
-        + "\nRobyn seed grazes it there (+0.1%). On the two unmeasurable channels both wander — Robyn's mean ooh curve crosses"
-        + "\nthe truth between 1.25x and 1.5x."
+        + f"\nRobyn seed grazes it there ({facts['rb_graze']:+.1%}). On the two unmeasurable channels both wander —"
+        + "\nRobyn's mean ooh curve crosses the truth between {:g}x and {:g}x.".format(*facts["rb_ooh_cross"])
         + "\nMeridian's curves are its own counterfactual; Robyn has no equivalent, so its curves are reconstructed from its"
         + "\nselected model's own fitted parameters, checked against its xDecompAgg at 1.0x (runs/robyn/DECISIONS.md RD9)."
         + "\n" + ROBYN_CAVEAT)
     _provenance(fig)
-    fig.subplots_adjust(top=0.60, bottom=0.185, left=0.055, right=0.99,
+    fig.subplots_adjust(top=0.585, bottom=0.185, left=0.055, right=0.99,
                         wspace=0.26)
     fig.savefig(path, dpi=200)
     plt.close(fig)
@@ -376,7 +488,7 @@ def fig_intervals(df, path):
              color="#333333", va="bottom", ha="right")
     ax1.set_xlim(0, 1.05)
 
-    labels = [f"{row.label}  ({row.kind})"
+    labels = [f"{row.label}  ({row.kind}, {row.n_seeds} seeds)"
               + (f"\n{row.n_bad} of {row.n_seeds} seeds did not converge"
                  if row.n_bad else "")
               for row in r.itertuples()]
@@ -392,7 +504,7 @@ def fig_intervals(df, path):
              color="#888888", va="top")
 
     _caption(
-        fig, "Well-calibrated intervals were available in this dataset",
+        fig, "Well-calibrated intervals were available on the national aggregate",
         SIMULATED
         + "\nThe oracle rung that estimates its own baseline (L3) covers the "
         "truth 92% of the time against a nominal 90%, on the same data the "
@@ -403,11 +515,13 @@ def fig_intervals(df, path):
         "a 90%\ninterval, and neither its coverage nor its width is "
         "comparable to the others' — a narrow candidate spread is not a "
         "confident posterior.\n"
-        "Robyn's five seeds are also not one spec: 101-104 ran at 4000x5, seed105 at its converged 2000x5 (runs/robyn/DECISIONS.md).\n"
+        "Robyn's five seeds are also not one spec: 101-104 ran at 4000x5, seed105 at its converged 2000x5; its adstock bounds exclude the\n"
+        "true retention on ooh (0.6) and display (0.4) (runs/robyn/DECISIONS.md).\n"
         "Meridian escalated too: its geo arm shipped at 2000/2000 adapt/burnin, a 3rd attempt after 500/500 and 1000/1000 failed, carrying 64 and 122\n"
-        "divergent transitions against 1-6 per national run (runs/meridian/DECISIONS.md). Its national arm needed no escalation.")
+        "divergent transitions against 1-6 per national run (runs/meridian/DECISIONS.md). Its national arm needed no escalation.\n"
+        + MERIDIAN_CAVEAT)
     _provenance(fig)
-    fig.subplots_adjust(top=0.655, bottom=0.115, left=0.245, right=0.985,
+    fig.subplots_adjust(top=0.615, bottom=0.115, left=0.262, right=0.985,
                         wspace=0.06)
     fig.savefig(path, dpi=200)
     plt.close(fig)
@@ -429,15 +543,24 @@ def main():
 
     figdir = Path(args.figures)
     figdir.mkdir(parents=True, exist_ok=True)
+    roi_facts(df, order, n_recoverable)
     rb = fig_roi_per_channel(df, gts, order, mean_snr, n_recoverable,
                              figdir / "fig1_roi_per_channel.png")
-    fig_response_curves(results, gts, order, n_recoverable,
+    facts = curve_facts(results, gts)
+    fig_response_curves(results, gts, order, n_recoverable, facts,
                         figdir / "fig2_response_curves.png")
     iv = fig_intervals(df, figdir / "fig3_intervals.png")
 
     print("channel order by signal-to-noise: "
           + ", ".join(f"{c} {mean_snr[c]:.2f}" for c in order))
     print(f"Robyn portfolio-level ROI from its own estimates: {rb:.2f}")
+    print("figure 2 caption, computed: Meridian tv {:.3f}x the truth at "
+          "0.25x, {:.3f}x at 0.5x, crossing under {:g}-{:g}x; Robyn seed {} "
+          "grazes tv at 0.25x, {:+.2%} from the drawn truth ({:+.2%} from its "
+          "own seed's); Robyn ooh crossing {:g}-{:g}x".format(
+              facts["mer_tv_025"], facts["mer_tv_05"], *facts["mer_tv_cross"],
+              facts["rb_graze_seed"], facts["rb_graze"], facts["rb_graze_own"],
+              *facts["rb_ooh_cross"]))
     print(iv[["label", "kind", "coverage", "width", "n_obs",
               "n_bad"]].to_string(index=False))
     print(f"wrote 3 figure(s) to {figdir}")

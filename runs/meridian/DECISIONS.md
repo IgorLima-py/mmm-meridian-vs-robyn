@@ -63,3 +63,21 @@ timestamps rather than silently edited into the table.
   magnitude above the national runs; it is published as-is per those gates,
   with the count disclosed rather than the gate revised after the fact.
   Raised by the pre-publication audit, not by a re-run.
+- **2026-09-11 (pre-publication audit):** MD5's rationale — that D5 gave Robyn
+  bounds containing the truth, so `max_lag=13` is the symmetric courtesy — holds
+  only in part. Robyn's bounds exclude the true adstock retention on ooh (0.6
+  against 0.1–0.4) and display (0.4 against 0–0.3); see the same-dated amendment
+  in `runs/robyn/DECISIONS.md`. `max_lag=13` stays, disclosed as before. On
+  carryover the setup favoured Meridian — with its default `Uniform(0, 1)` adstock
+  prior it could express the true retention on all five channels, Robyn on three —
+  but on response shape it cut the other way; see the next amendment.
+- **2026-09-11 (pre-publication audit):** MD2 calls the default saturation prior
+  "concave-leaning". In Meridian 1.8.0 it is not a leaning: `slope_m` is
+  `Deterministic(1.0)`, so every Hill slope is fixed at 1 — which is why
+  `rhat_by_param` in the geo extracts has no slope entry. Under the
+  pre-registered defaults Meridian cannot fit tv's S-shape (true slope 2) at all,
+  matches ooh's slope of 1 exactly, and cannot express the other three (0.7 to
+  0.9) either, though it comes close. Because ooh's spend tracks tv's by design,
+  the misfit on tv may also have leaked into Meridian's ooh estimate — not
+  tested. MD2 promised this as a disclosed stressor; the article, README and the
+  captions of figures 1–3 now disclose it.

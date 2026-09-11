@@ -154,6 +154,41 @@ parameters over time — an assumption both tools share and reality doesn't;
 asserted; (i) exposure frequency — neither tool models it in the core
 regression, so it gets a paragraph in the article, not a phase (see `BACKLOG.md`).
 
+**Amendment, 2026-09-11 (pre-publication audit): D5 contradicted this plan's own
+parameter table.** D5 requires every true adstock retention inside Robyn's
+recommended bounds (OOH/print 0.1–0.4, digital 0.0–0.3); the §3 table, committed
+alongside it, sets ooh to 0.6 and display to 0.4. The generator implemented the
+table and Robyn ran with D5's bounds, so on those two channels the true carryover
+lies outside what Robyn could fit — the arrangement D5 says would rig the test.
+Ledger item (b) holds for tv, social (at the edge of its bound) and search only.
+It is disclosed rather than fixed, because fixing it means regenerating the data
+and re-running both tools. Those two channels sit below the C7 signal-to-noise
+floor, where no estimator recovers anything here, so the recoverability result
+does not rest on them. Robyn's five-channel means do include them, and because
+ooh's spend was designed to track tv's, the cap may also have moved carryover
+onto Robyn's tv estimate — not tested.
+
+**Amendment, 2026-09-11 (pre-publication audit): Meridian's default slope prior
+is not "concave-leaning".** §1 (item 6), D5's rationale and ledger item (c)
+describe it so. In
+Meridian 1.8.0 `slope_m` is `Deterministic(1.0)`: every Hill slope is fixed at
+1, which is why the committed geo extracts, listing R-hat for every sampled
+parameter, have no slope entry. Under the pre-registered default priors (MD2)
+Meridian therefore cannot fit tv's S-shape (true slope 2) at all, matches ooh's
+slope of 1 exactly, and cannot express the other three (0.7 to 0.9) either, though it comes close.
+D5 meant the S-shaped channel as a disclosed stressor; the article and README
+disclose it only as of this amendment. With the D5 amendment above, each tool's
+pre-registered setup excluded part of the truth: Robyn's adstock on two
+channels, Meridian's response shape on four.
+
+**Amendment, 2026-09-11 (pre-publication audit): ledger item (h) was never
+shown.** Figure 1 draws each tool's reference level (Meridian's ROI-prior
+median, Robyn's portfolio ROI), but no ablation measured how much work the
+priors and bounds did at n≈156, so the article says only that they may do much
+of it, untested — and after the two amendments above, part of that work was
+excluding the truth. An oracle rung with the slope fixed at 1 would measure Meridian's share;
+it is proposed in `docs/BACKLOG.md`, not run.
+
 ## 6. Execution phases
 
 > Each phase ends with: update `STATUS.md` (phase done, next step), commit.

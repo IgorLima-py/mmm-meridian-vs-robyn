@@ -40,8 +40,9 @@ Determinism contract: same seed + same generator version (see
   `simulation/config.py`; βs are calibrated so the full-window counterfactual
   ROI hits the targets exactly. One channel (tv) is deliberately S-shaped
   (S = 2); ooh is deliberately low-ROI with above-effect spend share (the
-  DECOMP.RSSD probe); adstock retentions sit inside Robyn's recommended
-  hyperparameter bounds per channel type (PLAN D5).
+  DECOMP.RSSD probe). PLAN D5 meant every adstock retention to sit inside
+  Robyn's recommended bounds per channel type; ooh (0.6, bound 0.1–0.4) and
+  display (0.4, bound 0–0.3) do not — disclosed in the D5 amendment.
 
 ## Ground truth (`ground_truth.json` per seed)
 

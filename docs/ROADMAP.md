@@ -8,8 +8,9 @@
 | C3 | done | any | opus | high | Phase 5: score every extract and build the three charts |
 | C4 | done | any | opus | max | Phase 6: the ~1,000-word article |
 | C5 | done | any | opus | high | Public README and a fresh-clone reproducibility pass |
-| C6 | next | any | opus | max | Adversarial audit until the verdict is SHIP |
+| C6 | done | any | opus | max | Adversarial audit until the verdict is SHIP |
 | C7 | blocked | any | opus | high | Post-publication: PyMC-Marketing as an independent third estimator |
+| C8 | next | any | sonnet | low | Publication gate: the LICENSE decision and the last checks before going public |
 
 <!-- HEADER-END -->
 
@@ -189,6 +190,10 @@ costs the whole piece and cannot be patched after publication.
 
 **verificar:** `article/` exists, its word count is 800-1300, it contains the literal heading "What neither tool can tell you", and `grep -i` finds both "simulated" and "1.8.0" in it.
 
+*C6 note, 2026-09-11:* the disclosures the pre-publication audit required took
+the article from 1,299 to about 1,850 words. The 800-1300 range was C4's
+acceptance bar; it does not cap what the audit could add.
+
 **Estimate.** 4 h.
 
 ---
@@ -274,7 +279,7 @@ because `.git/hooks/` does not travel through git.
 ## C7 — Third estimator — PyMC-Marketing, after v1 ships
 
 **Objective.** Run PyMC-Marketing on the same simulated data through the same
-pre-registered harness, and find out what value *it* collapses toward.
+pre-registered harness, and find out whether *it*, too, settles toward an anchor.
 
 **Model/effort: opus, high.** The exporter is mechanical, but the input mapping
 is a fairness decision with a known trap (below), and interpreting a third
@@ -286,12 +291,11 @@ delay v1. The Robyn-dormancy timing angle is perishable; this is not.
 **Why it is worth doing at all, given the oracle already exists.** The oracle
 settled the defensive question — it proves the failure is not a simulator bug,
 which is what a third tool would only have argued by accumulation. What remains
-is a genuinely open question the oracle cannot answer: Meridian shrinks toward
-the median of its ROI prior (~1.22), Robyn toward a single spend-proportional
-ROI. **A third independent estimator either collapses toward an anchor of its
-own — which makes "the estimate is the tool's prior, not a measurement" a
-pattern instead of a coincidence — or it does not, which is more interesting
-still.** Secondary: the only published benchmark involving Meridian was written
+is a genuinely open question the oracle cannot answer: Robyn lands on a single
+spend-proportional ROI by design, and Meridian's band tops out near the median
+of its ROI prior (~1.22) — whether it shrinks toward it is untested. **A third independent estimator either settles toward an anchor of its
+own — which would make anchoring a pattern across tools rather than one tool's
+design — or it does not, which is more interesting still.** Secondary: the only published benchmark involving Meridian was written
 by PyMC Labs, the vendor of the tool that won it. A run by someone with no horse
 in the race is worth something.
 
@@ -326,3 +330,41 @@ with a date **before** the first run's timestamp, and the pinned version is in
 `envs/`.
 
 **Estimate.** 4 h, plus environment setup on a machine with the Python stack.
+
+---
+
+## C8 — Publication gate — LICENSE and the decision to publish
+
+Numbered after C7 because it was created later, in C6's `/tchau` — but it comes
+**before** C7, which is blocked on publication happening.
+
+**Objective.** Close the last thing standing between the piece and a public
+repository: it has no `LICENSE`. Then run the final pre-publication checks and
+hand Igor a clean go/no-go.
+
+**Model/effort: sonnet, low.** No analysis, no writing under Igor's name. The
+piece is already at `VERDICT: SHIP` (`analysis/AUDIT.md`); this slice adds a
+file and runs commands.
+
+**Prerequisites.** C6.
+
+**What it does.**
+- **The licence, which is Igor's decision, not the session's.** Present the two
+  or three that fit a repo holding both code and a written piece — the usual
+  split is a permissive code licence (MIT or Apache-2.0) plus CC BY 4.0 for the
+  article — with one line each on what it means for a reader who wants to reuse
+  the simulator or quote the article. Write the file only after Igor picks.
+- Add the licence to the README, beside the repo map.
+- Re-run the Layer 1 sequence on a fresh clone and confirm the README's
+  reproducibility paragraph still describes what happens, including its date.
+- Confirm the audit record is present and that its last line still reads
+  `VERDICT: SHIP`.
+- Say plainly whether anything found since C6 changes the verdict.
+
+**What it does not do.** It does not publish. Publishing is a date decision and
+it is Igor's.
+
+**verificar:** `LICENSE` exists at the repo root, the README names the licence,
+and a fresh clone runs the six Layer 1 commands with no failure.
+
+**Estimate.** 30 min.

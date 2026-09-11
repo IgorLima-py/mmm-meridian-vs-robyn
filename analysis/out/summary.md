@@ -13,6 +13,7 @@
 - runtime (s, mean): 1105.450
 - seeds passing the tool's own convergence check: 1 of 2 (not converged: 101)
 - run spec: 2000/2000 adapt/burnin — seeds 101, 102
+- same seeds, national arm: ROI |rel err| (mean) 0.470 — seeds 101, 102
 
 | channel | mean ROI rel err | mean \|ROI rel err\| | effect share − spend share (pp) |
 |---|---|---|---|

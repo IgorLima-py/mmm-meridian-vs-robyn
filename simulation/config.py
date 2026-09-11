@@ -55,8 +55,9 @@ CONFIG = {
     # Channels. Units:
     #   mean_weekly_spend: national, revenue units
     #   cost_per_unit: spend per 1000 exposure units (CPM-like)
-    #   adstock_alpha: geometric retention (equals Robyn's theta; inside
-    #                  Robyn's recommended bounds per channel type - PLAN D5)
+    #   adstock_alpha: geometric retention (equals Robyn's theta). PLAN D5
+    #                  meant these to sit inside Robyn's recommended bounds;
+    #                  ooh (0.6) and display (0.4) do not - see its amendment.
     #   hill_k: half-saturation, in units of mean adstocked exposure per capita
     #   hill_s: Hill slope (S>1 => S-shaped curve)
     #   true_roi: calibration target = incremental revenue / spend, full window

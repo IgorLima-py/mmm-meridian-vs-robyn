@@ -47,3 +47,14 @@ rather than silently edited into the table.
   disclosed as-is. Final convergence state across all five seeds: 101
   converged (4000×5), 102/103/104 not converged (4000×5), 105 converged
   (2000×5, pre-registered spec, untouched).
+- **2026-09-11 (pre-publication audit — a contradiction inside the
+  pre-registration, not a run change):** the θ bounds above (D5: tv 0.3–0.8,
+  ooh 0.1–0.4, social/display/search 0–0.3) exclude the generator's true
+  retention on two channels — ooh 0.6 and display 0.4 (`simulation/config.py`).
+  `docs/PLAN.md` D5 required the truths inside these bounds, while its own
+  parameter table set those two values. On ooh and display Robyn therefore could
+  not express the true carryover, even in principle — and because ooh's spend
+  tracks tv's by design, the cap may also have moved carryover onto Robyn's tv
+  estimate; not tested. No run was changed and the
+  committed extracts stand; the article, the README and every figure caption
+  that shows Robyn state it.

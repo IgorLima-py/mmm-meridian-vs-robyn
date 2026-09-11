@@ -1,6 +1,103 @@
 # Status
 
-_Atualizado: 2026-09-10 (sessão C5 — Karen, desktop GPU — C5 fechado)_
+_Atualizado: 2026-09-11 (sessão C6 — Karen, desktop GPU — C6 fechado, veredito SHIP)_
+
+## Sessão C6 (10-11/09) — a auditoria adversarial, nove rodadas até SHIP
+
+Karen, mas quase nada precisou dela: só a conferência dos priors do Meridian
+usou o venv WSL2 (ver "Preso a esta máquina"). O resto roda igual no Dell.
+
+### O que foi feito
+
+Nove rodadas do `publication-auditor`. Sete voltaram BLOCK, duas SHIP — a 6ª e,
+depois de uma checagem de regressão, a 9ª. O registro público está em
+**`analysis/AUDIT.md`** (última linha `VERDICT: SHIP`), linkado do mapa do
+README. Vinte arquivos mudaram; os que importam:
+
+- **`analysis/scoring.py`** — emite a comparação nas mesmas seeds quando um
+  braço roda num subconjunto das seeds de outro. É de lá que sai o 0.470.
+- **`analysis/figures.py`** — `curve_facts()` e `roi_facts()`: as legendas das
+  figs 1 e 2 agora **calculam** os números que citam e **afirmam** as frases
+  qualitativas que fazem. Se uma re-exportação invalidar qualquer uma, a figura
+  não é gerada. Testei os dois com sabotagem proposital; disparam nomeando a
+  afirmação quebrada.
+- **`article/`, `README.md`, `analysis/ORACLE.md`, `analysis/FIGURES.md`** — o
+  texto todo, incluindo o reenquadramento descrito abaixo.
+- **`docs/PLAN.md`, `runs/*/DECISIONS.md`, `simulation/config.py`,
+  `data/README.md`** — emendas datadas de 11/09. Nenhuma pré-registração foi
+  reescrita; a original fica e a emenda entra embaixo.
+
+Três achados mudaram a substância, não a redação:
+
+1. **Geo contra nacional era artefato de composição.** O artigo dizia que o geo
+   tinha o agregado melhor (0.499 contra 0.533). Mas 0.499 é média de 2 seeds e
+   0.533 de 5; nas mesmas duas seeds o nacional marca **0.470** — o geo é pior.
+2. **A D5 se contradisse desde o primeiro commit.** Ela exigia a verdade dentro
+   dos limites recomendados do Robyn ("truth outside would rig the test"), e a
+   tabela de parâmetros do mesmo commit pôs ooh em 0.6 (limite 0.1–0.4) e display
+   em 0.4 (limite 0–0.3). O Robyn não conseguia expressar o carryover verdadeiro
+   nesses dois canais.
+3. **A inclinação do Hill do Meridian é fixa em 1** (`slope_m` é
+   `Deterministic(1.0)` no 1.8.0; confirmei instanciando no venv da Karen, e os
+   extratos geo confirmam — não há `slope_m` no `rhat_by_param`). O plano
+   chamava isso de prior "concave-leaning". Com inclinação fixa, o Meridian não
+   representa o S do tv.
+
+Por causa de 2 e 3, a peça saiu de "as duas foram tratadas com generosidade"
+para **"o setup de cada ferramenta excluiu parte da verdade"**, com as duas
+exclusões declaradas onde os números aparecem — inclusive nas legendas.
+
+### O que foi tentado e falhou — não repita
+
+- **Auditor de escopo amplo estoura o limite de 40 turnos e volta sem veredito.**
+  Aconteceu na primeira chamada desta sessão (51 tool uses, 111k tokens, nenhum
+  veredito) exatamente como o C3 e o C4 já tinham avisado. O que funciona:
+  escopo estreito **e** instrução explícita de reservar orçamento para escrever
+  o veredito antes de acabar.
+- **`SendMessage` não existe neste build.** Subagente que estourou não se
+  retoma; tem de relançar. Não perca tempo procurando.
+- **Três subagentes em paralelo estouraram o limite de sessão** (429, duas
+  vezes, perdendo as três chamadas de uma vez). Rodar **em série**.
+- **O hook `git-destrutivo` bloqueia `git clean`**, inclusive em clone de
+  rascunho no scratchpad. Está certo. A saída é clonar de novo, não contornar.
+- **O erro mais caro fui eu.** Os bloqueantes das rodadas 2, 3, 6, 7 e 8 foram
+  introduzidos pelas minhas próprias correções. Dois padrões: (a) número
+  publicado sem fonte commitada; (b) **adjetivo de distância aplicado a um grupo
+  de números** — "within 0.02" para um gap de 0.0208, "well below" para um canal
+  a 0.026. O que resolveu: **listar os números em vez de adjetivar**, e calcular
+  cada um antes de escrever. A última rodada pegou ainda um "a mediana" que, no
+  meio de uma frase sobre cinco médias, se lia como a mediana delas (1.06) e não
+  a do prior (1.22) — a palavra "prior" era obrigatória.
+
+### Reprodutibilidade, re-verificada no estado final
+
+Não reaproveitei o passe do C5: clone novo, venv construído do zero só com
+`envs/analysis.lock.txt`, as seis chamadas da camada 1, e comparação byte a
+byte. **14.2 s**, conteúdo idêntico a menos de CRLF, os três PNGs bit a bit,
+42 arquivos listados pelo git. O README teve de mudar de "under 15 seconds"
+para "about 10–15 seconds": as medições variaram de 10 a 15 s, e afirmação
+publicada não pode depender do relógio estar de bom humor.
+
+### Preso a esta máquina
+
+Só uma coisa: a conferência dos priors do Meridian (`slope_m`, `alpha_m`,
+`roi_m`) foi feita instanciando `PriorDistribution()` no venv WSL2 da Karen.
+O resultado está escrito nas emendas e no `AUDIT.md`, então **não precisa ser
+refeito** — mas quem quiser repetir precisa da Karen.
+
+### Decisões do Igor que continuam abertas
+
+1. **Não existe `LICENSE`.** Herdado do C5 e ainda em pé. O auditor não cobre
+   licenciamento, então ele nunca ia pegar isso. Repo público sem licença é repo
+   que ninguém pode reusar legalmente. É a primeira coisa da próxima fatia.
+2. **Publicar virou decisão de data**, não de estado: a peça está em SHIP.
+3. **Declarar ou regerar a contradição da D5** (`docs/BACKLOG.md` item 9).
+   Regerar muda todos os números. Escolhi declarar; a escolha é reversível.
+4. **Degrau do oráculo com inclinação fixa em 1** (`BACKLOG` item 8): mediria
+   quanto do erro do Meridian vem da inclinação. Não rodei — é análise nova.
+5. **O artigo foi de 1.299 para 1.835 palavras**, acima da faixa de 800–1300 do
+   `verificar:` do C4. Todo o acréscimo é ressalva que a auditoria exigiu. Há
+   nota datada no `ROADMAP` registrando isso.
 
 ## Sessão C5 (10/09) — README público e o passe de reprodutibilidade
 
@@ -245,7 +342,8 @@ que importam para quem continuar:
   por completo: ooh **0.161** é o canal mais preciso dele e o menor erro por
   canal que qualquer uma das duas ferramentas alcança — em cima do canal menos
   recuperável do cenário. As cinco células menores da tabela são todas do
-  oráculo e todas em tv. Isso muda o enquadramento do artigo e é o gancho mais
+  oráculo — quatro em tv e uma em search (corrigido em 11/09, na auditoria do
+  C6: aqui dizia "todas em tv"). Isso muda o enquadramento do artigo e é o gancho mais
   forte do C4.
 - **O dial de correlação tv–ooh nunca acertou o alvo.** Realizado 0.34, 0.37,
   0.38, 0.38, 0.61 contra alvo pré-registrado de ~0.4–0.5: **zero de cinco**
@@ -253,7 +351,8 @@ que importam para quem continuar:
 - **O mecanismo de encolhimento estava mal descrito.** "Cada ferramenta encolhe
   para um valor característico" não descreve o Meridian: ele **comprime** para
   a banda 0.74–1.24 (fator 1.7 contra 4.4 da verdade), com a mediana do prior
-  (1.22) no **teto** da banda, não no centro. O Robyn sim colapsa: banda
+  (1.22) perto do topo da banda (1.24), não no centro — corrigido em 11/09, na
+  auditoria do C6: aqui dizia "no **teto**", e a média de ooh passa dela. O Robyn sim colapsa: banda
   0.68–0.73, fator 1.08.
 
 ### O que foi tentado e falhou — não repita

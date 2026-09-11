@@ -2,8 +2,9 @@
 
 > **Snapshot, not a live document (added 2026-09-09).** Everything below is the
 > state of the project on 2026-09-08, and it is left unedited on purpose — it
-> is the record of what was known when the decisions were made. Two things
-> moved afterwards, so do not quote its Robyn figures:
+> is the record of what was known when the decisions were made. Three things
+> moved afterwards, so do not quote its Robyn figures or its reading of
+> Meridian:
 >
 > - The Robyn escalation this document recommended has since run. Seeds 102,
 >   103 and 104 went to 4000x5 and still fail Robyn's own convergence check
@@ -12,6 +13,11 @@
 > - With those final extracts the Robyn row of the scoring table is
 >   −0.540 / 0.555 / 0.16 / 0.277, not the −0.506 / 0.538 / 0.20 / 0.263 quoted
 >   below, and the Meridian-vs-Robyn gap is 0.533 vs 0.555, not 0.533 vs 0.538.
+> - Its reading that Meridian collapses to its prior median (~1.22) did not
+>   survive either. `analysis/ORACLE.md` rejected it on 2026-09-09: Meridian's
+>   five national channel means span 0.74 to 1.24, with the prior median near the
+>   top of that range, not its centre — compression, not collapse. (This
+>   bullet was added in the pre-publication audit, 2026-09-11.)
 >
 > The current numbers of record are `analysis/out/summary.md` and
 > `analysis/ORACLE.md`; the charts built on them are in `analysis/figures/`.

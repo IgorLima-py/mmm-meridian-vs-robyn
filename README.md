@@ -14,7 +14,7 @@ selection rule were all committed before the first run.
 This is a comparison of two tools and a reading of what they can and cannot tell you.
 It is not a production marketing-mix model, and nothing here is offered as one.
 
-📄 **[Read the article](article/meridian-vs-robyn.md)** (~1,300 words) — the full argument.
+📄 **[Read the article](article/meridian-vs-robyn.md)** (~1,850 words) — the full argument.
 
 ---
 
@@ -23,21 +23,24 @@ It is not a production marketing-mix model, and nothing here is offered as one.
 **There is no winner.** On the like-for-like national arm the two tools tie, and both
 miss badly:
 
-| arm | mean \|ROI error\| | interval covers truth | interval width / true ROI |
+| arm | mean \|relative ROI error\| | interval covers truth | interval width / true ROI |
 |---|---|---|---|
 | Meridian — national, 5 seeds | 0.533 | 60% (nominal 90%) | 1.615 |
-| Robyn — national, 5 seeds | 0.555 | 16% — **not a posterior, not comparable** | 0.277 |
-| Meridian — geo, 2 seeds | 0.499 | 50% | 1.196 |
+| Robyn — national, 5 seeds (3 not converged) | 0.555 | 16% — **not a posterior, not comparable** | 0.277 |
+| Meridian — geo, 2 seeds (1 not converged) | 0.499 | 50% | 1.196 |
 | **Oracle** — national, true parameters | 0.432 | 88% | 1.338 |
 | **Oracle** — national, estimated baseline | 0.598 | 92% | 2.753 |
 
 *Every cell above is read from [`analysis/out/summary.md`](analysis/out/summary.md), which
-`analysis/scoring.py` regenerates from the committed inputs.*
+`analysis/scoring.py` regenerates from the committed inputs. The geo row is not an upgrade
+on the national one: on those same two seeds the national arm scores 0.470.*
 
 The last two rows are the point. The **oracle** is an estimator that cheats: it is handed
 the generator's functional form and the true adstock and Hill parameters, and fits only
-five coefficients. Nobody can run one on real data. It exists to separate *the tools
-failed* from *the data could not answer* — and it says both are true, per channel:
+the five coefficients — plus, in the last row, its own baseline, as the tools must. Nobody
+can run one on real data. It exists to separate *the tools
+failed* from *the data could not answer* — and it says the data could answer on three
+channels and could not on two:
 
 | channel | signal / noise | oracle err | Meridian err | Robyn err |
 |---|---|---|---|---|
@@ -48,16 +51,22 @@ failed* from *the data could not answer* — and it says both are true, per chan
 | display | 0.10 | 0.76 | 0.38 | 0.43 |
 
 *Mean absolute relative ROI error on simulated data, national arm, five seeds; the oracle
-column is the rung handed the true baseline. Signal-to-noise is each channel's true
+column is the rung handed the true baseline, and three of Robyn's five seeds fail its own
+convergence check. Signal-to-noise is each channel's true
 contribution against the revenue noise, both as standard deviations, from
 [`analysis/out/diagnostics.md`](analysis/out/diagnostics.md).*
 
 ![Estimated vs true ROI per channel, per tool, with the oracle as a third series — simulated data](analysis/figures/fig1_roi_per_channel.png)
 
-For **tv, search and social** the truth is in the data and neither tool found it. For
-**ooh and display** the truth is not in the data at all — and both tools report those two
-with the same apparent confidence as the rest. Robyn's own error column ranks ooh as its
-*best* channel; the truth is the reverse.
+*The figure's oracle is the rung that estimates its own baseline, as the tools must — not
+the table's true-baseline rung — and its axis prints the C7 gate's signal-to-noise, within
+0.02 of the table's (tv 1.89 vs 1.91; [`analysis/ORACLE.md`](analysis/ORACLE.md) explains
+the two variants).*
+
+For **tv, search and social** the truth is in the data and neither tool, as configured,
+found it. For **ooh and display** the truth is not in the data at all — and both tools
+report those two with the same apparent confidence as the rest. Scored against the truth,
+Robyn's best channel is ooh — one of the two the data cannot identify.
 
 **Which tool to use is conditional** — uncertainty you can act on, geographic variation,
 an allocation finance will sign off on, runtime, and maintenance risk each point
@@ -99,18 +108,20 @@ the scenario diagnostics the signal-to-noise column comes from, and the three fi
 `--diagnostics` replaces the fit rather than adding to it, which is why it is a separate
 invocation.
 
-**Verified, not asserted.** On 2026-09-10 this sequence was run against a clone into an
+**Verified, not asserted.** On 2026-09-11 this sequence was run against a clone into an
 empty directory, in a virtualenv built from scratch containing nothing but
 `envs/analysis.lock.txt` and pip — neither model environment installed in it, and nothing
-in the sequence touching WSL2, R or a GPU. All six commands exit 0 in **under 15 seconds
+in the sequence touching WSL2, R or a GPU. All six commands exit 0 in **about 10–15 seconds
 total**, and every regenerated tracked artifact — the 20 data files, the 20 oracle JSONs,
 `analysis/out/summary.md`, `analysis/out/diagnostics.md` and all three PNGs — came back
 identical to the committed copies.
 
-One caveat on "identical": on Windows the generator writes CRLF while git stores these
-files with LF (`.gitattributes`), so `git status` lists the CSVs as modified after a
-regeneration. The *content* is byte-identical — `git diff --ignore-cr-at-eol --quiet`
-returns 0. That is the honest form of the determinism claim.
+One caveat on "identical": on Windows every text artifact the sequence writes — the CSVs,
+the JSONs and the two `analysis/out/` markdown files — comes out with CRLF line endings,
+while git stores them with LF (`.gitattributes`), so `git status` lists all 42 as modified
+after a regeneration. The *content* is byte-identical — `git diff --ignore-cr-at-eol
+--quiet` returns 0 — and the three PNGs match bit for bit. That is the honest form of the
+determinism claim.
 
 ### Layer 2 — re-running the tools themselves
 
@@ -187,6 +198,7 @@ in [`docs/BACKLOG.md`](docs/BACKLOG.md). Stated, not silent.
 | [`runs/`](runs/) | run scripts, the committed result extracts, and a `DECISIONS.md` per tool — every setup choice, dated, including the ones that flatter each tool |
 | [`analysis/`](analysis/) | scoring harness, the [oracle ladder](analysis/ORACLE.md), the pre-registered [selection rule](analysis/SELECTION_RULE.md), figures |
 | [`analysis/out/summary.md`](analysis/out/summary.md) | the provenance every published number cites |
+| [`analysis/AUDIT.md`](analysis/AUDIT.md) | the adversarial pre-publication audit: what it was reviewed for, and the nine rounds it took |
 | [`envs/`](envs/ENVIRONMENT.md) | setup scripts, lock files, host spec, friction log |
 | [`docs/`](docs/PLAN.md) | the plan and its decision log, references, deviations |
 
@@ -196,18 +208,39 @@ Heavy model-run outputs are not committed — only the small extracts in `runs/*
 
 ## Scope, honestly
 
-One simulated scenario. Exogenous spend — no budget chasing demand, no targeting
-feedback, which is the *easy* regime and flatters both tools. Five fixed seeds. One
-pinned version of each tool, each run once under one pre-registered setup. Constant
-effectiveness over 156 weeks.
+One simulated scenario, whose media transforms — geometric adstock, Hill saturation — sit
+inside both tools' model families, a best case real data never offers. Not an exact one:
+Robyn cannot express the true adstock on two channels, nor Meridian — its default priors fix
+every Hill slope at 1 — the true slope on four, tv's S-shape (2) furthest off (next
+paragraph); on the national arm, Hill applied per geo and summed is not Hill of the total;
+and the baseline
+carries a mid-May event on no holiday calendar. Gross misspecification is untested here.
+Exogenous
+spend — no budget chasing demand, no targeting feedback, which is the *easy* regime and
+likely flatters both tools' accuracy.
+Five fixed seeds. One version of each tool — Meridian's Python stack pinned, Robyn's R
+install recorded but not pinned — under pre-registered setups, escalated where runs failed
+to converge, as the next paragraph lists. Constant effectiveness over 156 weeks.
 
-Two caveats travel with every Robyn number: three of five seeds fail Robyn's own
-convergence check even at double the pre-registered iterations, and the five-seed means
-blend two specs (seeds 101-104 at 4000×5, seed 105 at its converged 2000×5).
-Symmetrically, Meridian's geo arm ran at four times its pre-registered sampler spec and
-carries far more divergent transitions than the national arm. Both are logged in
-`runs/*/DECISIONS.md`.
+Three caveats travel with every Robyn number: three of five seeds fail Robyn's own
+convergence check even at double the pre-registered iterations; the five-seed means blend
+two specs (seeds 101-104 at 4000×5, seed 105 at its converged 2000×5); and its adstock
+bounds exclude the true retention on ooh (0.6 against 0.1–0.4) and display (0.4 against
+0–0.3). That last one is a contradiction inside the pre-registration itself —
+`docs/PLAN.md` D5 against its own parameter table — which only the pre-publication audit caught; it
+is recorded in dated amendments rather than fixed, since fixing it means re-running both
+tools. One caveat travels with every Meridian number: its slope fixed at 1, which the
+pre-registration had misdescribed as "concave-leaning". Because ooh's spend was designed to
+track tv's, either tool's misfit on one of those two channels can leak into the other; that
+was not tested.
+Meridian's geo arm, beyond that, ran at four times its pre-registered adaptation and
+burn-in, still left one of its two seeds unconverged, and carries far more divergent
+transitions than the national arm. It also differs from the national arm in more than
+geography — a baseline with its own free level every week, where the national arm's has one
+only at points Meridian picks itself — and drops the
+pre-registered competitor control, which that baseline makes redundant (Meridian rejects
+it; dropping it is statistically a no-op). All of it is logged in `runs/*/DECISIONS.md`.
 
-None of this is evidence about other scenarios, about endogenous spend, or about real
+None of this is evidence about misspecified models, other scenarios, endogenous spend, or real
 data. It is evidence about what these two tools did to *this* dataset, whose answer was
 known in advance.

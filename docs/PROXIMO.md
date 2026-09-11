@@ -4,46 +4,42 @@ Ponteiro de UMA fatia. A fila inteira está em `docs/ROADMAP.md` — este arquiv
 é só o topo dela, resolvido agora. Lido pelo hook `SessionStart` e pelo `/oi`;
 avançado pelo `/tchau` só depois que o `verificar:` abaixo estiver satisfeito.
 
-chat: C6
-titulo: Auditoria adversarial até o veredito SHIP
-perfil: leitura adversarial da peça inteira + correção do que ela reprovar
-modelo: opus
-esforco: max
+chat: C8
+titulo: Portão de publicação — a licença e as últimas conferências
+perfil: uma decisão do Igor + comandos; nada de análise nem de escrita
+modelo: sonnet
+esforco: low
 forma: sessao
 maquina: any
 plan-mode: nao
-objetivo: Rodar o `publication-auditor` contra a peça terminada — artigo, README, figuras e resultados — e agir em cada achado até o veredito ser SHIP. É o último portão antes de publicar, e o trabalho dele é achar o que todas as passadas anteriores deixaram passar.
+objetivo: Fechar a única coisa que ainda separa a peça de um repositório público — ela não tem `LICENSE`. Apresentar as opções de licença para o Igor escolher, escrever o arquivo depois que ele escolher, citar a licença no README, e rodar as conferências finais antes do go/no-go. Publicar não é desta fatia: é decisão de data, e é do Igor.
 
 ## Contexto mínimo para abrir
 
-- **C5 fechou.** O `README.md` agora tem ~215 linhas e é a porta de entrada
-  pública: pergunta, resposta condicional sem vencedor, duas tabelas de número
-  com legenda de proveniência, fig1 embutida, duas camadas de reprodução,
-  tabela de versões com o risco do `tfp-nightly`, e o limite do lado R. O
-  artigo (`article/meridian-vs-robyn.md`, 1.299 palavras) **não foi tocado** —
-  ele já está em `VERDICT: SHIP` e tem 1 palavra de folga até o teto do C4.
-- **A auditoria agora tem uma superfície maior do que no C4.** Ela precisa
-  cobrir o README também, e o README repete números do artigo: os agregados por
-  braço, a tabela de recuperabilidade por canal e os tempos de run. Todo número
-  repetido é uma chance nova de divergir de `analysis/out/summary.md`.
-- **Como rodar o auditor, pelo que o C4 aprendeu:** a forma ampla (mandar ele
-  auditar tudo de uma vez) **estoura o limite de turnos** e volta sem veredito
-  — aconteceu no C3 e no C4. O que funciona é **rodada estreita**: um alvo por
-  chamada (o artigo; depois o README; depois as figuras/legendas), 7-17
-  chamadas cada, cada uma voltando com veredito próprio.
-- **Ele indicia, não conserta.** Cada BLOCK vira correção feita à mão aqui, ou
-  vira ressalva explícita na seção de limitações com o motivo de não ter sido
-  corrigida. As duas saídas são aceitáveis; ignorar não é.
-- **A saída da auditoria é commitada** sob `analysis/` — é isso que mostra ao
-  leitor que a peça foi revisada adversarialmente e contra o quê.
-- **Duas decisões abertas que o Igor precisa fechar, e o auditor vai bater
-  nelas:** (1) **não existe `LICENSE`** — repo público sem licença é repo que
-  ninguém pode reusar legalmente; (2) o README não diz mais "work in progress",
-  então publicar passa a ser uma decisão de data, não de estado.
-- **Item opcional herdado do C5, não bloqueante:** o gerador escreve CRLF no
-  Windows enquanto o git guarda LF, então `git status` acusa os CSVs como
-  modificados depois de re-gerar. O conteúdo é idêntico e o README documenta
-  isso honestamente. Fazer o gerador escrever LF explícito eliminaria a
-  ressalva — é meia hora e não pertence ao C6.
+- **O C6 fechou com `VERDICT: SHIP`.** Nove rodadas do `publication-auditor`,
+  sete BLOCK e duas SHIP. O registro público está em `analysis/AUDIT.md` — leia
+  a seção "What the audit did not resolve" antes de dizer qualquer coisa sobre
+  o estado da peça. A narrativa da sessão está no `docs/STATUS.md`.
+- **A licença é decisão do Igor, não sua.** O repo tem código (simulador,
+  scoring, figuras) e uma peça escrita. O arranjo usual é uma licença
+  permissiva para o código (MIT ou Apache-2.0) mais CC BY 4.0 para o artigo.
+  Apresente as opções com uma linha cada sobre o que mudam para quem quer
+  reusar o simulador ou citar o artigo, e **só escreva o arquivo depois que ele
+  escolher**. Não invente licença por conta própria.
+- **O que NÃO é desta fatia.** Não publique. Não mexa no artigo, no README nem
+  nas figuras além de citar a licença — a peça passou por nove rodadas de
+  auditoria e cada edição nova já se mostrou capaz de introduzir erro. Se achar
+  algo errado, anote no `STATUS.md` e fale com o Igor; não corrija de improviso.
+- **As conferências finais são comandos, não leitura:** clone limpo, venv novo
+  a partir de `envs/analysis.lock.txt`, as seis chamadas da camada 1 do README,
+  e conferir que a última linha do `analysis/AUDIT.md` ainda lê `VERDICT: SHIP`.
+  O parágrafo "Verified, not asserted" do README está datado de 2026-09-11; se
+  você rodar noutro dia e nada tiver mudado, a data continua correta — ela
+  descreve o passe que validou este estado, não o dia em que você leu.
+- **Quatro decisões do Igor continuam abertas** e estão listadas no fim da
+  seção do C6 no `docs/STATUS.md`: publicar (data), declarar vs. regerar a
+  contradição da D5 (`BACKLOG` 9), o degrau do oráculo com inclinação 1
+  (`BACKLOG` 8), e o tamanho do artigo (1.835 palavras, acima da faixa do C4,
+  com nota datada no `ROADMAP`). Nenhuma bloqueia a publicação.
 
-**verificar:** a saída do `publication-auditor` está commitada sob `analysis/` e sua última linha lê `VERDICT: SHIP`.
+**verificar:** `LICENSE` existe na raiz, o README nomeia a licença, e um clone limpo roda as seis chamadas da camada 1 sem falha.
