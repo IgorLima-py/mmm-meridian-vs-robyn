@@ -1,5 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoCompactWindow": 400000,
   "permissions": {
     "allow": [
       "Bash(python -m simulation.checks *)",
@@ -36,42 +37,10 @@
     "PYTHONUTF8": "1"
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell",
-            "args": [
-              "-NoProfile",
-              "-ExecutionPolicy",
-              "Bypass",
-              "-File",
-              "${CLAUDE_PROJECT_DIR}/.claude/hooks/sessao-abre.ps1"
-            ],
-            "timeout": 60,
-            "statusMessage": "Lendo o estado do repositorio..."
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
-          {
-            "type": "command",
-            "command": "powershell",
-            "args": [
-              "-NoProfile",
-              "-ExecutionPolicy",
-              "Bypass",
-              "-File",
-              "${CLAUDE_PROJECT_DIR}/.claude/hooks/git-destrutivo.ps1"
-            ],
-            "timeout": 15,
-            "statusMessage": "Conferindo o comando git..."
-          },
           {
             "type": "command",
             "if": "Bash(git commit *)",

@@ -68,6 +68,11 @@ entre eles é **git + `docs/STATUS.md`** — nunca outra coisa:
    execução, estimativas) e `docs/REFERENCES.md`.
 4. Mostra o plano ao Igor e **só começa a executar depois do OK dele.**
 
+A linha de contrato da bateria, sozinha e na coluna zero (quem lê é o hook de push do
+plugin `playbook`, o subagente `bateria` e o `/tchau`):
+
+bateria: python -m simulation.checks
+
 ## Ao abrir a sessão
 
 Executado pelo comando `/oi`. **Ele é deliberadamente barato** — existe para
@@ -129,9 +134,11 @@ corrigir — nunca para contornar com `git add -f` ou mexendo no `.gitignore`.
 
 Versionada em `.claude/` (o `.gitignore` deixa passar tudo menos o estado
 local). Duas camadas: o **canon do playbook**, padronizado entre os projetos do
-Igor (`/oi`, `/tchau`, `/360`, `hooks/sessao-abre.ps1`, os `deny` de segurança
-e o par `docs/PROXIMO.md` + `docs/ROADMAP.md`), e o que é **só deste repo**,
-abaixo. Ao mexer na infraestrutura: mudança que vale para todo projeto vai para
+Igor, e o que é **só deste repo**, abaixo. Desde 22/09/2026 (C9b), o canon
+chega pelo plugin `playbook`, ligado no usuário de cada máquina: o `/oi`, o
+`/tchau`, o `/360`, o `/grill` e os hooks não têm mais cópia em `.claude/`.
+Aqui ficam só os `deny` de segurança do canon e o par `docs/PROXIMO.md` +
+`docs/ROADMAP.md`. Ao mexer na infraestrutura: mudança que vale para todo projeto vai para
 o playbook, não para cá.
 
 - **`settings.json`** — união das duas camadas: os `deny` do canon, mais os
