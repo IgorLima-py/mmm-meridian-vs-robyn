@@ -1,6 +1,29 @@
 # Status
 
-_Atualizado: 2026-09-11 (sessão C6 — Karen, desktop GPU — C6 fechado, veredito SHIP)_
+_Atualizado: 2026-09-24 (C8, feita de fora pela sessão C3 do carreira-ai, no Dell)_
+
+## Sessão C8 (24/09): licença, humanize, rodadas 10 e 11
+
+- **Licença:** MIT no código, CC BY 4.0 no artigo (`LICENSE`, `article/LICENSE.md`,
+  seção Licence no README). Escolha do Igor, 24/09.
+- **Humanize** no README e no artigo: só travessão virando outra pontuação. Os
+  números batem como multiconjunto antes e depois, e os qualificadores também.
+- **Rodada 10** do auditor, só no diff: SHIP, com 1 achado médio e 4 leves, todos
+  do mesmo mecanismo: a vírgula no lugar do travessão religou a cláusula no lugar
+  errado. Corrigidos com o conserto mínimo do auditor. **Rodada 11**, nas seis
+  linhas corrigidas: SHIP, nada a reportar. Registro em `analysis/AUDIT.md`.
+- **Clone limpo nesta máquina (Dell, `C:\Users\igorlima`):** as seis chamadas da
+  camada 1 saem com 0 em 41 s, e `summary.md`, as três figuras e os 20 arquivos de
+  dados voltam idênticos. **Mas 8 JSONs do oráculo diferem no 16º dígito**
+  (`r2` 0.8052827723838654 vira ...657, por exemplo), e `git diff --ignore-cr-at-eol`
+  não volta 0. É ruído de ponto flutuante entre máquinas, e não mexe em número
+  publicado. O parágrafo "Verified, not asserted" do README descreve o passe de
+  11/09 e continua verdadeiro sobre ele, mas "every regenerated tracked artifact
+  came back identical" **não vale em qualquer máquina**. Não corrigi: é decisão do
+  Igor se o README passa a dizer isso. O tempo também variou (41 s aqui, contra
+  "about 10–15 seconds").
+- **Pegadinha do Windows:** venv em caminho comprido (o scratchpad) quebra o
+  `pip install` do numpy com `WinError 206`. Clone num caminho curto (`%TEMP%\mmc`).
 
 ## Sessão C6 (10-11/09) — a auditoria adversarial, nove rodadas até SHIP
 

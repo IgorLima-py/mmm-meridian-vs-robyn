@@ -97,4 +97,20 @@ than its wording:
 - Whether Robyn's γ bounds contain the true half-saturation points. Its
   parametrisation is relative to each series' own range; this was not checked.
 
+## Rounds 10 and 11: the copy pass before publication
+
+On 2026-09-24, after round 9, the README and the article went through one more
+edit: em dashes used as connectors were replaced by other punctuation, and the
+licence was added. No number changed. The numerals in both files were checked as
+a multiset before and after, and so were the qualifiers the earlier rounds had
+caught drifting.
+
+Round 10 audited only that diff and returned SHIP, with one medium and four low
+findings. All five came from the same mechanism: a dash turned into a comma or a
+colon re-attached a clause to a different part of the sentence. The medium one
+was the article's last line, where "not evidence about ... real data" came to
+read as one more item in the scope list instead of a disclaimer covering all of
+it. Each line took the auditor's minimum fix. Round 11 audited those six lines,
+found every finding resolved and nothing new, and returned SHIP.
+
 VERDICT: SHIP

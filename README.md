@@ -198,7 +198,7 @@ in [`docs/BACKLOG.md`](docs/BACKLOG.md). Stated, not silent.
 | [`runs/`](runs/) | run scripts, the committed result extracts, and a `DECISIONS.md` per tool — every setup choice, dated, including the ones that flatter each tool |
 | [`analysis/`](analysis/) | scoring harness, the [oracle ladder](analysis/ORACLE.md), the pre-registered [selection rule](analysis/SELECTION_RULE.md), figures |
 | [`analysis/out/summary.md`](analysis/out/summary.md) | the provenance every published number cites |
-| [`analysis/AUDIT.md`](analysis/AUDIT.md) | the adversarial pre-publication audit: what it was reviewed for, and the nine rounds it took |
+| [`analysis/AUDIT.md`](analysis/AUDIT.md) | the adversarial pre-publication audit: what it was reviewed for, and the eleven rounds it took |
 | [`envs/`](envs/ENVIRONMENT.md) | setup scripts, lock files, host spec, friction log |
 | [`docs/`](docs/PLAN.md) | the plan and its decision log, references, deviations |
 
