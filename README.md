@@ -204,6 +204,11 @@ in [`docs/BACKLOG.md`](docs/BACKLOG.md). Stated, not silent.
 
 Heavy model-run outputs are not committed — only the small extracts in `runs/*/results/`.
 
+## Licence
+
+The code is MIT ([`LICENSE`](LICENSE)). The article is CC BY 4.0
+([`article/LICENSE.md`](article/LICENSE.md)): reuse it with credit.
+
 ---
 
 ## Scope, honestly
