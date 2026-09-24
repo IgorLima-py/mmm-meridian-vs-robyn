@@ -13,14 +13,14 @@ regression driven by Nevergrad) ran over the same five seeds on the national agg
 plus a second Meridian arm on two seeds of the geo panel, which Robyn cannot use. The
 generator uses geometric adstock and Hill saturation, the intersection of both tools'
 model families: neither gets a home advantage, and both work in the right family of media
-transforms, though not with every parameter in it (below), a best case the limitations
+transforms, though not with every parameter in it (below). That is a best case the limitations
 return to. True ROIs span 0.8 to
 3.5, with spend share deliberately misaligned from effect share. Harness, metrics and Robyn's selection
 rule were pre-registered.
 
 The setup was meant to be generous to both, and it is logged. Meridian got `max_lag=13`
 instead of its default 8, matching the true adstock support. Robyn got its own recommended
-bounds, which the pre-registration said would contain the true values, and on ooh and
+bounds, which the pre-registration said would contain the true values. On ooh and
 display they do not: true adstock retention 0.6 against a 0.1–0.4 bound, and 0.4 against
 0–0.3. Meridian ran on its default priors, which fix every Hill slope at 1 where the
 pre-registration had called them merely "concave-leaning": against true slopes of 0.7 to
@@ -102,7 +102,7 @@ smallest here) evidence of precision.
 
 Three caveats travel with every Robyn number here: three of five seeds fail its own
 convergence check even at double the pre-registered iterations; its five-seed means blend
-two specs: seeds 101-104 at 4000x5, seed 105 at its original converged 2000x5; and it
+two specs (seeds 101-104 at 4000x5, seed 105 at its original converged 2000x5); and it
 cannot express the true adstock on ooh and display. One travels with every Meridian number:
 it cannot express the true Hill slope on four channels, tv's S-shape furthest off. The two
 exclusions fall on different channels (Robyn's on the two this data cannot identify for
@@ -118,8 +118,8 @@ rejects it, and dropping it is statistically a no-op.
 
 There is no winner. The honest answer is conditional.
 
-- **Uncertainty you can act on:** Meridian: 60% coverage is bad, but Robyn's interval
-  answers a different question.
+- **Uncertainty you can act on:** Meridian (60% coverage is bad, but Robyn's interval
+  answers a different question).
 - **Geographic variation:** only Meridian can use it, and here it showed no accuracy gain.
   On the two seeds the geo arm ran it scored 0.499, the national arm 0.470 on those same
   seeds (the 0.533 above averages all five), with one geo seed not converged and worse
@@ -176,5 +176,5 @@ tool included) to `runs/*/DECISIONS.md` and `analysis/SELECTION_RULE.md`.
 
 Scope: one simulated scenario with media transforms both tools share, exogenous spend, five
 fixed seeds, one version of each tool (Robyn's recorded, not reproducibly pinned),
-pre-registered setups with the escalations logged above, not evidence about misspecified
+pre-registered setups with the escalations logged above. None of it is evidence about misspecified
 models, other scenarios, endogenous spend, or real data.
