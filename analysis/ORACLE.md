@@ -413,3 +413,178 @@ variance-decomposition route gives about 0.84. A number that moves between
 S/N figure above is one definition, computed by one committed function. A per-channel recoverability gate — run the oracle, require a
 minimum oracle accuracy before any tool run is worth doing — is the fix, and it
 is the part of this project most worth handing to someone else.
+
+## Setup-constrained rungs
+
+*Added 2026-09-29, part 2. Pre-registered in `docs/PLAN.md` §8 before any
+number was computed, and amended the same day in §8.6 and §8.7 for the
+reasons given below. Everything above this section is the v1 record and is
+unchanged.*
+
+Three questions were left open by the pre-publication audit
+(`analysis/AUDIT.md`), and by this page: how much of Meridian's miss comes
+from its fixed Hill slope; whether one channel's constraint leaked into
+another channel's estimate; and whether Robyn's γ bounds contain the true
+half-saturation. All three were open for one reason: every rung above is handed
+the true shape, which neither tool's setup could fully express. Two rungs
+now restrict the shape to what each setup could express:
+
+| Rung | Tool id | What it is given |
+|---|---|---|
+| L6 | `oracle_nat_meridian_setup` | L3, with every channel's regressor replaced by its best approximation inside Meridian 1.8.0's space as v1 ran it: Hill slope fixed at 1, half-saturation inside the support of `ec_m` |
+| L7 | `oracle_nat_robyn_setup` | the same, inside Robyn 3.12.1's space as v1 ran it: θ inside its per-channel bounds, α in [0.5, 3], γ in [0.3, 1] |
+
+Each is L3 in every other respect: national aggregate regressors, a baseline
+estimated as intercept + trend + 3 Fourier harmonics + the control, OLS, the
+90% OLS interval. Only **hard** constraints are modelled (a prior's support, a
+hyperparameter's bounds). Where a prior puts its mass inside that support,
+such as Meridian's `LogNormal(0.2, 0.9)` ROI prior, stays on the tool's side of
+the ledger below.
+
+Scored numbers come from `analysis/out/summary.md` (the per-rung blocks and
+the "Setup decomposition" table). The projections, the noiseless fits and the
+three answers come from `analysis/out/diagnostics.md`, written by
+`python analysis/oracle.py --diagnostics`.
+
+### How the rungs were built, and what failed first
+
+The pre-registration asked for more: a rung (L5) that estimated the shape
+jointly from revenue, and L6 and L7 as the same search restricted to each
+setup. It also pre-registered a test of that search. On noiseless data built
+from the true shape, the search had to find the truth from seven random
+starts. It failed on all five seeds. The truth sits at a residual of about
+1e-16, but the random starts stopped at other shapes whose residual was
+about 1e-7 of the total. On the national aggregate the five shapes are close
+to jointly unidentified even without noise, and a search that moves one
+channel at a time cannot cross the ridges where one channel's shape
+compensates for another's. The stop rule fired and no number from that
+search exists (commit `a9e062b` reproduces the failure). L5 was retired, and
+the amendment (§8.6) redefined L6 and L7 as **projections**: each channel's
+true regressor is approximated inside the setup's space, one channel at a
+time, a problem that is identified. Projecting onto the unconstrained space
+returns the true shape on 25 of 25 channel-seeds.
+
+A second amendment (§8.7) followed the first run of the projections. Meridian's
+tv projection landed on the ceiling of the search grid, not on a limit of
+Meridian's, so the grid was widened to cover `ec_m`'s whole support. The two
+aggregate numbers seen before that amendment are disclosed in it.
+
+What the projections look like:
+
+- **Meridian's space.** tv's best slope-1 approximation is close to linear:
+  its half-saturation runs to `ec_m`'s ceiling on all five seeds, and 1.0e-2
+  of the true regressor's sum of squares stays out of reach. On the other four
+  channels the unreachable part is at most 1.1e-5, and on ooh, whose true
+  slope is 1, it is zero.
+- **Robyn's space.** tv, social and search are reproduced exactly: their true
+  shapes are inside Robyn's bounds. ooh's retention is capped at 0.4 against a
+  true 0.6 (3.2e-3 unreachable; the half-saturation lands on the γ floor on 3
+  of 5 seeds). display's is capped at 0.3 against 0.4 (1.7e-4).
+
+### Q1: Meridian's fixed slope explains little of its miss, and none on tv
+
+Mean signed ROI errors, national arm. The noiseless column is the
+constrained fit on the true media contributions, read against the same fit
+with the true shape (which carries only the aggregation gap):
+
+| channel | slope 1, noiseless shift | L3 | L6 (slope 1) | Meridian |
+|---|---|---|---|---|
+| tv | +0.237 | −0.008 | +0.202 | −0.336 |
+| search | −0.112 | −0.186 | −0.114 | −0.697 |
+| social | −0.078 | −0.030 | −0.048 | −0.698 |
+
+- **tv.** Fixing the slope at 1 pushes tv's ROI **up**, by about a quarter,
+  while Meridian missed it **down** by a third. The setup cannot explain a
+  miss in the opposite direction. Something else in the tool carried the
+  estimate from where its setup alone would have put it (L6, +0.202) to where it
+  landed (−0.336).
+- **search and social.** The slope pushes the same way as the miss, but by
+  about a sixth of it on search (0.112 of 0.697) and a ninth on social (0.078
+  of 0.698) in the noiseless limit. On noisy revenue its price in absolute
+  error is −0.017 on search and +0.035 on social, against Meridian's 0.697 and
+  0.698.
+
+### Q2: no leak to tv; the leak to ooh is small and unstable
+
+- **Robyn's ooh and display caps → tv.** Projecting only those two channels
+  onto Robyn's space moves tv's error by 0.000 without noise and by −0.012 with
+  it (per seed −0.035 to +0.015): 2% of Robyn's tv error of 0.610. The cap did
+  not reach tv.
+- **Meridian's slope on tv → ooh.** Fixing only tv's slope moves ooh's error
+  by −0.039 without noise, 7% of Meridian's ooh error of 0.553. With noise the
+  mean shift is +0.210, but per seed it runs from −0.207 to +0.497 and changes
+  sign. ooh is below the recoverability floor, and what moves there is noise.
+  The honest reading is that the population-level leak is small, and the
+  noisy one is not a stable effect.
+
+### Q3: Robyn's γ bounds contain the truth on every channel and seed
+
+The γ at which Robyn's inflexion equals the true half-saturation runs from
+0.36 to 0.67 across the 25 channel-seeds: tv 0.59–0.67, ooh 0.48–0.51,
+display 0.47–0.49, social 0.41–0.44, search 0.36–0.41. The range the
+approximation allows never reaches a bound of [0.3, 1]. With α's range
+already known to contain every true slope, Robyn's setup excluded the truth
+only where the D5 amendment said it did: θ on ooh and display.
+
+### The decomposition
+
+Each tool's mean absolute ROI error, split exactly into L3's error (shape
+known, baseline estimated), the setup's price (the setup rung minus L3), and
+the rest (the tool minus the setup rung). Recoverable channels only. ooh and
+display are in the summary, marked as below the floor:
+
+| tool | channel | tool \|err\| | L3 | setup's price | rest |
+|---|---|---|---|---|---|
+| Meridian | tv | 0.336 | 0.098 | +0.104 | +0.134 |
+| Meridian | search | 0.697 | 0.319 | −0.017 | +0.394 |
+| Meridian | social | 0.698 | 0.382 | +0.035 | +0.281 |
+| Robyn | tv | 0.610 | 0.098 | −0.004 | +0.516 |
+| Robyn | search | 0.792 | 0.319 | +0.009 | +0.464 |
+| Robyn | social | 0.717 | 0.382 | +0.008 | +0.327 |
+
+Two ways to misread this table, and both have to be closed off:
+
+1. **It apportions sizes, not causes.** Meridian's tv row gives the setup
+   +0.104, but Q1 shows that the setup pushes the other way. The signed
+   version beside it in `analysis/out/summary.md` (not pre-registered, added
+   for this reason) puts Meridian's tv "rest" at −0.538: the tool moved the
+   estimate further than its whole error, in the opposite direction to its
+   setup.
+2. **"The rest" is not "the tool's fault".** It holds everything the setup
+   rung does not: the cost of estimating the shape from the data (a
+   difficulty of the data, which L5 was meant to measure and could not), the
+   priors' mass, regularisation, DECOMP.RSSD, the baseline machinery, the
+   sampler and model selection. What the table licenses is narrower: **on tv,
+   search and social, neither tool's setup constraints account for its miss**.
+   Robyn's bounds cost it nothing measurable there (−0.004 to +0.009). The
+   constraint on Meridian costs little, and on tv it points the wrong way to
+   explain anything. The miss lives in the rest.
+
+Robyn's columns carry the three caveats stated earlier on this page: three of
+five seeds non-converged, a mixed spec, and θ bounds that exclude the truth on
+ooh and display.
+
+### Two scoring additions
+
+- **Rank agreement.** The Spearman correlation between estimated and true ROI
+  across the five channels, averaged over seeds: Meridian national −0.06
+  (range −0.5 to 0.3), Robyn 0.42 (−0.5 to 1.0), L3 0.62 (0.0 to 0.9), L2
+  0.76 (0.3 to 1.0). Robyn's figure needs its caveat: its five ROIs span
+  1.08x, so its ranks rest on differences of a few hundredths, and a ranking
+  drawn from a band that narrow is not a measurement.
+- **The tool difference, seed by seed.** Meridian's mean |ROI rel err| minus
+  Robyn's, national arm: +0.095, −0.162, +0.302, −0.273, −0.074 on seeds 101 to
+  105. Mean −0.022, standard deviation 0.226. Meridian is lower on 3 seeds,
+  Robyn on 2. The average difference between the two tools is a tenth of its
+  seed-to-seed spread: on these five seeds neither is the better estimator of
+  ROI.
+
+### What this section does not license
+
+- That the rest is the tool's machinery alone. It includes estimating the
+  shape, which nothing here measured.
+- That a setup with the truth inside it would have fixed either tool.
+  Robyn's setup contains the truth on tv, social and search, and on search
+  its error, 0.792, is the largest in the table.
+- Anything about the geo arm, other scenarios or real data. National arm,
+  five seeds, one simulated scenario.

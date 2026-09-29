@@ -88,6 +88,12 @@ specified in `PLAN.md`.**
    that constraint. A rung built like L3 but with slope 1 would measure it on the
    analysis layer, in seconds. Proposed by the pre-publication audit on
    2026-09-11 and not run: a new rung is new analysis, not a correction.
+   **Done in part 2 (C10, 2026-09-29)** as rung L6, `oracle_nat_meridian_setup`,
+   with its Robyn counterpart L7. It was built as a projection of each
+   channel's true regressor into the setup's space, not as the joint shape
+   fit first pre-registered, which failed its own check (`docs/PLAN.md`
+   §8.6). Answer and numbers: `analysis/ORACLE.md`, "Setup-constrained
+   rungs".
 9. **Re-run with D5's contradiction removed.** The pre-registration set ooh's and
    display's true adstock outside Robyn's recommended bounds (`docs/PLAN.md`
    amendment of 2026-09-11). Removing it means moving those two truths inside
