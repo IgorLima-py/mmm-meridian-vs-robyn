@@ -493,8 +493,11 @@ with the true shape (which carries only the aggregation gap):
 | search | −0.112 | −0.186 | −0.114 | −0.697 |
 | social | −0.078 | −0.030 | −0.048 | −0.698 |
 
-- **tv.** Fixing the slope at 1 pushes tv's ROI **up**, by about a quarter,
-  while Meridian missed it **down** by a third. The setup cannot explain a
+- **tv.** Meridian's space pushes tv's ROI **up**, by about a quarter,
+  while Meridian missed it **down** by a third. On tv that space binds twice:
+  the slope is fixed at 1, and the half-saturation of the best slope-1 fit
+  runs to `ec_m`'s ceiling on every seed, so the shift is the two together,
+  not the slope alone. The setup cannot explain a
   miss in the opposite direction. Something else in the tool carried the
   estimate from where its setup alone would have put it (L6, +0.202) to where it
   landed (−0.336).
@@ -510,7 +513,8 @@ with the true shape (which carries only the aggregation gap):
   onto Robyn's space moves tv's error by 0.000 without noise and by −0.012 with
   it (per seed −0.035 to +0.015): 2% of Robyn's tv error of 0.610. The cap did
   not reach tv.
-- **Meridian's slope on tv → ooh.** Fixing only tv's slope moves ooh's error
+- **Meridian's space on tv → ooh.** Projecting only tv onto Meridian's space
+  (slope 1, and its half-saturation on `ec_m`'s ceiling) moves ooh's error
   by −0.039 without noise, 7% of Meridian's ooh error of 0.553. With noise the
   mean shift is +0.210, but per seed it runs from −0.207 to +0.497 and changes
   sign. ooh is below the recoverability floor, and what moves there is noise.
@@ -569,9 +573,10 @@ ooh and display.
 - **Rank agreement.** The Spearman correlation between estimated and true ROI
   across the five channels, averaged over seeds: Meridian national −0.06
   (range −0.5 to 0.3), Robyn 0.42 (−0.5 to 1.0), L3 0.62 (0.0 to 0.9), L2
-  0.76 (0.3 to 1.0). Robyn's figure needs its caveat: its five ROIs span
-  1.08x, so its ranks rest on differences of a few hundredths, and a ranking
-  drawn from a band that narrow is not a measurement.
+  0.76 (0.3 to 1.0). Robyn's figure needs its caveat: seed by seed, its five
+  ROIs span 1.02x to 1.32x (0.02 to 0.13 between its highest and lowest
+  channel), so its ranks rest on differences of a few hundredths to about a
+  tenth, and a ranking drawn from a band that narrow is not a measurement.
 - **The tool difference, seed by seed.** Meridian's mean |ROI rel err| minus
   Robyn's, national arm: +0.095, −0.162, +0.302, −0.273, −0.074 on seeds 101 to
   105. Mean −0.022, standard deviation 0.226. Meridian is lower on 3 seeds,

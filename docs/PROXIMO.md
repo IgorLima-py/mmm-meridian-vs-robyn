@@ -7,13 +7,13 @@
 > Quem escreve: o `/tchau`, ao avançar o ponteiro, e o `/360`, ao desenhar o roadmap.
 > A fatia inteira (entra, sai, verificar, prompt de abertura) está no bloco 3 do `docs/ROADMAP.md`.
 
-chat: C10
-titulo: Quanto do erro da v1 era setup — o oráculo com as restrições de cada ferramenta
+chat: C11
+titulo: O erro custa dinheiro? Regret de orçamento com otimizador neutro
 perfil: dificil
 modelo: opus
 esforco: high
 forma: sessao
 maquina: qualquer
 plan-mode: nao
-persona: estatístico de simulação que desconfia do próprio oráculo
-objetivo: Primeira fatia da parte 2. Nos dados da v1 e sem rodar ferramenta nenhuma: pré-registrar a parte 2 (commit próprio), implementar os degraus do oráculo com as restrições do setup do Meridian e do Robyn, e responder as três perguntas que o AUDIT.md deixou abertas.
+persona: analista de alocação de orçamento, cético com métrica de ROI que não vira decisão
+objetivo: Com as curvas que os extratos da v1 já trazem, medir quanto do incremental possível cada ferramenta perde numa realocação, com otimizador neutro exato e os limites do pré-registro (docs/PLAN.md §8.5, L5 fora pela §8.6); e escrever o validador de schema que serve às C12 e C16-C20.

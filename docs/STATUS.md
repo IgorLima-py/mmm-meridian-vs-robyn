@@ -1,6 +1,80 @@
 # Status
 
-_Atualizado: 2026-09-29 (o /360 da v2, na Karen)_
+_Atualizado: 2026-09-29 (C10, na Karen)_
+
+## Sessão C10 (29/09, Karen): quanto do erro da v1 era setup
+
+bateria 5: 5/0/0 (`python -m simulation.checks`, 29/09, antes do push)
+
+### O que foi feito
+
+Nenhuma ferramenta rodou; tudo é camada de análise sobre os dados e os extratos da v1.
+
+- **Pré-registro da parte 2** em `docs/PLAN.md` §8, commit só dele (`65c0527`), antes de
+  qualquer número: degraus L5–L7, projeções sem ruído, as definições das três perguntas do
+  AUDIT, a decomposição, rank agreement, dispersão por seed, e regret com limites por canal
+  para a C11/C12. **Limites escolhidos por mim, sem consulta:** primário [0,5; 2,0] por canal
+  (padrão `max_response` do `robyn_allocator` 3.12.1), sensibilidade [0,7; 1,3] (padrão de
+  orçamento fixo do `BudgetOptimizer` do Meridian 1.8.0). Os dois foram lidos do código
+  instalado na WSL da Karen, não de doc. O Igor pode vetar por emenda antes da C11.
+- **Duas emendas no mesmo dia** (§8.6 `7a5c795`, §8.7 `e01b5c0`), explicadas abaixo em "o que
+  falhou". O resultado: L5 aposentado; L6 `oracle_nat_meridian_setup` e L7
+  `oracle_nat_robyn_setup` são L3 com o regressor de cada canal trocado pela melhor
+  aproximação da curva verdadeira dentro do espaço de parâmetros de cada ferramenta.
+- **Código** (`01b680c`): `analysis/oracle.py` (projeções, check, `--diagnostics` com Q1–Q3),
+  `analysis/scoring.py` (rank agreement, Meridian − Robyn seed a seed, tabela de decomposição
+  pré-registrada e, ao lado, uma versão com sinal marcada como não pré-registrada). 10 JSONs
+  novos em `runs/oracle/results/`; os 20 antigos não mudaram de conteúdo.
+- **Texto** (`f93ad91`): seção `## Setup-constrained rungs` no fim do `analysis/ORACLE.md`
+  (o resto da página é o registro da v1, intocado); `docs/BACKLOG.md` item 8 aponta para ela.
+  **Não passou pela `humanize`** — fica para a C13/C14, quando vai a público.
+
+### Resultado, em uma linha por pergunta
+
+- **Q1:** o espaço do Meridian (slope 1, e na tv o k no teto do `ec_m`) empurra a tv para
+  **cima** (+0,24 sem ruído); o Meridian errou para **baixo** (−0,34). Não explica nada da tv; em search e social explica ~1/6 e ~1/9.
+- **Q2:** o teto de θ do Robyn em ooh/display não chega à tv (0,000). O espaço do Meridian
+  só na tv mexe ooh em −0,04 sem ruído; com ruído +0,21 em média, mas troca de sinal entre
+  seeds (ooh está abaixo do piso).
+- **Q3:** os limites de γ do Robyn contêm o k verdadeiro nos 25 canal-seed (γ 0,36–0,67).
+- **Decomposição:** em tv, search e social, os limites do Robyn custam ~0 e o do Meridian
+  pouco; o erro das duas está no "resto" (estimar a forma + priors + máquina da ferramenta).
+- **Meridian − Robyn por seed:** média −0,022, dp 0,226 — sem vencedor com 5 seeds.
+
+### O que foi tentado e falhou — não repita
+
+- **Ajuste conjunto da forma (L5, §8.1).** Descida por coordenadas no grid, canal a canal,
+  8 partidas. O check pré-registrado (achar a verdade sem ruído a partir das 7 partidas
+  aleatórias) falhou nas 5 seeds: erro máx de ROI 0,67 a 5,8 (`a9e062b`,
+  `python analysis/oracle.py --rungs L5`). Não é bug: na verdade o SSR é ~1e-16, e as
+  partidas param em formas com SSR ~1e-7 do total. Um teste exploratório com 40 partidas
+  (script não guardado) achou a verdade em 0 de 40 nas seeds 101–103. No agregado nacional
+  as 5 formas são quase não-identificadas juntas, mesmo sem ruído. Mais partidas não
+  resolvem; um otimizador contínuo talvez, mas não foi tentado (scipy não está no lock).
+- **Grade de k até 4,00.** A projeção da tv no espaço do Meridian parou no teto da grade, não
+  no do Meridian (o `ec_m` ≤ 10 mapeia para k ≈ 5,3 na tv). Grade ampliada para 10,00 (§8.7),
+  e o `oracle.py` agora aborta se o teto do `ec_m` passar da grade. Os dois agregados vistos
+  antes da emenda (L6 0,661, L7 0,635) estão declarados nela.
+- **Heredoc com apóstrofo no Bash** falhou uma vez ao anexar texto no PLAN; o Edit resolveu.
+
+### Segunda opinião (Opus, no /tchau)
+
+Sem achado que bloqueie o `sai:`/`verificar:`. Dois achados menores de texto, corrigidos
+no `ORACLE.md` antes do push: o desvio da tv vem do slope 1 **e** do teto do `ec_m`, não do
+slope sozinho; e a faixa dos ROIs do Robyn é 1,02x–1,32x por seed (1,08x era a das médias).
+Terceiro, só informativo: o Meridian com `max_lag=13` usa 14 pesos e o L6 usa 13, como o
+PLAN §8.1 já declarava.
+
+### Preso a esta máquina (Karen)
+
+Nada novo. As constantes das ferramentas (priors do Meridian, `saturation_hill` e defaults do
+alocador do Robyn) foram lidas dos pacotes da WSL e estão citadas no PLAN §8; o Dell não
+precisa delas para rodar nada da C10.
+
+### Próximo passo
+
+C11 — regret de orçamento com otimizador neutro, pelo pré-registro do `docs/PLAN.md` §8.5
+(com L5 fora da lista de estimadores, §8.6). Máquina: qualquer.
 
 ## Sessão /360 da v2 (27–29/09, Karen): avaliação da v1 e o roadmap das partes 2 e 3
 
