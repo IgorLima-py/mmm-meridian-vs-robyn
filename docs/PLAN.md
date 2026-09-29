@@ -475,3 +475,76 @@ term means anything.
 - **Estimators.** Meridian national, Meridian geo (two seeds, flagged),
   Robyn national, and oracles L2, L3, L5, L6 and L7. One line per estimator
   in `## Budget regret` in `analysis/out/summary.md`.
+
+### 8.6 Amendment, 2026-09-29 (same day): the stop rule fired
+
+**What happened.** §8.1 was implemented as written (commit `a9e062b`), and
+its optimiser check failed on all five seeds. From the seven random starts
+the search did not return the true shape on noiseless data built from L2's
+regressors: max |ROI rel err| 0.75, 5.8, 0.72, 4.8 and 0.67 on seeds 101 to
+105, with one of the seven starts on the winner each time
+(`python analysis/oracle.py --rungs L5` at `a9e062b` reproduces it). It is
+not a code error: the truth-projected start sits at an SSR of about 1e-16
+and stays there, while the random starts stop at shapes whose SSR is about
+1e-7 of y'y. An exploratory run with 40 random starts on seeds 101–103
+reached the truth from none of them (the script was not kept). Coordinate
+descent cannot cross the ridges along which one channel's shape compensates
+for another's, and on the national aggregate the five shapes are close to
+jointly unidentified even without noise. As the stop rule requires, no
+L5–L7 number from that search exists. **No fit on noisy data was run before
+this amendment**, so no result motivated what follows.
+
+**What replaces §8.1 and §8.2.**
+
+- **L5 is retired**, and its name is not reused. Part 2 does not measure what
+  estimating the shape costs.
+- **L6 and L7 become projection rungs**: L3, with each channel's regressor
+  replaced by the best approximation of that channel's true response inside
+  the tool's space. Per channel, the target is L3's own regressor (the true
+  shape), and the projection is the admissible (θ, s, k) that minimises
+  min over β of ‖target − β · candidate‖², with no intercept, so the level is
+  matched as well as the variation — the level is what an ROI measures. The
+  search is exhaustive on §8.1's grid, then exhaustive on a grid ten times
+  finer (steps 0.005 in θ, 0.01 in s, 0.005 in k) spanning one coarse step
+  either side of the coarse winner, restricted to the space; Robyn's γ bound
+  is applied at each fine θ. One channel at a time: each of these problems is
+  identified, which is what the joint search lacked. The betas and the
+  baseline are then fitted by OLS on noisy national revenue with L3's
+  design, exactly as L3.
+- **Intervals.** The shape is now fixed before revenue is seen, as in L3, so
+  L6 and L7 export L3's OLS 90% interval (`ols_ci90`). §8.1's "no intervals"
+  no longer applies.
+- **The check** that replaces §8.1's: projecting onto the free space must
+  return the true shape exactly, on every channel of every seed (the truth
+  is on the coarse grid, where its residual is 0). It is now a check of the
+  code, not of a search. The stop rule keeps its force: if it fails, no L6
+  or L7 result is exported.
+- **Pseudo-true projections** (replaces §8.2). The projected columns, fitted
+  by OLS without a baseline to noiseless national data (the true national
+  media contributions, summed from the geo level). Reference: the same fit
+  with the true columns, which is L2 without noise — the aggregation gap
+  alone. Spaces: Meridian's, Robyn's, and for Q2 two partial variants —
+  (4) only ooh's and display's regressors projected onto Robyn's space, the
+  rest true; (5) only tv's regressor projected onto Meridian's space, the rest
+  true. The two variants are also fitted on noisy revenue with L3's design,
+  five seeds. All of this goes to `analysis/out/diagnostics.md`, not to
+  scored JSONs.
+
+**What changes in §8.3 and §8.5.**
+
+- **L3 replaces L5 as the reference.** Q1: mean|err L6| − mean|err L3|, and
+  the pseudo-true bias of Meridian's space minus the reference's. Q2: tv's
+  error under variant 4 minus under L3 (noisy, mean over seeds) and minus the
+  reference (noiseless), for Robyn; ooh's under variant 5, the same way, for
+  Meridian; each as a fraction of the tool's mean|err| on that channel. Q3 is
+  unchanged.
+- **The decomposition** keeps its form with L3 in L5's place:
+
+      |err T| = |err L3|                        knowing the shape, estimating the baseline
+              + (|err setup(T)| − |err L3|)     the setup's parameter space
+              + (|err T| − |err setup(T)|)      everything else
+
+  The cost of estimating the shape now sits in the third term, which
+  therefore mixes a difficulty of the data with the tool's machinery. Any
+  sentence that quotes the third term says so.
+- **Regret estimators:** L5 is removed from §8.5's list.
