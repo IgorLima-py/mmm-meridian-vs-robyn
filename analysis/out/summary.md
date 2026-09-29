@@ -248,3 +248,33 @@ The same three pieces with their sign (mean signed ROI rel err over seeds). Not 
 | robyn | search | -0.792 | -0.186 | -0.001 | -0.605 |
 | robyn | social | -0.717 | -0.030 | -0.010 | -0.677 |
 | robyn | tv | -0.610 | -0.008 | -0.012 | -0.590 |
+## Budget regret (docs/PLAN.md §8.5)
+
+Each estimator's response curves are handed to the same exact optimiser, which reallocates the observed total budget with every channel's multiplier inside [0.5, 2.0] (Robyn's allocator default); the plan is then scored on the true curves. Regret: the share of the achievable incremental revenue the plan loses. Uplift captured: the share of the best plan's gain over the observed allocation that this plan keeps; negative means the plan is worse than not reallocating. The last column repeats regret with the multipliers inside [0.7, 1.3] (Meridian's fixed-budget default). Mean over seeds, range in brackets.
+
+| estimator | arm | seeds | regret | uplift captured | regret, [0.7, 1.3] |
+|---|---|---|---|---|---|
+| Meridian | national | 5 | 0.056 (0.026 to 0.079) | 0.064 (-0.384 to 0.573) | 0.034 (0.014 to 0.050) |
+| Meridian — two seeds only | geo | 2 | 0.069 (0.030 to 0.108) | -0.131 (-0.770 to 0.508) | 0.054 (0.017 to 0.092) |
+| Robyn | national | 5 | 0.059 (0.005 to 0.132) | 0.008 (-1.207 to 0.920) | 0.034 (0.001 to 0.077) |
+| oracle L2 — true shape, true baseline | national | 5 | 0.007 (0.000 to 0.021) | 0.882 (0.660 to 1.000) | 0.004 (0.000 to 0.015) |
+| oracle L3 — true shape, estimated baseline | national | 5 | 0.022 (0.011 to 0.035) | 0.626 (0.434 to 0.816) | 0.009 (0.000 to 0.029) |
+| oracle L6 — shape projected on Meridian's setup | national | 5 | 0.023 (0.004 to 0.060) | 0.614 (0.000 to 0.936) | 0.016 (0.001 to 0.044) |
+| oracle L7 — shape projected on Robyn's setup | national | 5 | 0.025 (0.011 to 0.036) | 0.575 (0.396 to 0.816) | 0.012 (0.000 to 0.028) |
+| *reference: keep the observed allocation* | — | 5 | 0.060 (0.057 to 0.061) | 0 by definition | 0.045 (0.042 to 0.045) |
+
+The reference row is not an estimator and was not pre-registered: it is the bar any plan has to clear. The best plan's gain over the observed allocation, as a share of the observed allocation's incremental revenue: seed 101 6.5%, seed 102 6.5%, seed 103 6.4%, seed 104 6.5%, seed 105 6.0% at [0.5, 2.0]; 4.7%, 4.7%, 4.6%, 4.7%, 4.4% at [0.7, 1.3].
+
+Regret seed by seed, multipliers in [0.5, 2.0]:
+
+| estimator | arm | 101 | 102 | 103 | 104 | 105 |
+|---|---|---|---|---|---|---|
+| Meridian | national | 0.058 | 0.038 | 0.078 | 0.026 | 0.079 |
+| Meridian | geo | 0.030 | 0.108 | — | — | — |
+| Robyn | national | 0.033 | 0.043 | 0.132 | 0.005 | 0.081 |
+| oracle L2 | national | 0.021 | 0.000 | 0.009 | 0.005 | 0.001 |
+| oracle L3 | national | 0.035 | 0.011 | 0.021 | 0.013 | 0.032 |
+| oracle L6 | national | 0.030 | 0.011 | 0.060 | 0.004 | 0.011 |
+| oracle L7 | national | 0.035 | 0.011 | 0.036 | 0.013 | 0.032 |
+
+- every estimator's optimum is a unique vertex: no plan above was picked from a tie.
