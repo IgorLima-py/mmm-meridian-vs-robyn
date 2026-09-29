@@ -36,6 +36,18 @@ Every rung uses ordinary least squares, unconstrained (a negative beta is
 information, not something to hide). Exports the standard results schema so
 `scoring.py` consumes them unchanged.
 
+Three more rungs, pre-registered in docs/PLAN.md §8 (2026-09-29), stop
+handing over the shape. They share L3's design and ESTIMATE adstock and Hill
+from the data, each inside one parameter space:
+
+  L5  oracle_nat_fitshape       the generator's family, free.
+                                -> what estimating the shape costs.
+  L6  oracle_nat_meridian_setup Meridian 1.8.0's space as run in v1:
+                                Hill slope fixed at 1.
+  L7  oracle_nat_robyn_setup    Robyn 3.12.1's space as run in v1: its
+                                theta, alpha and gamma bounds.
+                                -> L6 - L5 and L7 - L5 are each setup's price.
+
 Usage (from the repo root):
     python analysis/oracle.py                       # all seeds -> runs/oracle/results/
     python analysis/oracle.py --seeds 101 --out /tmp/x
@@ -259,6 +271,397 @@ def run_rung(world, rung, gt):
     }
 
 
+# ---------------------------------------------------------------------------
+# Setup-constrained rungs (docs/PLAN.md §8, pre-registered 2026-09-29)
+#
+# L1-L4 are handed the true shape, so they cannot say how much of a tool's
+# miss came from the parameter space its setup allowed. L5-L7 estimate the
+# shape on a grid, each inside one parameter space, and share everything
+# else with L3. Every number below is from the pre-registration.
+
+SETUP_RUNGS_VERSION = "1.1.0"     # L1-L4 stay at ORACLE_VERSION, unchanged
+THETA_GRID = np.round(np.arange(0.0, 0.951, 0.05), 2)   # 20 retentions
+S_GRID = np.round(np.arange(0.3, 4.001, 0.1), 1)        # 38 Hill slopes
+K_GRID = np.round(np.arange(0.05, 4.001, 0.05), 2)      # 80 half-saturations
+N_STARTS = 8           # truth projected to the space + 7 random grid points
+MAX_CYCLES = 50
+SSR_TIE = 1e-9         # a start "reached the best SSR" within this, relative
+GRID_EPS = 1e-9        # float slack when a grid value is tested against a bound
+
+# Robyn 3.12.1 as run in v1: runs/robyn/run_robyn.R, RD2. Its inflexion is
+# gamma * max(z) (saturation_hill, read from the installed package 2026-09-29).
+ROBYN_THETA = {"tv": (0.3, 0.8), "ooh": (0.1, 0.4), "social": (0.0, 0.3),
+               "display": (0.0, 0.3), "search": (0.0, 0.3)}
+ROBYN_ALPHA = (0.5, 3.0)
+ROBYN_GAMMA = (0.3, 1.0)
+# Meridian 1.8.0 defaults, model/prior_distribution.py (read 2026-09-29):
+# slope_m = Deterministic(1.0); ec_m = TruncatedNormal(0.8, 0.8, 0.1, 10) in
+# units of the population-scaled non-zero median of the media.
+MERIDIAN_SLOPE = 1.0
+MERIDIAN_EC = (0.1, 10.0)
+
+# The parameter spaces. The first three are the rungs; all five are the
+# pseudo-true projections of PLAN §8.2.
+SPACES = {
+    "free": "the generator's family, all shape parameters free",
+    "meridian": "Meridian 1.8.0's space: Hill slope fixed at 1, "
+                "half-saturation inside ec_m's support",
+    "robyn": "Robyn 3.12.1's space: theta inside its per-channel bounds, "
+             "alpha in [0.5, 3], gamma in [0.3, 1]",
+    "cap_ooh_display": "free, except ooh's and display's theta capped at "
+                       "Robyn's bounds",
+    "tv_slope1": "free, except tv's Hill slope fixed at 1",
+}
+SETUP_RUNGS = {
+    "L5": ("oracle_nat_fitshape", "free", 5),
+    "L6": ("oracle_nat_meridian_setup", "meridian", 6),
+    "L7": ("oracle_nat_robyn_setup", "robyn", 7),
+}
+
+
+def adstock_fast(x, alpha, max_lag):
+    """`simulation.core.adstock_geometric` for a 1-D series, as a convolution."""
+    w = alpha ** np.arange(max_lag)
+    num = np.convolve(x, w)[: len(x)]
+    den = np.cumsum(w)[np.minimum(np.arange(len(x)), max_lag - 1)]
+    return num / den
+
+
+def robyn_adstock(x, theta):
+    """Robyn's geometric adstock: unnormalised, cold start at the window."""
+    z = np.empty_like(x, dtype=float)
+    acc = 0.0
+    for t, v in enumerate(x):
+        acc = v + theta * acc
+        z[t] = acc
+    return z
+
+
+def national_response_shape(world, ch, theta, k, s, mult=1.0):
+    """(T_window,) national-aggregate response for an arbitrary shape.
+
+    Same construction as `national_unit_response`, with the shape passed in
+    instead of read from the config.
+    """
+    pop_tot = world.pop.sum()
+    x_pc = world.imp[ch].sum(axis=0) * mult / pop_tot
+    ad = adstock_geometric(x_pc, theta, world.cfg["adstock_max_lag"])
+    return (pop_tot * hill(ad / world.ref[ch], k, s))[world.win]
+
+
+def robyn_k_ceiling(world, ch):
+    """Per theta on the grid: the half-saturation, in the generator's units,
+    that Robyn's gamma = 1 maps to.
+
+    Robyn's inflexion is gamma * max(z), z its own adstocked exposure. At
+    steady state z/u = population * mean exposure per capita / (1 - theta),
+    so gamma = 1 corresponds to k = max(z) * (1 - theta) / (pop * ref).
+    """
+    x = world.imp[ch].sum(axis=0)[world.win]
+    scale = world.pop.sum() * world.ref[ch]
+    return np.array([robyn_adstock(x, th).max() * (1 - th) / scale
+                     for th in THETA_GRID])
+
+
+class ChannelGrid:
+    """Every candidate national regressor of one channel on the shape grid."""
+
+    def __init__(self, world, ch):
+        cfg = world.cfg
+        self.ch = ch
+        pop_tot = world.pop.sum()
+        x_pc = world.imp[ch].sum(axis=0) / pop_tot
+        lag = cfg["adstock_max_lag"]
+        u = []
+        for th in THETA_GRID:
+            fast = adstock_fast(x_pc, th, lag)
+            ref = adstock_geometric(x_pc, th, lag)
+            assert np.max(np.abs(fast - ref)) <= 1e-12 * np.max(np.abs(ref)), \
+                f"adstock_fast drifted from the generator's adstock on {ch}"
+            u.append(fast[world.win] / world.ref[ch])
+        u = np.array(u)[:, None, None, :]                     # (nθ,1,1,W)
+        us = u ** S_GRID[None, :, None, None]
+        ks = K_GRID[None, None, :, None] ** S_GRID[None, :, None, None]
+        self.shape = (len(THETA_GRID), len(S_GRID), len(K_GRID))
+        self.H = (pop_tot * us / (us + ks)).reshape(-1, u.shape[-1])
+        self.HH = np.einsum("ij,ij->i", self.H, self.H)
+        win_pc = x_pc[world.win]
+        self.median_over_ref = float(np.median(win_pc[win_pc > 0])
+                                     / world.ref[ch])
+        self.robyn_kmax = robyn_k_ceiling(world, ch)
+
+    def mask(self, space):
+        """Boolean (nθ, nS, nK) admissible set of this channel in `space`."""
+        th = THETA_GRID[:, None, None]
+        s = S_GRID[None, :, None]
+        k = K_GRID[None, None, :]
+        m = np.ones(self.shape, dtype=bool)
+        if space == "meridian" or (space == "tv_slope1" and self.ch == "tv"):
+            m &= np.abs(s - MERIDIAN_SLOPE) < GRID_EPS
+        if space == "meridian":
+            lo, hi = np.array(MERIDIAN_EC) * self.median_over_ref
+            m &= (k >= lo - GRID_EPS) & (k <= hi + GRID_EPS)
+        if space == "robyn" or (space == "cap_ooh_display"
+                                and self.ch in ("ooh", "display")):
+            lo, hi = ROBYN_THETA[self.ch]
+            m &= (th >= lo - GRID_EPS) & (th <= hi + GRID_EPS)
+        if space == "robyn":
+            m &= (s >= ROBYN_ALPHA[0] - GRID_EPS) & (s <= ROBYN_ALPHA[1] + GRID_EPS)
+            kmax = self.robyn_kmax[:, None, None]
+            m &= ((k >= ROBYN_GAMMA[0] * kmax - GRID_EPS)
+                  & (k <= ROBYN_GAMMA[1] * kmax + GRID_EPS))
+        return m
+
+    def unravel(self, flat):
+        i, j, l = np.unravel_index(flat, self.shape)
+        return float(THETA_GRID[i]), float(S_GRID[j]), float(K_GRID[l])
+
+    def nearest(self, mask, theta, s, k):
+        """Flat index of the admissible grid point nearest the given shape,
+        distance measured in grid steps; ties go to the lowest index."""
+        d = (np.abs(THETA_GRID[:, None, None] - theta) / 0.05
+             + np.abs(S_GRID[None, :, None] - s) / 0.1
+             + np.abs(K_GRID[None, None, :] - k) / 0.05)
+        d = np.where(mask, d, np.inf)
+        return int(np.argmin(d.reshape(-1)))
+
+
+def fit_shape(y, base, grids, masks, starts):
+    """Coordinate descent over channels on the shape grid (PLAN §8.1).
+
+    For one channel, every admissible shape is scored in closed form with the
+    other four channels and the baseline held fixed: residualise y on those
+    columns, and a candidate column c lowers the SSR by (c'y_r)^2 / c'M c.
+    Cycle through the channels until none moves. Returns one record per
+    start, in start order.
+    """
+    channels = list(grids)
+    flat_masks = {ch: masks[ch].reshape(-1) for ch in channels}
+    records = []
+    for start in starts:
+        cur = dict(start)
+        cycles = 0
+        for cycles in range(1, MAX_CYCLES + 1):
+            moved = False
+            for ch in channels:
+                g = grids[ch]
+                others = [grids[c].H[cur[c]] for c in channels if c != ch]
+                Z = np.column_stack(others + ([base] if base is not None else []))
+                Q, _ = np.linalg.qr(Z)
+                yr = y - Q @ (Q.T @ y)
+                yy = float(yr @ yr)
+                cy = g.H @ yr
+                HQ = g.H @ Q
+                cc = g.HH - np.einsum("ij,ij->i", HQ, HQ)
+                ok = flat_masks[ch] & (cc > 1e-12 * g.HH)
+                ssr = np.full(g.H.shape[0], np.inf)
+                ssr[ok] = yy - cy[ok] ** 2 / cc[ok]
+                best = int(np.argmin(ssr))
+                now = ssr[cur[ch]]
+                if best != cur[ch] and (not np.isfinite(now)
+                                        or ssr[best] < now - 1e-12 * abs(now)):
+                    cur[ch] = best
+                    moved = True
+            if not moved:
+                break
+        X = np.column_stack([grids[c].H[cur[c]] for c in channels]
+                            + ([base] if base is not None else []))
+        coef, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
+        resid = y - X @ coef
+        records.append({"shape": cur, "ssr": float(resid @ resid),
+                        "cycles": cycles})
+    return records
+
+
+def make_starts(grids, masks, world, rng_key, with_truth=True, n=N_STARTS):
+    """Start 0 is the truth projected into the space (if `with_truth`); the
+    rest are admissible grid points drawn uniformly, rng seeded by `rng_key`."""
+    rng = np.random.default_rng(rng_key)
+    starts = []
+    if with_truth:
+        starts.append({ch: g.nearest(masks[ch],
+                                     *_true_shape(world, ch))
+                       for ch, g in grids.items()})
+    while len(starts) < n:
+        starts.append({ch: int(rng.choice(np.flatnonzero(masks[ch].reshape(-1))))
+                       for ch in grids})
+    return starts
+
+
+def _true_shape(world, ch):
+    spec = world.cfg["channels"][ch]
+    return spec["adstock_alpha"], spec["hill_s"], spec["hill_k"]
+
+
+def best_of(records, grids):
+    """The winning start, and how many others landed on it."""
+    ssrs = np.array([r["ssr"] for r in records])
+    b = int(np.argmin(ssrs))
+    win = records[b]
+    reached = [i for i, r in enumerate(records)
+               if r["shape"] == win["shape"]
+               or r["ssr"] <= win["ssr"] * (1 + SSR_TIE)]
+    return b, win, reached
+
+
+def boundary_flags(g, mask, flat):
+    """Fitted parameters sitting on an edge of the admissible set, holding
+    the other two at their fitted values. A parameter with one admissible
+    value (Meridian's slope) is fixed, not on a boundary."""
+    i, j, l = np.unravel_index(flat, g.shape)
+    out = []
+    for name, line, pos in (("theta", mask[:, j, l], i),
+                            ("hill_s", mask[i, :, l], j),
+                            ("hill_k", mask[i, j, :], l)):
+        adm = np.flatnonzero(line)
+        if len(adm) > 1 and pos in (adm.min(), adm.max()):
+            out.append(f"{name}_{'low' if pos == adm.min() else 'high'}")
+    return out
+
+
+def channel_grids(world):
+    return {ch: ChannelGrid(world, ch) for ch in world.cfg["channels"]}
+
+
+def optimiser_check(world, grids):
+    """PLAN §8.1 stop rule: on revenue built exactly from L2's regressors with
+    the true shape, no noise and no baseline, the search from the seven
+    random starts alone must return the true ROI to 1e-9 on every channel.
+    """
+    channels = list(grids)
+    beta = {ch: world.beta_pc[ch] for ch in channels}
+    y = sum(beta[ch] * national_unit_response(world, ch) for ch in channels)
+    masks = {ch: g.mask("free") for ch, g in grids.items()}
+    # rng key (seed, 0): rung numbers 5-7 key the rungs themselves.
+    starts = make_starts(grids, masks, world, [world.seed, 0],
+                         with_truth=False, n=N_STARTS - 1)
+    records = fit_shape(y, None, grids, masks, starts)
+    _, win, reached = best_of(records, grids)
+    shape = {ch: grids[ch].unravel(win["shape"][ch]) for ch in channels}
+    cols = [national_response_shape(world, ch, shape[ch][0], shape[ch][2],
+                                    shape[ch][1]) for ch in channels]
+    coef, _, _, _ = fit_ols(y, np.column_stack(cols))
+    errs = {}
+    for i, ch in enumerate(channels):
+        unit = national_unit_response(world, ch).sum()
+        roi_true = beta[ch] * unit
+        roi_fit = coef[i] * cols[i].sum()
+        errs[ch] = abs(roi_fit - roi_true) / abs(roi_true)
+    return {"max_roi_rel_err": max(errs.values()),
+            "starts_reaching_best": len(reached),
+            "n_starts": len(records),
+            "passed": max(errs.values()) <= 1e-9}
+
+
+def fit_space(world, grids, space, rng_key, truebase=False):
+    """Fit one parameter space. Returns (winner shape per channel, OLS
+    pieces, start bookkeeping). `truebase` gives L2's noiseless design."""
+    cfg = world.cfg
+    channels = list(cfg["channels"])
+    win = world.win
+    masks = {ch: g.mask(space) for ch, g in grids.items()}
+    if truebase:
+        # Pseudo-true (PLAN §8.2): the true national media contributions,
+        # summed from the geo level -- noise, baseline and control removed.
+        y = sum(world.media[ch][:, win].sum(axis=0) for ch in channels)
+        base = None
+    else:
+        y = world.revenue[:, win].sum(axis=0)
+        base = baseline_design(world.W, world.draws["control_index"][win])
+    starts = make_starts(grids, masks, world, rng_key)
+    records = fit_shape(y, base, grids, masks, starts)
+    b, win_rec, reached = best_of(records, grids)
+    shape = {ch: grids[ch].unravel(win_rec["shape"][ch]) for ch in channels}
+    media = np.column_stack([national_response_shape(
+        world, ch, shape[ch][0], shape[ch][2], shape[ch][1]) for ch in channels])
+    X = media if base is None else np.column_stack([media, base])
+    coef, _, _, _ = fit_ols(y, X)
+    book = {
+        "n_starts": len(records),
+        "random_starts_reaching_best": sum(1 for i in reached if i != 0),
+        "truth_start_is_best": b == 0,
+        "cycles_of_best": win_rec["cycles"],
+        "at_boundary": {ch: boundary_flags(grids[ch], masks[ch],
+                                           win_rec["shape"][ch])
+                        for ch in channels},
+    }
+    return shape, coef, y, X, book
+
+
+def run_setup_rung(world, rung, gt, grids):
+    tool, space, number = SETUP_RUNGS[rung]
+    cfg = world.cfg
+    channels = list(cfg["channels"])
+    shape, coef, y, X, book = fit_space(world, grids, space,
+                                        [world.seed, number])
+    resid = y - X @ coef
+    ss_tot = float(((y - y.mean()) ** 2).sum())
+    r2 = 1.0 - float(resid @ resid) / ss_tot
+
+    out_channels = {}
+    for i, ch in enumerate(channels):
+        theta, s, k = shape[ch]
+        b = float(coef[i])
+
+        def unit(mult, ch=ch, theta=theta, k=k, s=s):
+            return float(national_response_shape(world, ch, theta, k, s,
+                                                 mult).sum())
+
+        spend = gt["channels"][ch]["spend_total"]
+        inc = b * unit(1.0)
+        delta = cfg["mroi_delta"]
+        curve_m = cfg["response_curve_multipliers"]
+        out_channels[ch] = {
+            "roi": {"point": inc / spend},
+            "mroi": {"point": (b * unit(1.0 + delta) - inc) / (delta * spend)},
+            "contribution_share": {"point": inc / gt["total_revenue"]},
+            "response_curve": {
+                "multipliers": curve_m,
+                "incremental_revenue": [b * unit(m) for m in curve_m],
+                "kind": "selected_model"},
+        }
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "tool": tool,
+        "tool_version": SETUP_RUNGS_VERSION,
+        "arm": "national",
+        "seed_dataset": world.seed,
+        "run": {
+            "tool_seed": number,
+            "runtime_seconds": 0.0,
+            "hardware": "grid search + OLS, any CPU",
+            "converged": True,
+            "convergence_detail": {
+                "method": "coordinate descent on the shape grid, "
+                          "OLS for betas and baseline",
+                "r2": r2, **{k: v for k, v in book.items()
+                             if k != "at_boundary"}},
+        },
+        "channels": out_channels,
+        "extras": {
+            "rung": rung,
+            "parameter_space": SPACES[space],
+            "what_the_oracle_knows": (
+                "national aggregate exposure with the pre-window warm-up, "
+                "the generator's adstock and Hill family; shape estimated "
+                "inside the parameter space above; baseline estimated "
+                "(intercept + trend + 3 Fourier harmonics + control)"),
+            "fitted_shape": {ch: {"adstock_alpha": shape[ch][0],
+                                  "hill_s": shape[ch][1],
+                                  "hill_k": shape[ch][2]}
+                             for ch in channels},
+            "at_boundary": book["at_boundary"],
+            "n_rows": int(len(y)),
+            "n_linear_params": int(X.shape[1]),
+            "r2": r2,
+            "note": ("Diagnostic, not a competing estimator. No interval is "
+                     "exported: an OLS interval conditional on a fitted "
+                     "shape ignores the shape's uncertainty (PLAN §8.1)."),
+        },
+    }
+
+
 def diagnostics(seeds, data_root,
                 out_path="analysis/out/diagnostics.md"):
     """Every scenario number ORACLE.md quotes, derived here rather than by hand.
@@ -378,7 +781,8 @@ def main():
     ap.add_argument("--seeds", nargs="*", type=int, default=SEEDS)
     ap.add_argument("--data", default="data/sim")
     ap.add_argument("--out", default="runs/oracle/results")
-    ap.add_argument("--rungs", nargs="*", default=list(RUNGS))
+    ap.add_argument("--rungs", nargs="*",
+                    default=list(RUNGS) + list(SETUP_RUNGS))
     ap.add_argument("--diagnostics", action="store_true",
                     help="print the scenario diagnostics ORACLE.md cites, "
                          "instead of fitting and exporting the rungs")
@@ -391,6 +795,24 @@ def main():
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     report = []
+
+    # PLAN §8.1 stop rule: the optimiser is checked on every seed before any
+    # setup-constrained rung is exported, and a failure exports none of them.
+    if any(r in SETUP_RUNGS for r in args.rungs):
+        failed = []
+        for seed in args.seeds:
+            world = World(seed, CONFIG)
+            chk = optimiser_check(world, channel_grids(world))
+            print(f"optimiser check seed{seed}: max |ROI rel err| "
+                  f"{chk['max_roi_rel_err']:.1e}, "
+                  f"{chk['starts_reaching_best']} of {chk['n_starts']} "
+                  f"random starts on the winner -> "
+                  f"{'pass' if chk['passed'] else 'FAIL'}")
+            if not chk["passed"]:
+                failed.append(seed)
+        if failed:
+            sys.exit(f"optimiser check failed on seed(s) {failed}: no L5-L7 "
+                     f"result is exported (docs/PLAN.md §8.1)")
 
     for seed in args.seeds:
         gt_path = Path(args.data) / f"seed{seed}" / "ground_truth.json"
@@ -407,26 +829,32 @@ def main():
             sys.exit(f"seed {seed}: rebuilt revenue differs from national.csv "
                      f"(max abs {drift:.4f}, rel {rel:.2e}) — regenerate first")
 
+        grids = None
         for rung in args.rungs:
-            res = run_rung(world, rung, gt)
+            if rung in SETUP_RUNGS:
+                grids = grids or channel_grids(world)
+                res = run_setup_rung(world, rung, gt, grids)
+            else:
+                res = run_rung(world, rung, gt)
             name = f"{res['tool']}_{res['arm']}_seed{seed}.json"
             with open(out / name, "w") as f:
                 json.dump(res, f, indent=1)
-            errs = res["extras"]["beta_rel_err"]
+            # ROI error rather than beta error: a fitted shape rescales beta,
+            # so only the ROI is comparable across all seven rungs.
+            errs = [abs(v["roi"]["point"] / gt["channels"][ch]["true_roi"] - 1)
+                    for ch, v in res["channels"].items()]
             report.append({
                 "seed": seed, "rung": rung, "tool": res["tool"],
                 "r2": res["extras"]["r2"],
-                "beta_abs_rel_err_mean": float(
-                    np.mean([abs(v) for v in errs.values()])),
-                "beta_abs_rel_err_max": float(
-                    np.max([abs(v) for v in errs.values()])),
+                "roi_abs_rel_err_mean": float(np.mean(errs)),
+                "roi_abs_rel_err_max": float(np.max(errs)),
             })
 
     df = pd.DataFrame(report)
     print(df.groupby(["rung", "tool"])
             .agg(r2=("r2", "mean"),
-                 beta_err_mean=("beta_abs_rel_err_mean", "mean"),
-                 beta_err_max=("beta_abs_rel_err_max", "max"))
+                 roi_err_mean=("roi_abs_rel_err_mean", "mean"),
+                 roi_err_max=("roi_abs_rel_err_max", "max"))
             .round(4).to_string())
     print(f"\nwrote {len(report)} result JSON(s) to {out}")
 
