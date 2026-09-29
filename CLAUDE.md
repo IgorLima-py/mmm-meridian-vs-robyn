@@ -6,7 +6,7 @@ limites — ela **não** alega "construí um MMM".
 
 ## Regras que valem sempre
 
-- **Este repositório nasceu privado mas VAI ser público — com o histórico inteiro.**
+- **Este repositório nasceu privado e já é público — com o histórico inteiro.**
   Todo commit, desde o primeiro, precisa passar no teste: *"isto pode ser lido por
   qualquer pessoa, para sempre?"* Se não pode, não entra.
 - **Só dado simulado ou demo público.** Nenhum dado real de anunciante, nenhum dado
@@ -73,6 +73,11 @@ plugin `playbook`, o subagente `bateria` e o `/tchau`):
 
 bateria: python -m simulation.checks
 
+A linha da stack, idem na coluna zero (quem lê é o revisor do `/tchau`, para reconhecer
+dependência que ninguém pediu; decidida no `/360` de 27/09/2026):
+
+stack travada: Python (simulação, análise, Meridian, PyMC-Marketing) + R só para o Robyn + WSL2 na Karen para os runs + página HTML/JS estática sem build. Fora: GeoLift, SaaS comercial, LightweightMMM, framework JS com build, backend, dado real.
+
 ## Ao abrir a sessão
 
 Executado pelo comando `/oi`. **Ele é deliberadamente barato** — existe para
@@ -90,28 +95,29 @@ razão de ser.
    - Só Intel Graphics → **Dell** (laptop, sem admin): análise e escrita.
      **Nunca** tentar WSL2 ou qualquer instalação que exija admin aqui.
    - Em dúvida (GPU inesperada), pergunte ao Igor em vez de assumir.
-3. O ponteiro é o `docs/PROXIMO.md` e a fila inteira é o `docs/ROADMAP.md`
-   (tabela até `<!-- HEADER-END -->`). **Se o hook `SessionStart` já injetou o
+3. O ponteiro é o `docs/PROXIMO.md` e a fila inteira é o bloco 2, "A fila", do
+   `docs/ROADMAP.md`. **Se o hook `SessionStart` já injetou o
    bloco `docs/PROXIMO.md pede:`, use-o — não releia o arquivo.** Se o
    ponteiro apontar uma `maquina:` que não é esta, isso é a primeira coisa da
-   resposta, e a alternativa é a primeira fatia `next` cuja `machine` seja
-   `any`.
+   resposta, e a alternativa é a primeira fatia ⬜ da fila cuja `Máquina` seja
+   `qualquer` e cujas dependências estejam ✅.
 4. `git status --short` (idem: se veio na injeção, não rode de novo).
 5. Responda em poucas linhas: o ID, o nome, o **modelo** e o **esforço**
    recomendados, e uma linha de objetivo. Pergunte se o Igor quer seguir assim.
 
 **Não** leia `docs/STATUS.md`, `docs/PLAN.md` nem `BRIEF.md` na abertura. Eles
 são lidos sob demanda, depois que a fatia foi escolhida — o `docs/ROADMAP.md`
-traz o detalhe de cada C abaixo do marcador, e o `STATUS.md` traz o que falhou
+traz o detalhe de cada C no bloco 3, e o `STATUS.md` traz o que falhou
 e o que está preso a esta máquina.
 
 ## Ao encerrar a sessão
 
 Executado pelo comando `/tchau`.
 
-1. **`docs/ROADMAP.md`**: atualize a coluna `state` — o que fechou vira `done`,
-   o próximo vira `next`, o que ficou pela metade vira `doing`. A tabela é a
-   fila e nada mais; ela nunca explica.
+1. **`docs/ROADMAP.md`**: atualize a coluna `Estado` do bloco 2 — o que fechou
+   vira ✅, o que ficou pela metade vira 🚧, o que travou vira 🔴. A tabela é a
+   fila e nada mais; ela nunca explica. A v1 (C0–C8) está arquivada em
+   `docs/ROADMAP_V1.md` e não se edita.
 2. **`docs/PROXIMO.md`**: avance o ponteiro **só se o `verificar:` da fatia
    aberta estiver satisfeito de verdade**. Se faltar qualquer item, não avance
    e diga o que faltou. `modelo:` e `esforco:` do ponteiro novo saem da tabela
