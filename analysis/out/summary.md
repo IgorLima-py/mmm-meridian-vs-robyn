@@ -11,6 +11,7 @@
 - curve rel err @0.5x spend (mean): -0.417
 - curve rel err @1.0x spend (mean): -0.499
 - runtime (s, mean): 1105.450
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.200 (range -0.3 to 0.7)
 - seeds passing the tool's own convergence check: 1 of 2 (not converged: 101)
 - run spec: 2000/2000 adapt/burnin — seeds 101, 102
 - same seeds, national arm: ROI |rel err| (mean) 0.470 — seeds 101, 102
@@ -34,6 +35,7 @@
 - curve rel err @0.5x spend (mean): -0.201
 - curve rel err @1.0x spend (mean): -0.312
 - runtime (s, mean): 431.580
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): -0.060 (range -0.5 to 0.3)
 - seeds passing the tool's own convergence check: 5 of 5
 - run spec: 500/500 adapt/burnin — seeds 101, 102, 103, 104, 105
 
@@ -56,6 +58,7 @@
 - curve rel err @0.5x spend (mean): 0.091
 - curve rel err @1.0x spend (mean): 0.091
 - runtime (s, mean): 0.000
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.280 (range -0.7 to 1.0)
 - seeds passing the tool's own convergence check: 5 of 5
 
 | channel | mean ROI rel err | mean \|ROI rel err\| | effect share − spend share (pp) |
@@ -77,6 +80,7 @@
 - curve rel err @0.5x spend (mean): 0.118
 - curve rel err @1.0x spend (mean): 0.118
 - runtime (s, mean): 0.000
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.600 (range -0.2 to 1.0)
 - seeds passing the tool's own convergence check: 5 of 5
 
 | channel | mean ROI rel err | mean \|ROI rel err\| | effect share − spend share (pp) |
@@ -98,6 +102,7 @@
 - curve rel err @0.5x spend (mean): -0.009
 - curve rel err @1.0x spend (mean): -0.008
 - runtime (s, mean): 0.000
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.620 (range 0.0 to 0.9)
 - seeds passing the tool's own convergence check: 5 of 5
 
 | channel | mean ROI rel err | mean \|ROI rel err\| | effect share − spend share (pp) |
@@ -107,6 +112,50 @@
 | search | -0.186 | 0.319 | +8.56 |
 | social | -0.030 | 0.382 | +2.85 |
 | tv | -0.008 | 0.098 | -1.34 |
+
+## oracle_nat_meridian_setup — national arm (5 seed(s))
+- ROI bias (mean rel err): 0.119
+- ROI |rel err| (mean): 0.664
+- interval contains truth (rate): 0.840
+- interval width / true ROI (mean): 2.776
+- contribution |err| (pp, mean): 1.834
+- pull toward spend share (mean, + = pulled): 0.037
+- distance from spend share (pp, mean |gap| per channel-seed): 8.081
+- curve rel err @0.5x spend (mean): 0.188
+- curve rel err @1.0x spend (mean): 0.119
+- runtime (s, mean): 0.000
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.620 (range 0.2 to 0.9)
+- seeds passing the tool's own convergence check: 5 of 5
+
+| channel | mean ROI rel err | mean \|ROI rel err\| | effect share − spend share (pp) |
+|---|---|---|---|
+| display | 0.459 | 1.334 | -3.14 |
+| ooh | 0.097 | 1.062 | -6.82 |
+| search | -0.114 | 0.303 | +8.06 |
+| social | -0.048 | 0.417 | +0.41 |
+| tv | 0.202 | 0.202 | +1.50 |
+
+## oracle_nat_robyn_setup — national arm (5 seed(s))
+- ROI bias (mean rel err): 0.058
+- ROI |rel err| (mean): 0.635
+- interval contains truth (rate): 0.920
+- interval width / true ROI (mean): 2.784
+- contribution |err| (pp, mean): 1.662
+- pull toward spend share (mean, + = pulled): 0.027
+- distance from spend share (pp, mean |gap| per channel-seed): 8.290
+- curve rel err @0.5x spend (mean): 0.072
+- curve rel err @1.0x spend (mean): 0.058
+- runtime (s, mean): 0.000
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.440 (range -0.6 to 0.9)
+- seeds passing the tool's own convergence check: 5 of 5
+
+| channel | mean ROI rel err | mean \|ROI rel err\| | effect share − spend share (pp) |
+|---|---|---|---|
+| display | 0.293 | 1.164 | -3.12 |
+| ooh | 0.244 | 1.197 | -5.98 |
+| search | -0.187 | 0.328 | +8.31 |
+| social | -0.040 | 0.390 | +2.59 |
+| tv | -0.020 | 0.094 | -1.80 |
 
 ## oracle_nat_truebase — national arm (5 seed(s))
 - ROI bias (mean rel err): 0.065
@@ -119,6 +168,7 @@
 - curve rel err @0.5x spend (mean): 0.064
 - curve rel err @1.0x spend (mean): 0.065
 - runtime (s, mean): 0.000
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.760 (range 0.3 to 1.0)
 - seeds passing the tool's own convergence check: 5 of 5
 
 | channel | mean ROI rel err | mean \|ROI rel err\| | effect share − spend share (pp) |
@@ -140,6 +190,7 @@
 - curve rel err @0.5x spend (mean): -0.637
 - curve rel err @1.0x spend (mean): -0.540
 - runtime (s, mean): 1017.080
+- ROI rank agreement with truth (Spearman over channels, mean over seeds): 0.420 (range -0.5 to 1.0)
 - seeds passing the tool's own convergence check: 2 of 5 (not converged: 102, 103, 104)
 - run spec: 2000x5 iterations x trials — seeds 105; 4000x5 iterations x trials — seeds 101, 102, 103, 104  **mixed spec: means below blend them**
 
@@ -150,3 +201,50 @@
 | search | -0.792 | 0.792 | +0.91 |
 | social | -0.717 | 0.717 | +0.09 |
 | tv | -0.610 | 0.610 | -0.11 |
+
+## Meridian − Robyn, national arm, seed by seed
+
+D = mean over the five channels of |ROI rel err|, Meridian minus Robyn; negative means Meridian was closer on that seed.
+
+| seed | Meridian | Robyn | D |
+|---|---|---|---|
+| 101 | 0.545 | 0.450 | +0.095 |
+| 102 | 0.394 | 0.556 | -0.162 |
+| 103 | 0.756 | 0.454 | +0.302 |
+| 104 | 0.426 | 0.699 | -0.273 |
+| 105 | 0.543 | 0.617 | -0.074 |
+
+- mean D: -0.022; standard deviation (ddof=1): 0.226; range -0.273 to +0.302
+- Meridian lower on 3 of 5 seeds, Robyn lower on 2
+
+## Setup decomposition, national arm (docs/PLAN.md §8.3, §8.6)
+
+Each tool's mean |ROI rel err| over seeds, split exactly into three terms: L3's error (the shape known, the baseline estimated); the setup's price, the rung restricted to the tool's parameter space (L6 for Meridian, L7 for Robyn) minus L3; and the rest, the tool minus that rung. The rest mixes the cost of estimating the shape, a difficulty of the data, with the tool's own machinery. A negative term is reported as it is. Channels marked * are below the recoverability floor, where no term means anything.
+
+| tool | channel | tool \|err\| | L3 | setup's price | rest |
+|---|---|---|---|---|---|
+| meridian | display* | 0.381 | 1.216 | +0.118 | -0.953 |
+| meridian | ooh* | 0.553 | 0.975 | +0.087 | -0.509 |
+| meridian | search | 0.697 | 0.319 | -0.017 | +0.394 |
+| meridian | social | 0.698 | 0.382 | +0.035 | +0.281 |
+| meridian | tv | 0.336 | 0.098 | +0.104 | +0.134 |
+| robyn | display* | 0.428 | 1.216 | -0.052 | -0.736 |
+| robyn | ooh* | 0.230 | 0.975 | +0.222 | -0.967 |
+| robyn | search | 0.792 | 0.319 | +0.009 | +0.464 |
+| robyn | social | 0.717 | 0.382 | +0.008 | +0.327 |
+| robyn | tv | 0.610 | 0.098 | -0.004 | +0.516 |
+
+The same three pieces with their sign (mean signed ROI rel err over seeds). Not pre-registered: added because the table above apportions sizes, and a setup that pushes the estimate one way cannot explain a miss the other way.
+
+| tool | channel | tool | L3 | setup's shift | rest |
+|---|---|---|---|---|---|
+| meridian | display* | -0.381 | +0.299 | +0.160 | -0.840 |
+| meridian | ooh* | +0.553 | -0.116 | +0.214 | +0.455 |
+| meridian | search | -0.697 | -0.186 | +0.072 | -0.583 |
+| meridian | social | -0.698 | -0.030 | -0.018 | -0.650 |
+| meridian | tv | -0.336 | -0.008 | +0.210 | -0.538 |
+| robyn | display* | -0.428 | +0.299 | -0.006 | -0.721 |
+| robyn | ooh* | -0.156 | -0.116 | +0.360 | -0.399 |
+| robyn | search | -0.792 | -0.186 | -0.001 | -0.605 |
+| robyn | social | -0.717 | -0.030 | -0.010 | -0.677 |
+| robyn | tv | -0.610 | -0.008 | -0.012 | -0.590 |

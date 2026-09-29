@@ -21,6 +21,102 @@ import pandas as pd
 
 CURVE_EVAL_MULTIPLIERS = [0.5, 1.0]   # M3, Jin-style fixed evaluation points
 
+# Part 2 additions (docs/PLAN.md §8.3, §8.4, §8.6). The decomposition reads
+# each tool against L3 and against the rung restricted to its setup.
+SETUP_RUNG_OF = {"meridian": "oracle_nat_meridian_setup",
+                 "robyn": "oracle_nat_robyn_setup"}
+REFERENCE_RUNG = "oracle_nat_estbase"                     # L3
+# Below the recoverability floor: the two channels the oracle cannot recover
+# (analysis/ORACLE.md, second result; simulation.checks.channel_snr).
+BELOW_FLOOR = ("ooh", "display")
+
+
+def rank_agreement(grp):
+    """Spearman correlation of estimated vs true ROI across channels, one
+    value per seed (ranks with ties averaged, then Pearson on the ranks)."""
+    out = {}
+    for seed, g in grp.groupby("seed"):
+        g = g.dropna(subset=["roi_point"])
+        if len(g) > 2:
+            out[seed] = g["roi_point"].rank().corr(g["true_roi"].rank())
+    return pd.Series(out, dtype=float)
+
+
+def seed_spread(df):
+    """Meridian minus Robyn, national arm, per seed (PLAN §8.4)."""
+    nat = df[(df["arm"] == "national") & df["tool"].isin(["meridian", "robyn"])]
+    per = (nat.assign(e=nat["roi_rel_err"].abs())
+              .groupby(["seed", "tool"]).e.mean().unstack())
+    if not {"meridian", "robyn"} <= set(per.columns):
+        return []
+    per = per.dropna()
+    d = per["meridian"] - per["robyn"]
+    lines = ["## Meridian − Robyn, national arm, seed by seed", "",
+             "D = mean over the five channels of |ROI rel err|, Meridian minus "
+             "Robyn; negative means Meridian was closer on that seed.", "",
+             "| seed | Meridian | Robyn | D |", "|---|---|---|---|"]
+    for seed, row in per.iterrows():
+        lines.append(f"| {seed} | {row.meridian:.3f} | {row.robyn:.3f} "
+                     f"| {d[seed]:+.3f} |")
+    lines += ["",
+              f"- mean D: {d.mean():+.3f}; standard deviation (ddof=1): "
+              f"{d.std(ddof=1):.3f}; range {d.min():+.3f} to {d.max():+.3f}",
+              f"- Meridian lower on {int((d < 0).sum())} of {len(d)} seeds, "
+              f"Robyn lower on {int((d > 0).sum())}", ""]
+    return lines
+
+
+def setup_decomposition(df):
+    """|err T| = |err L3| + (|err setup| - |err L3|) + (|err T| - |err setup|),
+    means over seeds of absolute ROI rel err, national arm (PLAN §8.3, §8.6)."""
+    nat = df[df["arm"] == "national"].assign(e=lambda x: x["roi_rel_err"].abs())
+    mean = nat.groupby(["tool", "channel"]).e.mean()
+    have = set(nat["tool"])
+    tools = [t for t, r in SETUP_RUNG_OF.items()
+             if {t, r, REFERENCE_RUNG} <= have]
+    if not tools:
+        return []
+    lines = ["## Setup decomposition, national arm (docs/PLAN.md §8.3, §8.6)", "",
+             "Each tool's mean |ROI rel err| over seeds, split exactly into three "
+             "terms: L3's error (the shape known, the baseline estimated); the "
+             "setup's price, the rung restricted to the tool's parameter space "
+             "(L6 for Meridian, L7 for Robyn) minus L3; and the rest, the tool "
+             "minus that rung. The rest mixes the cost of estimating the shape, "
+             "a difficulty of the data, with the tool's own machinery. A "
+             "negative term is reported as it is. Channels marked * are below "
+             "the recoverability floor, where no term means anything.", "",
+             "| tool | channel | tool \\|err\\| | L3 | setup's price | rest |",
+             "|---|---|---|---|---|---|"]
+    for t in tools:
+        for ch in sorted(set(nat.loc[nat.tool == t, "channel"])):
+            e_t = mean[(t, ch)]
+            e_3 = mean[(REFERENCE_RUNG, ch)]
+            e_s = mean[(SETUP_RUNG_OF[t], ch)]
+            mark = "*" if ch in BELOW_FLOOR else ""
+            lines.append(f"| {t} | {ch}{mark} | {e_t:.3f} | {e_3:.3f} "
+                         f"| {e_s - e_3:+.3f} | {e_t - e_s:+.3f} |")
+
+    # Added beside the pre-registered table, not pre-registered: absolute
+    # errors apportion sizes, not directions. Where the setup pushes one way
+    # and the tool missed the other, the table above reads as "the setup
+    # explains part of the miss" when it explains none of it.
+    signed = nat.groupby(["tool", "channel"]).roi_rel_err.mean()
+    lines += ["", "The same three pieces with their sign (mean signed ROI rel err "
+              "over seeds). Not pre-registered: added because the table above "
+              "apportions sizes, and a setup that pushes the estimate one way "
+              "cannot explain a miss the other way.", "",
+              "| tool | channel | tool | L3 | setup's shift | rest |",
+              "|---|---|---|---|---|---|"]
+    for t in tools:
+        for ch in sorted(set(nat.loc[nat.tool == t, "channel"])):
+            s_t = signed[(t, ch)]
+            s_3 = signed[(REFERENCE_RUNG, ch)]
+            s_s = signed[(SETUP_RUNG_OF[t], ch)]
+            mark = "*" if ch in BELOW_FLOOR else ""
+            lines.append(f"| {t} | {ch}{mark} | {s_t:+.3f} | {s_3:+.3f} "
+                         f"| {s_s - s_3:+.3f} | {s_t - s_s:+.3f} |")
+    return lines + [""]
+
 
 def load_ground_truths(data_root):
     out = {}
@@ -166,6 +262,11 @@ def summarize(df):
             v = agg[k]
             if pd.notna(v):
                 lines.append(f"- {rename.get(k, k)}: {v:.3f}")
+        rho = rank_agreement(grp)
+        if len(rho):
+            lines.append(f"- ROI rank agreement with truth (Spearman over "
+                         f"channels, mean over seeds): {rho.mean():.3f} "
+                         f"(range {rho.min():.1f} to {rho.max():.1f})")
         # Convergence travels with every aggregate: this file is quoted on its
         # own, without the caveats that live in analysis/ORACLE.md.
         conv = grp.groupby("seed")["converged"].first()
@@ -212,6 +313,8 @@ def summarize(df):
             lines.append(f"| {ch} | {row.signed:.3f} | {row.absolute:.3f} |"
                          + (f" {row.gap:+.2f} |" if has_gap else ""))
         lines.append("")
+    lines += seed_spread(df)
+    lines += setup_decomposition(df)
     return "\n".join(lines)
 
 

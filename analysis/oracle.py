@@ -36,17 +36,19 @@ Every rung uses ordinary least squares, unconstrained (a negative beta is
 information, not something to hide). Exports the standard results schema so
 `scoring.py` consumes them unchanged.
 
-Three more rungs, pre-registered in docs/PLAN.md §8 (2026-09-29), stop
-handing over the shape. They share L3's design and ESTIMATE adstock and Hill
-from the data, each inside one parameter space:
+Two more rungs, pre-registered in docs/PLAN.md §8 and its amendment §8.6
+(2026-09-29), restrict the shape to what one tool's setup could express.
+Each is L3 with every channel's regressor replaced by the best
+approximation of the true one inside that tool's parameter space:
 
-  L5  oracle_nat_fitshape       the generator's family, free.
-                                -> what estimating the shape costs.
   L6  oracle_nat_meridian_setup Meridian 1.8.0's space as run in v1:
                                 Hill slope fixed at 1.
   L7  oracle_nat_robyn_setup    Robyn 3.12.1's space as run in v1: its
                                 theta, alpha and gamma bounds.
-                                -> L6 - L5 and L7 - L5 are each setup's price.
+                                -> L6 - L3 and L7 - L3 are each setup's price.
+
+(L5, a joint shape search, was pre-registered and retired when it failed its
+own check; the name is not reused. See PLAN §8.6.)
 
 Usage (from the repo root):
     python analysis/oracle.py                       # all seeds -> runs/oracle/results/
@@ -272,20 +274,23 @@ def run_rung(world, rung, gt):
 
 
 # ---------------------------------------------------------------------------
-# Setup-constrained rungs (docs/PLAN.md §8, pre-registered 2026-09-29)
+# Setup-constrained rungs (docs/PLAN.md §8, pre-registered 2026-09-29, and
+# its same-day amendment §8.6)
 #
 # L1-L4 are handed the true shape, so they cannot say how much of a tool's
-# miss came from the parameter space its setup allowed. L5-L7 estimate the
-# shape on a grid, each inside one parameter space, and share everything
-# else with L3. Every number below is from the pre-registration.
+# miss came from the parameter space its setup allowed. L6 and L7 are L3
+# with each channel's regressor replaced by the best approximation of the
+# true one that the tool's space admits. §8.1's joint shape search (L5) was
+# retired when its own check failed (commit a9e062b); what follows solves
+# one identified problem per channel instead. Every number below is from the
+# pre-registration.
 
 SETUP_RUNGS_VERSION = "1.1.0"     # L1-L4 stay at ORACLE_VERSION, unchanged
 THETA_GRID = np.round(np.arange(0.0, 0.951, 0.05), 2)   # 20 retentions
 S_GRID = np.round(np.arange(0.3, 4.001, 0.1), 1)        # 38 Hill slopes
-K_GRID = np.round(np.arange(0.05, 4.001, 0.05), 2)      # 80 half-saturations
-N_STARTS = 8           # truth projected to the space + 7 random grid points
-MAX_CYCLES = 50
-SSR_TIE = 1e-9         # a start "reached the best SSR" within this, relative
+K_GRID = np.round(np.arange(0.05, 10.001, 0.05), 2)     # 200 half-saturations;
+# the ceiling covers ec_m's mapped ceiling on every channel (PLAN §8.7)
+FINE_STEPS = (0.005, 0.01, 0.005)  # theta, s, k: ten times finer (§8.6)
 GRID_EPS = 1e-9        # float slack when a grid value is tested against a bound
 
 # Robyn 3.12.1 as run in v1: runs/robyn/run_robyn.R, RD2. Its inflexion is
@@ -300,22 +305,22 @@ ROBYN_GAMMA = (0.3, 1.0)
 MERIDIAN_SLOPE = 1.0
 MERIDIAN_EC = (0.1, 10.0)
 
-# The parameter spaces. The first three are the rungs; all five are the
-# pseudo-true projections of PLAN §8.2.
 SPACES = {
-    "free": "the generator's family, all shape parameters free",
+    "free": "the generator's family, every shape parameter free",
     "meridian": "Meridian 1.8.0's space: Hill slope fixed at 1, "
                 "half-saturation inside ec_m's support",
     "robyn": "Robyn 3.12.1's space: theta inside its per-channel bounds, "
              "alpha in [0.5, 3], gamma in [0.3, 1]",
-    "cap_ooh_display": "free, except ooh's and display's theta capped at "
-                       "Robyn's bounds",
-    "tv_slope1": "free, except tv's Hill slope fixed at 1",
 }
 SETUP_RUNGS = {
-    "L5": ("oracle_nat_fitshape", "free", 5),
-    "L6": ("oracle_nat_meridian_setup", "meridian", 6),
-    "L7": ("oracle_nat_robyn_setup", "robyn", 7),
+    "L6": ("oracle_nat_meridian_setup", "meridian"),
+    "L7": ("oracle_nat_robyn_setup", "robyn"),
+}
+# The two partial variants of §8.6 that answer Q2: one channel group
+# projected, the others left true. Diagnostics only, not scored JSONs.
+Q2_VARIANTS = {
+    "robyn_ooh_display": {"ooh": "robyn", "display": "robyn"},
+    "meridian_tv": {"tv": "meridian"},
 }
 
 
@@ -349,275 +354,227 @@ def national_response_shape(world, ch, theta, k, s, mult=1.0):
     return (pop_tot * hill(ad / world.ref[ch], k, s))[world.win]
 
 
-def robyn_k_ceiling(world, ch):
-    """Per theta on the grid: the half-saturation, in the generator's units,
-    that Robyn's gamma = 1 maps to.
+def robyn_k_ceiling(world, ch, theta):
+    """The half-saturation, in the generator's units, that Robyn's gamma = 1
+    maps to at retention `theta`.
 
     Robyn's inflexion is gamma * max(z), z its own adstocked exposure. At
     steady state z/u = population * mean exposure per capita / (1 - theta),
     so gamma = 1 corresponds to k = max(z) * (1 - theta) / (pop * ref).
     """
     x = world.imp[ch].sum(axis=0)[world.win]
-    scale = world.pop.sum() * world.ref[ch]
-    return np.array([robyn_adstock(x, th).max() * (1 - th) / scale
-                     for th in THETA_GRID])
+    z = robyn_adstock(x, theta)
+    return z.max() * (1 - theta) / (world.pop.sum() * world.ref[ch])
 
 
-class ChannelGrid:
-    """Every candidate national regressor of one channel on the shape grid."""
+def meridian_k_support(world, ch):
+    """ec_m's support [0.1, 10], in units of the population-scaled non-zero
+    median of the media, mapped to the generator's k units."""
+    pop_tot = world.pop.sum()
+    win_pc = world.imp[ch].sum(axis=0)[world.win] / pop_tot
+    lo, hi = (np.array(MERIDIAN_EC) * np.median(win_pc[win_pc > 0])
+              / world.ref[ch])
+    if hi > K_GRID[-1] + GRID_EPS:
+        sys.exit(f"seed {world.seed} {ch}: ec_m's ceiling maps to k = {hi:.2f}, "
+                 f"above the grid's {K_GRID[-1]} (docs/PLAN.md §8.7)")
+    return float(lo), float(hi)
 
-    def __init__(self, world, ch):
-        cfg = world.cfg
-        self.ch = ch
-        pop_tot = world.pop.sum()
-        x_pc = world.imp[ch].sum(axis=0) / pop_tot
-        lag = cfg["adstock_max_lag"]
-        u = []
-        for th in THETA_GRID:
-            fast = adstock_fast(x_pc, th, lag)
-            ref = adstock_geometric(x_pc, th, lag)
-            assert np.max(np.abs(fast - ref)) <= 1e-12 * np.max(np.abs(ref)), \
-                f"adstock_fast drifted from the generator's adstock on {ch}"
-            u.append(fast[world.win] / world.ref[ch])
-        u = np.array(u)[:, None, None, :]                     # (nθ,1,1,W)
-        us = u ** S_GRID[None, :, None, None]
-        ks = K_GRID[None, None, :, None] ** S_GRID[None, :, None, None]
-        self.shape = (len(THETA_GRID), len(S_GRID), len(K_GRID))
-        self.H = (pop_tot * us / (us + ks)).reshape(-1, u.shape[-1])
-        self.HH = np.einsum("ij,ij->i", self.H, self.H)
-        win_pc = x_pc[world.win]
-        self.median_over_ref = float(np.median(win_pc[win_pc > 0])
-                                     / world.ref[ch])
-        self.robyn_kmax = robyn_k_ceiling(world, ch)
 
-    def mask(self, space):
-        """Boolean (nθ, nS, nK) admissible set of this channel in `space`."""
-        th = THETA_GRID[:, None, None]
-        s = S_GRID[None, :, None]
-        k = K_GRID[None, None, :]
-        m = np.ones(self.shape, dtype=bool)
-        if space == "meridian" or (space == "tv_slope1" and self.ch == "tv"):
-            m &= np.abs(s - MERIDIAN_SLOPE) < GRID_EPS
-        if space == "meridian":
-            lo, hi = np.array(MERIDIAN_EC) * self.median_over_ref
-            m &= (k >= lo - GRID_EPS) & (k <= hi + GRID_EPS)
-        if space == "robyn" or (space == "cap_ooh_display"
-                                and self.ch in ("ooh", "display")):
-            lo, hi = ROBYN_THETA[self.ch]
-            m &= (th >= lo - GRID_EPS) & (th <= hi + GRID_EPS)
-        if space == "robyn":
-            m &= (s >= ROBYN_ALPHA[0] - GRID_EPS) & (s <= ROBYN_ALPHA[1] + GRID_EPS)
-            kmax = self.robyn_kmax[:, None, None]
-            m &= ((k >= ROBYN_GAMMA[0] * kmax - GRID_EPS)
-                  & (k <= ROBYN_GAMMA[1] * kmax + GRID_EPS))
+def bounds_hit(world, ch, space, shape):
+    """Names of the space's bounds a projected shape sits on, within half a
+    fine grid step. The grid's own edges are named too, so a projection
+    stopped by the grid rather than by the tool can never pass unnoticed."""
+    th, s, k = shape
+    half = [x / 2 for x in FINE_STEPS]
+    hits = []
+
+    def near(v, b, h):
+        return abs(v - b) <= h + GRID_EPS
+
+    for name, v, lo, hi, h in (("theta", th, THETA_GRID[0], THETA_GRID[-1], half[0]),
+                               ("hill_s", s, S_GRID[0], S_GRID[-1], half[1]),
+                               ("hill_k", k, K_GRID[0], K_GRID[-1], half[2])):
+        if near(v, lo, h) or near(v, hi, h):
+            hits.append(f"{name} at the grid edge")
+    if space == "meridian":
+        lo, hi = meridian_k_support(world, ch)
+        if near(k, hi, FINE_STEPS[2]):
+            hits.append("hill_k at ec_m's ceiling")
+        if near(k, lo, FINE_STEPS[2]):
+            hits.append("hill_k at ec_m's floor")
+    if space == "robyn":
+        lo, hi = ROBYN_THETA[ch]
+        if near(th, lo, half[0]) and lo > 0:
+            hits.append("theta at Robyn's lower bound")
+        if near(th, hi, half[0]):
+            hits.append("theta at Robyn's upper bound")
+        if near(s, ROBYN_ALPHA[0], half[1]) or near(s, ROBYN_ALPHA[1], half[1]):
+            hits.append("hill_s at Robyn's alpha bound")
+        kmax = robyn_k_ceiling(world, ch, th)
+        if near(k, ROBYN_GAMMA[0] * kmax, FINE_STEPS[2]):
+            hits.append("hill_k at Robyn's gamma floor")
+        if near(k, ROBYN_GAMMA[1] * kmax, FINE_STEPS[2]):
+            hits.append("hill_k at Robyn's gamma ceiling")
+    return hits
+
+
+def admissible(world, ch, space, theta, s, k):
+    """Boolean mask over broadcast (s, k) arrays at one retention `theta`."""
+    m = np.ones(np.broadcast(s, k).shape, dtype=bool)
+    if space == "free":
         return m
-
-    def unravel(self, flat):
-        i, j, l = np.unravel_index(flat, self.shape)
-        return float(THETA_GRID[i]), float(S_GRID[j]), float(K_GRID[l])
-
-    def nearest(self, mask, theta, s, k):
-        """Flat index of the admissible grid point nearest the given shape,
-        distance measured in grid steps; ties go to the lowest index."""
-        d = (np.abs(THETA_GRID[:, None, None] - theta) / 0.05
-             + np.abs(S_GRID[None, :, None] - s) / 0.1
-             + np.abs(K_GRID[None, None, :] - k) / 0.05)
-        d = np.where(mask, d, np.inf)
-        return int(np.argmin(d.reshape(-1)))
-
-
-def fit_shape(y, base, grids, masks, starts):
-    """Coordinate descent over channels on the shape grid (PLAN §8.1).
-
-    For one channel, every admissible shape is scored in closed form with the
-    other four channels and the baseline held fixed: residualise y on those
-    columns, and a candidate column c lowers the SSR by (c'y_r)^2 / c'M c.
-    Cycle through the channels until none moves. Returns one record per
-    start, in start order.
-    """
-    channels = list(grids)
-    flat_masks = {ch: masks[ch].reshape(-1) for ch in channels}
-    records = []
-    for start in starts:
-        cur = dict(start)
-        cycles = 0
-        for cycles in range(1, MAX_CYCLES + 1):
-            moved = False
-            for ch in channels:
-                g = grids[ch]
-                others = [grids[c].H[cur[c]] for c in channels if c != ch]
-                Z = np.column_stack(others + ([base] if base is not None else []))
-                Q, _ = np.linalg.qr(Z)
-                yr = y - Q @ (Q.T @ y)
-                yy = float(yr @ yr)
-                cy = g.H @ yr
-                HQ = g.H @ Q
-                cc = g.HH - np.einsum("ij,ij->i", HQ, HQ)
-                ok = flat_masks[ch] & (cc > 1e-12 * g.HH)
-                ssr = np.full(g.H.shape[0], np.inf)
-                ssr[ok] = yy - cy[ok] ** 2 / cc[ok]
-                best = int(np.argmin(ssr))
-                now = ssr[cur[ch]]
-                if best != cur[ch] and (not np.isfinite(now)
-                                        or ssr[best] < now - 1e-12 * abs(now)):
-                    cur[ch] = best
-                    moved = True
-            if not moved:
-                break
-        X = np.column_stack([grids[c].H[cur[c]] for c in channels]
-                            + ([base] if base is not None else []))
-        coef, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
-        resid = y - X @ coef
-        records.append({"shape": cur, "ssr": float(resid @ resid),
-                        "cycles": cycles})
-    return records
+    if space == "meridian":
+        lo, hi = meridian_k_support(world, ch)
+        m &= np.abs(s - MERIDIAN_SLOPE) < GRID_EPS
+        m &= (k >= lo - GRID_EPS) & (k <= hi + GRID_EPS)
+        return m
+    if space == "robyn":
+        lo, hi = ROBYN_THETA[ch]
+        if not lo - GRID_EPS <= theta <= hi + GRID_EPS:
+            return np.zeros_like(m)
+        kmax = robyn_k_ceiling(world, ch, theta)
+        m &= (s >= ROBYN_ALPHA[0] - GRID_EPS) & (s <= ROBYN_ALPHA[1] + GRID_EPS)
+        m &= ((k >= ROBYN_GAMMA[0] * kmax - GRID_EPS)
+              & (k <= ROBYN_GAMMA[1] * kmax + GRID_EPS))
+        return m
+    raise ValueError(space)
 
 
-def make_starts(grids, masks, world, rng_key, with_truth=True, n=N_STARTS):
-    """Start 0 is the truth projected into the space (if `with_truth`); the
-    rest are admissible grid points drawn uniformly, rng seeded by `rng_key`."""
-    rng = np.random.default_rng(rng_key)
-    starts = []
-    if with_truth:
-        starts.append({ch: g.nearest(masks[ch],
-                                     *_true_shape(world, ch))
-                       for ch, g in grids.items()})
-    while len(starts) < n:
-        starts.append({ch: int(rng.choice(np.flatnonzero(masks[ch].reshape(-1))))
-                       for ch in grids})
-    return starts
+def _search(world, ch, space, target, thetas, ss, ks):
+    """Exhaustive search of one channel's shape grid for the admissible
+    candidate closest to `target` up to scale: loss = t't - (h't)^2 / h'h.
+    Strict improvement only, so ties go to the first grid point visited."""
+    pop_tot = world.pop.sum()
+    x_pc = world.imp[ch].sum(axis=0) / pop_tot
+    lag = world.cfg["adstock_max_lag"]
+    tt = float(target @ target)
+    S, K = np.meshgrid(ss, ks, indexing="ij")
+    best = (np.inf, None)
+    for th in thetas:
+        adm = admissible(world, ch, space, th, S, K)
+        if not adm.any():
+            continue
+        u = adstock_fast(x_pc, th, lag)[world.win] / world.ref[ch]
+        us = u[None, None, :] ** S[..., None]
+        H = pop_tot * us / (us + K[..., None] ** S[..., None])
+        ht = H @ target
+        hh = np.einsum("ijt,ijt->ij", H, H)
+        loss = np.where(adm & (hh > 0), tt - ht ** 2 / np.where(hh > 0, hh, 1),
+                        np.inf)
+        i, j = np.unravel_index(int(np.argmin(loss)), loss.shape)
+        if loss[i, j] < best[0]:
+            best = (float(loss[i, j]),
+                    (float(th), float(S[i, j]), float(K[i, j])))
+    return best
 
 
-def _true_shape(world, ch):
-    spec = world.cfg["channels"][ch]
-    return spec["adstock_alpha"], spec["hill_s"], spec["hill_k"]
+def project_channel(world, ch, space):
+    """Best approximation of `ch`'s true national regressor inside `space`
+    (§8.6): coarse grid, then a grid ten times finer spanning one coarse step
+    either side of the coarse winner. Returns ((theta, s, k), residual share
+    of the target's sum of squares)."""
+    target = national_unit_response(world, ch)
+    _, (th0, s0, k0) = _search(world, ch, space, target,
+                               THETA_GRID, S_GRID, K_GRID)
+
+    def fine(centre, step, coarse, lo, hi):
+        n = int(round(coarse / step))
+        v = np.round(centre + step * np.arange(-n, n + 1), 6)
+        return v[(v >= lo - GRID_EPS) & (v <= hi + GRID_EPS)]
+
+    loss, shape = _search(
+        world, ch, space, target,
+        fine(th0, FINE_STEPS[0], 0.05, THETA_GRID[0], THETA_GRID[-1]),
+        fine(s0, FINE_STEPS[1], 0.1, S_GRID[0], S_GRID[-1]),
+        fine(k0, FINE_STEPS[2], 0.05, K_GRID[0], K_GRID[-1]))
+    return shape, loss / float(target @ target)
 
 
-def best_of(records, grids):
-    """The winning start, and how many others landed on it."""
-    ssrs = np.array([r["ssr"] for r in records])
-    b = int(np.argmin(ssrs))
-    win = records[b]
-    reached = [i for i, r in enumerate(records)
-               if r["shape"] == win["shape"]
-               or r["ssr"] <= win["ssr"] * (1 + SSR_TIE)]
-    return b, win, reached
+def projection_check(world):
+    """§8.6 check: projecting onto the free space must return the true shape
+    exactly on every channel. Returns the channels where it did not."""
+    bad = []
+    for ch in world.cfg["channels"]:
+        (th, s, k), _ = project_channel(world, ch, "free")
+        spec = world.cfg["channels"][ch]
+        if (abs(th - spec["adstock_alpha"]) > GRID_EPS
+                or abs(s - spec["hill_s"]) > GRID_EPS
+                or abs(k - spec["hill_k"]) > GRID_EPS):
+            bad.append(ch)
+    return bad
 
 
-def boundary_flags(g, mask, flat):
-    """Fitted parameters sitting on an edge of the admissible set, holding
-    the other two at their fitted values. A parameter with one admissible
-    value (Meridian's slope) is fixed, not on a boundary."""
-    i, j, l = np.unravel_index(flat, g.shape)
-    out = []
-    for name, line, pos in (("theta", mask[:, j, l], i),
-                            ("hill_s", mask[i, :, l], j),
-                            ("hill_k", mask[i, j, :], l)):
-        adm = np.flatnonzero(line)
-        if len(adm) > 1 and pos in (adm.min(), adm.max()):
-            out.append(f"{name}_{'low' if pos == adm.min() else 'high'}")
-    return out
+def projected_columns(world, spaces_by_channel, cache):
+    """One national regressor per channel: projected where the channel has a
+    space, true otherwise. Returns (columns, shapes, unit functions)."""
+    cols, shapes, units = [], {}, {}
+    for ch in world.cfg["channels"]:
+        space = spaces_by_channel.get(ch)
+        if space is None:
+            spec = world.cfg["channels"][ch]
+            shape = (spec["adstock_alpha"], spec["hill_s"], spec["hill_k"])
+        else:
+            key = (world.seed, ch, space)
+            if key not in cache:
+                cache[key] = project_channel(world, ch, space)
+            shape = cache[key][0]
+        th, s, k = shape
+        shapes[ch] = shape
+        cols.append(national_response_shape(world, ch, th, k, s))
+        units[ch] = (lambda m, ch=ch, th=th, k=k, s=s:
+                     float(national_response_shape(world, ch, th, k, s,
+                                                   m).sum()))
+    return np.column_stack(cols), shapes, units
 
 
-def channel_grids(world):
-    return {ch: ChannelGrid(world, ch) for ch in world.cfg["channels"]}
-
-
-def optimiser_check(world, grids):
-    """PLAN §8.1 stop rule: on revenue built exactly from L2's regressors with
-    the true shape, no noise and no baseline, the search from the seven
-    random starts alone must return the true ROI to 1e-9 on every channel.
-    """
-    channels = list(grids)
-    beta = {ch: world.beta_pc[ch] for ch in channels}
-    y = sum(beta[ch] * national_unit_response(world, ch) for ch in channels)
-    masks = {ch: g.mask("free") for ch, g in grids.items()}
-    # rng key (seed, 0): rung numbers 5-7 key the rungs themselves.
-    starts = make_starts(grids, masks, world, [world.seed, 0],
-                         with_truth=False, n=N_STARTS - 1)
-    records = fit_shape(y, None, grids, masks, starts)
-    _, win, reached = best_of(records, grids)
-    shape = {ch: grids[ch].unravel(win["shape"][ch]) for ch in channels}
-    cols = [national_response_shape(world, ch, shape[ch][0], shape[ch][2],
-                                    shape[ch][1]) for ch in channels]
-    coef, _, _, _ = fit_ols(y, np.column_stack(cols))
-    errs = {}
-    for i, ch in enumerate(channels):
-        unit = national_unit_response(world, ch).sum()
-        roi_true = beta[ch] * unit
-        roi_fit = coef[i] * cols[i].sum()
-        errs[ch] = abs(roi_fit - roi_true) / abs(roi_true)
-    return {"max_roi_rel_err": max(errs.values()),
-            "starts_reaching_best": len(reached),
-            "n_starts": len(records),
-            "passed": max(errs.values()) <= 1e-9}
-
-
-def fit_space(world, grids, space, rng_key, truebase=False):
-    """Fit one parameter space. Returns (winner shape per channel, OLS
-    pieces, start bookkeeping). `truebase` gives L2's noiseless design."""
-    cfg = world.cfg
-    channels = list(cfg["channels"])
+def fit_projected(world, spaces_by_channel, cache, noiseless=False):
+    """OLS on the projected columns. Noisy: L3's design (national revenue,
+    estimated baseline). Noiseless: the true national media contributions,
+    no baseline (§8.6 pseudo-true). Returns (coef, se, y, X, shapes, units)."""
     win = world.win
-    masks = {ch: g.mask(space) for ch, g in grids.items()}
-    if truebase:
-        # Pseudo-true (PLAN §8.2): the true national media contributions,
-        # summed from the geo level -- noise, baseline and control removed.
-        y = sum(world.media[ch][:, win].sum(axis=0) for ch in channels)
-        base = None
+    media, shapes, units = projected_columns(world, spaces_by_channel, cache)
+    if noiseless:
+        y = sum(world.media[ch][:, win].sum(axis=0)
+                for ch in world.cfg["channels"])
+        X = media
     else:
         y = world.revenue[:, win].sum(axis=0)
-        base = baseline_design(world.W, world.draws["control_index"][win])
-    starts = make_starts(grids, masks, world, rng_key)
-    records = fit_shape(y, base, grids, masks, starts)
-    b, win_rec, reached = best_of(records, grids)
-    shape = {ch: grids[ch].unravel(win_rec["shape"][ch]) for ch in channels}
-    media = np.column_stack([national_response_shape(
-        world, ch, shape[ch][0], shape[ch][2], shape[ch][1]) for ch in channels])
-    X = media if base is None else np.column_stack([media, base])
-    coef, _, _, _ = fit_ols(y, X)
-    book = {
-        "n_starts": len(records),
-        "random_starts_reaching_best": sum(1 for i in reached if i != 0),
-        "truth_start_is_best": b == 0,
-        "cycles_of_best": win_rec["cycles"],
-        "at_boundary": {ch: boundary_flags(grids[ch], masks[ch],
-                                           win_rec["shape"][ch])
-                        for ch in channels},
-    }
-    return shape, coef, y, X, book
+        X = np.column_stack([media, baseline_design(
+            world.W, world.draws["control_index"][win])])
+    coef, se, _, _ = fit_ols(y, X)
+    return coef, se, y, X, shapes, units
 
 
-def run_setup_rung(world, rung, gt, grids):
-    tool, space, number = SETUP_RUNGS[rung]
+def run_setup_rung(world, rung, gt, cache):
+    tool, space = SETUP_RUNGS[rung]
     cfg = world.cfg
     channels = list(cfg["channels"])
-    shape, coef, y, X, book = fit_space(world, grids, space,
-                                        [world.seed, number])
+    coef, se, y, X, shapes, units = fit_projected(
+        world, {ch: space for ch in channels}, cache)
     resid = y - X @ coef
     ss_tot = float(((y - y.mean()) ** 2).sum())
     r2 = 1.0 - float(resid @ resid) / ss_tot
 
     out_channels = {}
     for i, ch in enumerate(channels):
-        theta, s, k = shape[ch]
-        b = float(coef[i])
-
-        def unit(mult, ch=ch, theta=theta, k=k, s=s):
-            return float(national_response_shape(world, ch, theta, k, s,
-                                                 mult).sum())
-
+        b, b_se = float(coef[i]), float(se[i])
         spend = gt["channels"][ch]["spend_total"]
-        inc = b * unit(1.0)
+        unit1 = units[ch](1.0)
+        inc = b * unit1
+        lo, hi = (b - CI_Z * b_se) * unit1, (b + CI_Z * b_se) * unit1
         delta = cfg["mroi_delta"]
         curve_m = cfg["response_curve_multipliers"]
         out_channels[ch] = {
-            "roi": {"point": inc / spend},
-            "mroi": {"point": (b * unit(1.0 + delta) - inc) / (delta * spend)},
+            "roi": {"point": inc / spend,
+                    "interval_low": lo / spend,
+                    "interval_high": hi / spend,
+                    "interval_kind": "ols_ci90"},
+            "mroi": {"point": (b * units[ch](1.0 + delta) - inc)
+                     / (delta * spend)},
             "contribution_share": {"point": inc / gt["total_revenue"]},
             "response_curve": {
                 "multipliers": curve_m,
-                "incremental_revenue": [b * unit(m) for m in curve_m],
+                "incremental_revenue": [b * units[ch](m) for m in curve_m],
                 "kind": "selected_model"},
         }
 
@@ -628,41 +585,224 @@ def run_setup_rung(world, rung, gt, grids):
         "arm": "national",
         "seed_dataset": world.seed,
         "run": {
-            "tool_seed": number,
+            "tool_seed": 0,
             "runtime_seconds": 0.0,
-            "hardware": "grid search + OLS, any CPU",
+            "hardware": "OLS, any CPU",
             "converged": True,
-            "convergence_detail": {
-                "method": "coordinate descent on the shape grid, "
-                          "OLS for betas and baseline",
-                "r2": r2, **{k: v for k, v in book.items()
-                             if k != "at_boundary"}},
+            "convergence_detail": {"method": "closed-form OLS on projected "
+                                             "regressors", "r2": r2},
         },
         "channels": out_channels,
         "extras": {
             "rung": rung,
             "parameter_space": SPACES[space],
             "what_the_oracle_knows": (
-                "national aggregate exposure with the pre-window warm-up, "
-                "the generator's adstock and Hill family; shape estimated "
-                "inside the parameter space above; baseline estimated "
-                "(intercept + trend + 3 Fourier harmonics + control)"),
-            "fitted_shape": {ch: {"adstock_alpha": shape[ch][0],
-                                  "hill_s": shape[ch][1],
-                                  "hill_k": shape[ch][2]}
-                             for ch in channels},
-            "at_boundary": book["at_boundary"],
+                "as L3 (national aggregate regressors, baseline estimated), "
+                "but each channel's regressor is the best approximation of "
+                "the true one inside the parameter space above"),
+            "projected_shape": {
+                ch: {"adstock_alpha": shapes[ch][0], "hill_s": shapes[ch][1],
+                     "hill_k": shapes[ch][2],
+                     "residual_share": cache[(world.seed, ch, space)][1],
+                     "at_bound": bounds_hit(world, ch, space, shapes[ch])}
+                for ch in channels},
             "n_rows": int(len(y)),
-            "n_linear_params": int(X.shape[1]),
+            "n_params": int(X.shape[1]),
             "r2": r2,
-            "note": ("Diagnostic, not a competing estimator. No interval is "
-                     "exported: an OLS interval conditional on a fitted "
-                     "shape ignores the shape's uncertainty (PLAN §8.1)."),
+            "note": ("Diagnostic, not a competing estimator: handed the true "
+                     "shape, then restricted to what one tool's setup can "
+                     "express (docs/PLAN.md §8.6)."),
         },
     }
 
 
-def diagnostics(seeds, data_root,
+def robyn_gamma_of_truth(world, ch):
+    """Q3 (PLAN §8.3): the gamma at which Robyn's inflexion equals the true
+    half-saturation, by the steady-state ratio, and the range the observed
+    ratio z/u (window weeks 13 onward) allows around it."""
+    spec = world.cfg["channels"][ch]
+    th, k = spec["adstock_alpha"], spec["hill_k"]
+    x = world.imp[ch].sum(axis=0)[world.win]
+    z = robyn_adstock(x, th)
+    pop_tot = world.pop.sum()
+    x_pc = world.imp[ch].sum(axis=0) / pop_tot
+    u = adstock_geometric(x_pc, th, world.cfg["adstock_max_lag"])[world.win] \
+        / world.ref[ch]
+    r = z[13:] / u[13:]
+    r_ss = pop_tot * world.ref[ch] / (1 - th)
+    return (k * r_ss / z.max(), k * r.min() / z.max(), k * r.max() / z.max())
+
+
+def _roi_errs(world, coef, units, gt):
+    return {ch: coef[i] * units[ch](1.0) / gt["channels"][ch]["spend_total"]
+            / gt["channels"][ch]["true_roi"] - 1
+            for i, ch in enumerate(world.cfg["channels"])}
+
+
+def setup_diagnostics(seeds, data_root, results_root):
+    """PLAN §8.6-8.7: the projections, the pseudo-true ROI errors, and the
+    numbers that answer the audit's three open questions."""
+    channels = list(CONFIG["channels"])
+    true = {ch: None for ch in channels}
+    fits = {"reference": true,
+            "Meridian's space": {ch: "meridian" for ch in channels},
+            "Robyn's space": {ch: "robyn" for ch in channels},
+            "ooh, display -> Robyn": Q2_VARIANTS["robyn_ooh_display"],
+            "tv -> Meridian": Q2_VARIANTS["meridian_tv"]}
+    shapes, checks, pseudo, noisy, gammas = [], 0, [], [], []
+
+    for seed in seeds:
+        world = World(seed, CONFIG)
+        with open(Path(data_root) / f"seed{seed}" / "ground_truth.json") as f:
+            gt = json.load(f)
+        checks += 5 - len(projection_check(world))
+        cache = {}
+        for space in ("meridian", "robyn"):
+            for ch in channels:
+                (th, s, k), res = project_channel(world, ch, space)
+                cache[(seed, ch, space)] = ((th, s, k), res)
+                shapes.append({"space": space, "channel": ch, "theta": th,
+                               "hill_s": s, "hill_k": k, "residual": res,
+                               "bounds": "; ".join(
+                                   bounds_hit(world, ch, space, (th, s, k)))})
+        for label, spaces in fits.items():
+            for noiseless, sink in ((True, pseudo), (False, noisy)):
+                coef, _, _, _, _, units = fit_projected(
+                    world, {c: v for c, v in spaces.items() if v}, cache,
+                    noiseless=noiseless)
+                for ch, e in _roi_errs(world, coef, units, gt).items():
+                    sink.append({"seed": seed, "fit": label, "channel": ch,
+                                 "err": e})
+        for ch in channels:
+            g_ss, g_lo, g_hi = robyn_gamma_of_truth(world, ch)
+            gammas.append({"seed": seed, "channel": ch, "gamma": g_ss,
+                           "lo": g_lo, "hi": g_hi})
+
+    # The tools' own errors, national arm, for the Q2 fractions.
+    tool_err = {}
+    for tool in ("meridian", "robyn"):
+        errs = {ch: [] for ch in channels}
+        for seed in seeds:
+            p = Path(results_root) / tool / "results" / \
+                f"{tool}_national_seed{seed}.json"
+            with open(Path(data_root) / f"seed{seed}" / "ground_truth.json") as f:
+                gt = json.load(f)
+            with open(p) as f:
+                res = json.load(f)
+            for ch in channels:
+                errs[ch].append(res["channels"][ch]["roi"]["point"]
+                                / gt["channels"][ch]["true_roi"] - 1)
+        tool_err[tool] = {ch: (float(np.mean(v)), float(np.mean(np.abs(v))))
+                          for ch, v in errs.items()}
+
+    sh = pd.DataFrame(shapes)
+    pt = pd.DataFrame(pseudo).groupby(["fit", "channel"]).err.mean().unstack(0)
+    ny = pd.DataFrame(noisy).groupby(["fit", "channel"]).err.mean().unstack(0)
+    order = list(fits)
+    n_cs = len(seeds) * len(channels)
+
+    def span(col):
+        lo, hi = col.min(), col.max()
+        return f"{lo:g}" if np.isclose(lo, hi) else f"{lo:g}-{hi:g}"
+
+    out = [
+        "## Setup-constrained rungs: the projections (docs/PLAN.md §8.6-8.7)",
+        "",
+        "L6 and L7 are L3 with each channel's regressor replaced by the best",
+        "approximation of the true one inside one tool's parameter space. The",
+        f"check: projecting onto the free space returns the true shape on "
+        f"{checks} of {n_cs} channel-seeds.",
+        "",
+        "Projected shape per channel, range over seeds; `residual` is the share",
+        "of the true regressor's sum of squares the projection cannot reach",
+        "(mean over seeds); `bounds` counts the seeds on which the projection",
+        "sits on a bound of the space.",
+        "",
+    ]
+    for space in ("meridian", "robyn"):
+        out += [f"### {'Meridian' if space == 'meridian' else 'Robyn'}'s space",
+                "",
+                "| channel | true (θ, s, k) | projected θ | s | k | residual | bounds |",
+                "|---|---|---|---|---|---|---|"]
+        for ch in channels:
+            g = sh[(sh.space == space) & (sh.channel == ch)]
+            spec = CONFIG["channels"][ch]
+            b = g.bounds[g.bounds != ""]
+            bounds = ("; ".join(f"{n} ({(g.bounds.str.contains(n, regex=False)).sum()}/{len(g)})"
+                                for n in sorted({x for s_ in b for x in s_.split("; ")}))
+                      or "—")
+            out.append(f"| {ch} | {spec['adstock_alpha']}, {spec['hill_s']}, "
+                       f"{spec['hill_k']} | {span(g.theta)} | {span(g.hill_s)} "
+                       f"| {span(g.hill_k)} | {g.residual.clip(lower=0).mean():.1e} "
+                       f"| {bounds} |")
+        out.append("")
+
+    def table(df, title, lead):
+        rows = [title, "", *lead, "",
+                "| channel | " + " | ".join(order) + " |",
+                "|---|" + "---|" * len(order)]
+        for ch in channels:
+            rows.append(f"| {ch} | " + " | ".join(
+                f"{df.loc[ch, c]:+.3f}" for c in order) + " |")
+        return rows + [""]
+
+    out += table(pt, "## Pseudo-true ROI error (noiseless; baseline and control removed)",
+                 ["Mean signed ROI relative error over seeds. `reference` is L2 without",
+                  "noise: its error is the aggregation gap alone, and every other column",
+                  "is read against it."])
+    out += table(ny, "## The same fits on noisy revenue (L3's design)",
+                 ["Mean signed ROI relative error over seeds. `reference` is L3,",
+                  "`Meridian's space` is L6 and `Robyn's space` is L7."])
+
+    per_seed = pd.DataFrame(noisy).pivot_table(
+        index=["seed", "channel"], columns="fit", values="err")
+
+    def leak(ch, label, tool):
+        a = float(ny.loc[ch, label] - ny.loc[ch, "reference"])
+        d = (per_seed[label] - per_seed["reference"]).xs(ch, level="channel")
+        b = float(pt.loc[ch, label] - pt.loc[ch, "reference"])
+        m = tool_err[tool][ch][1]
+        return (f"| {ch} | {label} | {a:+.3f} | {d.min():+.3f} to "
+                f"{d.max():+.3f} | {a / m:+.2f} | {b:+.3f} "
+                f"| {b / m:+.2f} | {m:.3f} |")
+
+    out += ["## Q2: did one channel's constraint reach another (docs/PLAN.md §8.3, §8.6)",
+            "",
+            "Change in the channel's mean signed ROI error when only the named",
+            "channels are projected, against the reference (L3 noisy, L2 noiseless),",
+            "and that change as a fraction of the tool's own mean |ROI rel err| on",
+            "the channel (national arm). The noisy change is also given per seed,",
+            "as its range.",
+            "",
+            "| channel | projected | Δ noisy | per seed | / tool | Δ noiseless | / tool | tool mean abs err |",
+            "|---|---|---|---|---|---|---|---|",
+            leak("tv", "ooh, display -> Robyn", "robyn"),
+            leak("ooh", "tv -> Meridian", "meridian"),
+            ""]
+
+    gm = pd.DataFrame(gammas)
+    out += ["## Q3: do Robyn's γ bounds contain the true half-saturation",
+            "",
+            "γ at which Robyn's inflexion, γ · max(z), equals the true k, by the",
+            "steady-state ratio z/u; in brackets, the range the observed ratio",
+            "(window weeks 13 onward) allows. Robyn's bounds: [0.3, 1].",
+            "",
+            "| channel | " + " | ".join(f"seed{s}" for s in seeds) + " | verdict |",
+            "|---|" + "---|" * (len(seeds) + 1)]
+    for ch in channels:
+        g = gm[gm.channel == ch]
+        inside = ((g.lo >= ROBYN_GAMMA[0]) & (g.hi <= ROBYN_GAMMA[1])).all()
+        outside = ((g.hi < ROBYN_GAMMA[0]) | (g.lo > ROBYN_GAMMA[1])).all()
+        verdict = ("inside" if inside else "outside" if outside
+                   else "at the bound")
+        out.append(f"| {ch} | " + " | ".join(
+            f"{r.gamma:.2f} [{r.lo:.2f}, {r.hi:.2f}]" for r in g.itertuples())
+            + f" | {verdict} |")
+    out.append("")
+    return out
+
+
+def diagnostics(seeds, data_root, results_root="runs",
                 out_path="analysis/out/diagnostics.md"):
     """Every scenario number ORACLE.md quotes, derived here rather than by hand.
 
@@ -767,6 +907,7 @@ def diagnostics(seeds, data_root,
         "the one to read for cross-channel collinearity.",
         "",
     ]
+    out += setup_diagnostics(seeds, data_root, results_root)
 
     text = "\n".join(out)
     print(text)
@@ -796,23 +937,19 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     report = []
 
-    # PLAN §8.1 stop rule: the optimiser is checked on every seed before any
-    # setup-constrained rung is exported, and a failure exports none of them.
+    # PLAN §8.6 stop rule: the projection is checked on every seed before
+    # any setup-constrained rung is exported, and a failure exports none.
     if any(r in SETUP_RUNGS for r in args.rungs):
-        failed = []
+        failed = {}
         for seed in args.seeds:
-            world = World(seed, CONFIG)
-            chk = optimiser_check(world, channel_grids(world))
-            print(f"optimiser check seed{seed}: max |ROI rel err| "
-                  f"{chk['max_roi_rel_err']:.1e}, "
-                  f"{chk['starts_reaching_best']} of {chk['n_starts']} "
-                  f"random starts on the winner -> "
-                  f"{'pass' if chk['passed'] else 'FAIL'}")
-            if not chk["passed"]:
-                failed.append(seed)
+            bad = projection_check(World(seed, CONFIG))
+            print(f"projection check seed{seed}: free space returns the true "
+                  f"shape on {5 - len(bad)} of 5 channels")
+            if bad:
+                failed[seed] = bad
         if failed:
-            sys.exit(f"optimiser check failed on seed(s) {failed}: no L5-L7 "
-                     f"result is exported (docs/PLAN.md §8.1)")
+            sys.exit(f"projection check failed {failed}: no L6/L7 result is "
+                     f"exported (docs/PLAN.md §8.6)")
 
     for seed in args.seeds:
         gt_path = Path(args.data) / f"seed{seed}" / "ground_truth.json"
@@ -829,18 +966,17 @@ def main():
             sys.exit(f"seed {seed}: rebuilt revenue differs from national.csv "
                      f"(max abs {drift:.4f}, rel {rel:.2e}) — regenerate first")
 
-        grids = None
+        cache = {}
         for rung in args.rungs:
             if rung in SETUP_RUNGS:
-                grids = grids or channel_grids(world)
-                res = run_setup_rung(world, rung, gt, grids)
+                res = run_setup_rung(world, rung, gt, cache)
             else:
                 res = run_rung(world, rung, gt)
             name = f"{res['tool']}_{res['arm']}_seed{seed}.json"
             with open(out / name, "w") as f:
                 json.dump(res, f, indent=1)
-            # ROI error rather than beta error: a fitted shape rescales beta,
-            # so only the ROI is comparable across all seven rungs.
+            # ROI error rather than beta error: a projected shape rescales
+            # beta, so only the ROI is comparable across all six rungs.
             errs = [abs(v["roi"]["point"] / gt["channels"][ch]["true_roi"] - 1)
                     for ch, v in res["channels"].items()]
             report.append({

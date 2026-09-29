@@ -1,0 +1,272 @@
+{
+ "schema_version": "1.0",
+ "tool": "oracle_nat_meridian_setup",
+ "tool_version": "1.1.0",
+ "arm": "national",
+ "seed_dataset": 102,
+ "run": {
+  "tool_seed": 0,
+  "runtime_seconds": 0.0,
+  "hardware": "OLS, any CPU",
+  "converged": true,
+  "convergence_detail": {
+   "method": "closed-form OLS on projected regressors",
+   "r2": 0.8098400048237102
+  }
+ },
+ "channels": {
+  "tv": {
+   "roi": {
+    "point": 2.299360383567613,
+    "interval_low": 1.9711431426063577,
+    "interval_high": 2.6275776245288682,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 1.8854374900532522
+   },
+   "contribution_share": {
+    "point": 0.09881195467779606
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     31142975.465344314,
+     59141742.88884502,
+     84499221.30733563,
+     107610065.95096427,
+     128789337.06349929,
+     148292317.02163255,
+     183072041.13123593,
+     213242104.64528817,
+     239725924.93663943
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "ooh": {
+   "roi": {
+    "point": 0.6030265467596132,
+    "interval_low": -1.4542311855114716,
+    "interval_high": 2.660284279030698,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 0.2989298931169637
+   },
+   "contribution_share": {
+    "point": 0.006910470376457961
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     3071083.243218132,
+     5050929.0758015355,
+     6460633.133445458,
+     7525771.303559971,
+     8363475.225233538,
+     9041814.444441708,
+     10076985.036826195,
+     10832402.989003142,
+     11409416.792081542
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "social": {
+   "roi": {
+    "point": 3.1198445299121227,
+    "interval_low": 1.2479807983263962,
+    "interval_high": 4.991708261497848,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 1.2738992090038876
+   },
+   "contribution_share": {
+    "point": 0.053628467898213086
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     26598900.887033846,
+     41587349.60637912,
+     51410624.43843056,
+     58403489.59995493,
+     63655658.25319421,
+     67753742.3423017,
+     73747284.78739281,
+     77927181.22084756,
+     81012069.42039894
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "display": {
+   "roi": {
+    "point": 3.4645681039582077,
+    "interval_low": 0.1503884050708715,
+    "interval_high": 6.778747802845544,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 1.3532176881653397
+   },
+   "contribution_share": {
+    "point": 0.044665562072782806
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     22574239.327077806,
+     35022988.06306832,
+     43030239.20613515,
+     48642536.17957324,
+     52804323.084364444,
+     56017461.604078785,
+     60659607.39606595,
+     63854880.93249408,
+     66189957.6041222
+    ],
+    "kind": "selected_model"
+   }
+  },
+  "search": {
+   "roi": {
+    "point": 4.656730174623237,
+    "interval_low": 2.375452051208817,
+    "interval_high": 6.938008298037658,
+    "interval_kind": "ols_ci90"
+   },
+   "mroi": {
+    "point": 1.6302697929876864
+   },
+   "contribution_share": {
+    "point": 0.12007007189912287
+   },
+   "response_curve": {
+    "multipliers": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0,
+     1.25,
+     1.5,
+     2.0,
+     2.5,
+     3.0
+    ],
+    "incremental_revenue": [
+     0.0,
+     64047377.44174481,
+     96867474.61653566,
+     117051164.86565365,
+     130760983.3034205,
+     140693416.6466028,
+     148225036.0320118,
+     158895453.97818595,
+     166095328.5977075,
+     171282364.73811346
+    ],
+    "kind": "selected_model"
+   }
+  }
+ },
+ "extras": {
+  "rung": "L6",
+  "parameter_space": "Meridian 1.8.0's space: Hill slope fixed at 1, half-saturation inside ec_m's support",
+  "what_the_oracle_knows": "as L3 (national aggregate regressors, baseline estimated), but each channel's regressor is the best approximation of the true one inside the parameter space above",
+  "projected_shape": {
+   "tv": {
+    "adstock_alpha": 0.625,
+    "hill_s": 1.0,
+    "hill_k": 5.215,
+    "residual_share": 0.008716083584097173,
+    "at_bound": [
+     "hill_k at ec_m's ceiling"
+    ]
+   },
+   "ooh": {
+    "adstock_alpha": 0.6,
+    "hill_s": 1.0,
+    "hill_k": 1.0,
+    "residual_share": -3.4344285984720947e-16,
+    "at_bound": []
+   },
+   "social": {
+    "adstock_alpha": 0.295,
+    "hill_s": 1.0,
+    "hill_k": 0.675,
+    "residual_share": 3.4305963517983805e-06,
+    "at_bound": []
+   },
+   "display": {
+    "adstock_alpha": 0.395,
+    "hill_s": 1.0,
+    "hill_k": 0.63,
+    "residual_share": 6.3947144261407154e-06,
+    "at_bound": []
+   },
+   "search": {
+    "adstock_alpha": 0.1,
+    "hill_s": 1.0,
+    "hill_k": 0.53,
+    "residual_share": 1.1375454139267916e-05,
+    "at_bound": []
+   }
+  },
+  "n_rows": 156,
+  "n_params": 14,
+  "r2": 0.8098400048237102,
+  "note": "Diagnostic, not a competing estimator: handed the true shape, then restricted to what one tool's setup can express (docs/PLAN.md \u00a78.6)."
+ }
+}
