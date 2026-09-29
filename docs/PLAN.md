@@ -548,3 +548,25 @@ this amendment**, so no result motivated what follows.
   therefore mixes a difficulty of the data with the tool's machinery. Any
   sentence that quotes the third term says so.
 - **Regret estimators:** L5 is removed from §8.5's list.
+
+### 8.7 Amendment, 2026-09-29 (same day): the k grid was tighter than Meridian
+
+**What happened.** On the first run of §8.6, Meridian's-space projection of
+tv landed on k = 4.00 on every seed: the ceiling of §8.1's k grid, not of
+Meridian's space. The best slope-1 approximation of tv's S-curve is close
+to linear, and it keeps asking for a larger half-saturation. `ec_m`'s
+ceiling of 10, mapped to the generator's units, sits near 5.3 for tv, so
+L6 as run was more constrained than Meridian was — against §8.1's own
+wording ("inside the support of `ec_m`"). **Seen before this amendment:**
+that run's mean |ROI rel err| over all channels and seeds, 0.661 for L6 and
+0.635 for L7, printed by `oracle.py`; no per-channel number and no
+comparison with the tools. The amendment is decided on the boundary hit,
+which is a statement about the grid, not about any result.
+
+**What changes.** The k grid runs from 0.05 to **10.00** in steps of 0.05, for
+every space. `oracle.py` refuses to run if `ec_m`'s mapped ceiling exceeds
+the grid on any channel of any seed, so the grid can never again be the
+binding constraint for Meridian's space. The free space and Robyn's are
+unaffected in substance (the free projection must still return the truth,
+and Robyn's γ ≤ 1 keeps k far below the new ceiling). A projection that
+lands on a bound of its space is reported with the bound's name.
