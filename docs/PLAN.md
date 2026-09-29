@@ -304,3 +304,174 @@ runs are the overrun — flagged here deliberately).
 | Nevergrad/reticulate misbinding | official `install_nevergrad.R` flow, `RETICULATE_PYTHON` pinned, restart R |
 | Neither tool recovers anything (too-hard scenario) | that IS a publishable result with ground truth to prove it; check simulator sanity first, then report honestly |
 | Scope creep | stretch arms live strictly after Phase 6 |
+
+## 8. Part 2 pre-registration (amendment, 2026-09-29)
+
+Written and committed **before any number in it is computed**. It fixes the
+three new oracle rungs, the answers they are meant to give, the two scoring
+additions, and the budget-regret metric with the per-channel limits that C11
+and C12 use. Everything here runs on the v1 data and the v1 extracts; no tool
+is re-run. A change to anything below needs a dated amendment of its own.
+
+### 8.1 Setup-constrained rungs (C10)
+
+`analysis/AUDIT.md` left three questions open, all of the same kind: every
+v1 rung is handed the true shape, so the ladder cannot tell how much of a
+tool's miss came from the parameter space its setup allowed. Three new
+national rungs answer that. They share everything with L3 — national
+aggregate exposure (pre-window exposure known, as in L1–L4), the same
+estimated baseline (intercept + linear trend + 3 annual Fourier harmonics +
+the observed control), unconstrained OLS for the betas — and replace L3's
+known shape with a shape **estimated from the data**. They differ from each
+other only in the parameter space the shape is searched over:
+
+| Rung | Tool id | Shape searched over |
+|---|---|---|
+| L5 | `oracle_nat_fitshape` | the generator's own family, free: retention θ ∈ {0, 0.05, …, 0.95}; Hill slope s ∈ {0.3, 0.4, …, 4.0}; half-saturation k ∈ {0.05, 0.10, …, 4.00} (k in the generator's units: multiples of the channel's mean window exposure per capita) |
+| L6 | `oracle_nat_meridian_setup` | Meridian 1.8.0 as run in v1: s ≡ 1 (`slope_m` is `Deterministic(1.0)`); θ on L5's grid (`alpha_m` is `Uniform(0, 1)`); k on L5's grid, inside the support of `ec_m`, `TruncatedNormal(0.8, 0.8, 0.1, 10)`, whose units are Meridian's median-scaled media, mapped to the generator's units by × median(national exposure per capita)/mean |
+| L7 | `oracle_nat_robyn_setup` | Robyn 3.12.1 as run in v1 (RD2): θ inside each channel's bounds (tv 0.3–0.8, ooh 0.1–0.4, social/display/search 0–0.3) on L5's grid; s = Robyn's α ∈ [0.5, 3] on L5's grid; k on L5's grid, inside Robyn's γ ∈ [0.3, 1], where Robyn's inflexion is γ · max(z) and z is Robyn's own adstocked series — the unnormalised geometric recursion over the 156 window weeks it sees, cold start. Mapped to the generator's units by the steady-state ratio z/u = population × mean exposure per capita / (1 − θ) |
+
+The three definitions were read from the installed packages on the run
+machine on 2026-09-29, not from documentation: Meridian's
+`model/prior_distribution.py` for `alpha_m`, `ec_m` and `slope_m`, its
+`model/transformers.py` for the population-scaled non-zero median, and
+Robyn's `saturation_hill` (`inflexion <- max(x) * gamma`). Only **hard
+constraints** are modelled — the support of a prior, the bounds of a
+hyperparameter. Where a prior puts its mass inside that support is left to
+the tool's side of the ledger in 8.3, not to the setup's.
+
+Two family differences are deliberately **not** modelled, because they are
+not what the audit asked about and modelling them would blur the contrast:
+Meridian's adstock window is `max_lag + 1` = 14 weights against the
+generator's 13 (the 14th weight is 0.7¹³ ≈ 0.01 of the first, on tv);
+Robyn's adstock is unnormalised and cold-started. All three rungs use the
+generator's normalised 13-week adstock with the warm-up known; the setup
+constraint is the only thing that changes between them.
+
+**Estimation.** Variable projection: for a fixed shape, the betas and the
+baseline are OLS; the shape is found by coordinate descent over channels —
+for one channel, an exhaustive search over its admissible grid with the other
+four held fixed; cycle through the five until no parameter changes (at most
+50 cycles). Eight starts per run: the true shape projected to the nearest
+admissible grid point, and seven admissible grid points drawn uniformly by a
+generator seeded with (dataset seed, rung number). The run keeps the start
+with the lowest residual sum of squares. Each JSON records, under `extras`,
+the fitted shape, how many starts reached the best SSR (relative tolerance
+1e-9), whether the truth-projected start was the winner, the cycles used, and
+which fitted parameters sit on an admissible boundary.
+
+A grid rather than a gradient optimiser, because the analysis lock has no
+scipy and a new dependency is not worth one rung; and because every true
+parameter lies on L5's grid, which makes the optimiser testable (next
+paragraph). Grid resolution is part of each rung's error and is disclosed as
+such.
+
+**The optimiser check, and its stop rule.** Before any rung is exported, the
+procedure is run on revenue built exactly from L2's national regressors with
+the true shape and true betas, with no noise and no baseline, and fitted with
+L2's design. L5's parameter space contains the truth, so the search must
+return the true ROI on every channel of every seed to 1e-9 — and it must do
+so from the **seven random starts alone**: the truth-projected start begins
+at the answer and would pass the check without testing anything. If it does
+not, the optimiser is not trusted and **no L5–L7 number is published**; the
+failure is reported instead.
+
+**No intervals.** An OLS interval conditional on a fitted shape ignores the
+uncertainty of the shape and would read as a calibration result it is not.
+The three rungs export ROI, mROI, contribution share and response curve
+without `interval_low`/`interval_high`; their coverage is not reported.
+
+### 8.2 Pseudo-true projections (C10)
+
+Noise and setup are confounded in any single noisy fit. To separate them, the
+same procedure is run once per seed on **noiseless** national data with the
+true baseline and control removed (y = the sum of the five true national
+media contributions; L2's design with the shape fitted). What remains is the
+setup's bias plus the aggregation gap L2 already measures. Five parameter
+spaces are projected:
+
+1. free (L5's space) — the aggregation-only reference;
+2. Meridian's space (L6);
+3. Robyn's space (L7);
+4. free, except ooh's and display's θ capped at Robyn's bounds;
+5. free, except tv's slope fixed at 1.
+
+These go to `analysis/out/diagnostics.md` through `oracle.py --diagnostics`,
+not to scored JSONs.
+
+### 8.3 The three open questions, and the decomposition
+
+- **Q1 — how much of Meridian's miss on tv, search and social is its fixed
+  slope.** Per channel: the setup's price on noisy data,
+  mean|err L6| − mean|err L5| over the five seeds, set against Meridian
+  national's mean|err|; and the pseudo-true bias, projection 2's ROI error
+  minus projection 1's.
+- **Q2 — did one channel's constraint reach the other.** Robyn: tv's ROI error
+  in projection 4 minus projection 1. Meridian: ooh's ROI error in projection
+  5 minus projection 1. Each is reported as a fraction of the tool's mean|err|
+  on that channel. No pass/fail threshold: the size is the answer.
+- **Q3 — do Robyn's γ bounds contain the true half-saturation.** Per seed and
+  channel, γ_true = k_true × population × mean exposure per capita /
+  ((1 − θ_true) × max z), with z as in L7 at θ_true; contained iff
+  0.3 ≤ γ_true ≤ 1. Because the steady-state ratio is an approximation, the
+  observed range of z/u over window weeks 13 onward is reported beside it,
+  and a verdict within that range of a bound is reported as "at the bound",
+  not as inside or outside.
+
+**The decomposition.** For each tool T (Meridian national, Robyn national)
+and each channel, the mean absolute ROI error over the five seeds splits
+exactly into three terms:
+
+    |err T| = |err L5|                        estimating the shape (the data's price)
+            + (|err setup(T)| − |err L5|)     the setup's parameter space
+            + (|err T| − |err setup(T)|)      the tool: priors, regularisation,
+                                              DECOMP.RSSD, baseline machinery,
+                                              sampler and model selection
+
+with setup(Meridian) = L6 and setup(Robyn) = L7. It is an identity on the
+means, not per seed. A negative term is reported as it is, never clipped.
+Only tv, search and social are interpreted; ooh and display are reported and
+flagged as below the recoverability floor (`analysis/ORACLE.md`), where no
+term means anything.
+
+### 8.4 Scoring additions (C10)
+
+1. **Rank agreement.** Per run, the Spearman correlation between estimated
+   and true ROI across the five channels; per tool-arm, its mean and range
+   over seeds. With five channels it moves in steps of 0.1.
+2. **Seed-level spread of the tool difference.** National arm, per seed:
+   D = mean over channels of |err Meridian| − the same for Robyn. Reported:
+   each seed's D, their mean and standard deviation (ddof = 1), and how many
+   seeds each tool is lower on.
+
+### 8.5 Budget regret and per-channel limits (C11, C12)
+
+- **Allocation.** A vector of per-channel multipliers m applied to the whole
+  observed spend series — the response curve's own definition. The total
+  budget is fixed at observed window spend: Σ m_c × spend_c = Σ spend_c.
+- **Curves.** Piecewise-linear interpolation of the 10-point response curves
+  on the generator's multiplier grid: true curves from `ground_truth.json`,
+  estimated curves from each result JSON's `response_curve`. The same
+  interpolation is used to optimise and to evaluate, so the true curves give
+  a regret of exactly 0.
+- **Optimiser.** Exact, by vertex enumeration: a separable piecewise-linear
+  objective under one linear budget constraint and box limits has an optimum
+  where at most one channel sits strictly between breakpoints. No numerical
+  optimiser.
+- **Metric.** With a* the allocation that maximises true incremental revenue
+  and â the one that maximises the estimator's: regret =
+  (R_true(a*) − R_true(â)) / R_true(a*), the share of the achievable
+  incremental revenue lost. Secondary: uplift captured =
+  (R_true(â) − R_true(1)) / (R_true(a*) − R_true(1)), where 1 is the observed
+  allocation.
+- **Limits, primary: m_c ∈ [0.5, 2.0] for every channel.** Robyn 3.12.1's
+  `robyn_allocator` default for `max_response` (read from the installed
+  source, 2026-09-29). Both ends are points of the multiplier grid. C12 runs
+  both tools' own allocators with these limits.
+- **Limits, sensitivity: m_c ∈ [0.7, 1.3].** Meridian 1.8.0's default for a
+  fixed-budget optimisation (`SPEND_CONSTRAINT_DEFAULT_FIXED_BUDGET = 0.3` in
+  `constants.py`, read 2026-09-29). Neutral optimiser only; the allocators are
+  not re-run with it.
+- **Estimators.** Meridian national, Meridian geo (two seeds, flagged),
+  Robyn national, and oracles L2, L3, L5, L6 and L7. One line per estimator
+  in `## Budget regret` in `analysis/out/summary.md`.
