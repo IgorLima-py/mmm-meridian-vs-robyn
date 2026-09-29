@@ -7,8 +7,10 @@ Usage (from the repo root):
     python analysis/scoring.py --results runs --data data/sim --out analysis/out
     python analysis/scoring.py --selftest        # end-to-end check on stubs
 
-Outputs: <out>/metrics_long.csv (one row per run x channel) and
-<out>/summary.md (aggregates per tool x arm).
+Outputs: <out>/metrics_long.csv (one row per run x channel),
+<out>/regret_long.csv (one row per estimator x seed x budget limits, from
+regret.py) and <out>/summary.md (aggregates per tool x arm, then the budget
+regret table).
 """
 
 import argparse
@@ -18,6 +20,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+import regret
 
 CURVE_EVAL_MULTIPLIERS = [0.5, 1.0]   # M3, Jin-style fixed evaluation points
 
@@ -331,6 +335,8 @@ def run_scoring(results_root, data_root, out_root):
         if seed not in gts:
             skipped.append(f"{p} (no ground truth for seed {seed})")
             continue
+        if res.get("kind") == "allocation":   # an allocation, not a fit:
+            continue                           # regret.py scores it (C12)
         rows.extend(score_result(res, gts[seed]))
     if not rows:
         sys.exit(f"no scoreable result JSONs under {results_root}")
@@ -339,6 +345,10 @@ def run_scoring(results_root, data_root, out_root):
     out.mkdir(parents=True, exist_ok=True)
     df.to_csv(out / "metrics_long.csv", index=False)
     text = summarize(df)
+    reg_rows, reg_missing = regret.collect(results_root, gts)
+    if reg_rows:
+        pd.DataFrame(reg_rows).to_csv(out / "regret_long.csv", index=False)
+        text += "\n".join(regret.summary_lines(reg_rows, reg_missing, gts))
     if skipped:
         text += "\nSkipped files:\n" + "\n".join(f"- {s}" for s in skipped)
     (out / "summary.md").write_text(text, encoding="utf-8")
