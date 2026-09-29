@@ -1,6 +1,114 @@
 # Status
 
-_Atualizado: 2026-09-24 (C8, feita de fora pela sessão C3 do carreira-ai, no Dell)_
+_Atualizado: 2026-09-29 (o /360 da v2, na Karen)_
+
+## Sessão /360 da v2 (27–29/09, Karen): avaliação da v1 e o roadmap das partes 2 e 3
+
+Não foi fatia: foi um `/360`, aberto com o ponteiro ainda na C8. Nenhum código mudou.
+
+### O que foi feito
+
+- **A v1 está pública e fechada.** O GitHub detecta a licença MIT (commit `6708dbf`) e o
+  Igor aplicou o About. O `verificar:` da C8 já estava satisfeito pela seção de 24/09:
+  `LICENSE` na raiz, o README nomeia a licença e o clone limpo roda as seis chamadas. O
+  ponteiro só não tinha avançado.
+- **O `/360`:** avaliação honesta da v1 (abaixo), uma entrevista a fundo em 7 rodadas,
+  três conferentes nos `verificar:` (17 itens ganharam critério que dá para checar) e um
+  refutador em Opus, cujos 11 achados foram todos corrigidos antes da aprovação.
+- **Arquivos** (commit `035ef85`):
+  - `docs/ROADMAP.md` novo, no template do playbook: perfis (com `publicacao`, opus/xhigh),
+    a fila C10–C23, uma seção por fatia, a tabela de escape e as decisões da entrevista.
+  - `docs/ROADMAP_V1.md`, que é o roadmap antigo sem mudança e guarda a spec da C7.
+  - `docs/PROXIMO.md` apontando para a C10.
+  - No `CLAUDE.md`: a linha `stack travada:`, "já é público", e o `/oi` e o `/tchau` lendo
+    os blocos novos.
+- **O hook de abertura voltou a conferir o perfil:** rodei-o contra os arquivos novos e
+  ele deu `perfil x tabela: BATE (dificil = opus/high)`. Com o roadmap antigo, ele dizia
+  "nao achei a secao Tabela de perfis".
+
+### Avaliação da v1 (/360 de 27/09)
+
+A C17 lê isto antes de pré-registrar a parte 3.
+
+**O que é bom de verdade:**
+- A verdade é conhecida e existe o oráculo, que separa "a ferramenta falhou" de "o dado
+  não deixava".
+- Não achei benchmark publicado que traga o Robyn junto, nem um que pontue a decisão de
+  orçamento.
+- Tem pré-registro com emendas datadas, auditoria pública e limitações específicas.
+- O conselho "rode uma checagem de recuperabilidade antes" é útil e original. É ele que
+  vira a C15.
+
+**O que é fraco:**
+1. O resultado principal é um empate entre dois setups com deficiência, não entre duas
+   ferramentas: o slope do Meridian fica fixo em 1 em 4 canais, e os bounds do Robyn
+   excluem o adstock verdadeiro de ooh e display. A C10 ataca isso.
+2. O Robyn é frágil: 3 de 5 seeds não convergem, e a média mistura duas specs. O braço geo
+   tem 2 seeds, uma sem convergir, então é anedota.
+3. Cinco seeds e nenhuma incerteza sobre a diferença entre as ferramentas: 0,533 contra
+   0,555 é ruído.
+4. O regime é o fácil: gasto exógeno, efeito constante, família funcional certa e ruído iid.
+5. O desenho não foi feito para o que acabou medindo. O S/N da tv é 1,9, contra no máximo
+   0,4 nos outros canais, e isso só apareceu depois dos runs.
+6. Falta a métrica de decisão, o regret de orçamento, e as curvas para calculá-la já estão
+   nos extratos. É a C11.
+7. A v1 envelheceu:
+   - o Meridian 2.0 saiu em 02/09 e o 2.1 em 17/09;
+   - o mmm-recovery-bench apareceu em 24/09;
+   - o benchmark do Heusch saiu no arXiv 2608.21130.
+8. O artigo tem ~1.800 palavras, com ressalva em quase toda frase, e o conselho útil só
+   aparece no fim.
+
+**Os dados fazem sentido?** Sim, para o que se propõem:
+- O processo gerador é o de Jin et al. 2017, com ROIs entre 0,8 e 3,5.
+- Pela config, a mídia responde por ~25% da receita (Σ ROI × gasto ≈ 1,64 M por semana,
+  sobre uma base de 5 M).
+- O ponto menos realista é o search exógeno com ROI 3,5, que é justamente o que o cenário
+  endógeno da parte 3 ataca.
+
+**Projetos irmãos:**
+- **experiment-calculators** (público): a calculadora de geo-holdout dimensiona o
+  experimento da parte 3, via link.
+- **O projeto de geo-holdout, ainda privado:** conecta só pelo método, e entra como
+  citação depois de publicado.
+
+### O que foi tentado e falhou
+
+- **`Write` negado dentro do `/360`:** o comando bloqueia a escrita até a mensagem seguinte
+  do Igor. O plano ficou no contexto e foi escrito depois do "Tentar novamente".
+- **O classificador do modo automático não deu veredito, duas vezes**, no primeiro comando
+  da implementação, um `pull + mv + exclude` encadeado. Era transitório: os mesmos passos,
+  como comandos separados, passaram.
+- **Um `/batch` sem argumento foi chamado no fim da sessão.** Foi erro de digitação do
+  Igor, e nada rodou.
+
+### Preso a esta máquina (Karen)
+
+- **`.git/info/exclude`** tem `.agents/`, `.codex/` e `AGENTS.md`, os espelhos do Codex.
+  Isso não viaja pelo git. Se esses arquivos existirem no Dell, vão aparecer como não
+  rastreados lá. Apagá-los é decisão do Igor.
+- **Os modelos salvos da v1** (`outputs/meridian/*.pkl` e `outputs/robyn/seed*/OutputCollect.rds`)
+  só existem aqui, e a C12 roda os alocadores sobre eles sem refit. Não apague `outputs/`.
+
+### O que mudou nas decisões abertas da C6
+
+- **Publicar:** feito.
+- **D5, `BACKLOG` 9:** ficou de fora; o braço melhor caso resolve pela configuração.
+- **O degrau com slope 1, `BACKLOG` 8:** virou a C10.
+- **O tamanho do artigo:** vale o que foi publicado. A parte 2 tem teto de 1.000 palavras
+  e a parte 3, de 2.000.
+- **A frase "came back identical" do README:** é corrigida no README-índice da C13.
+
+As abertas novas estão no bloco 5 do roadmap:
+- a spec do Robyn que converge (a C16 mede);
+- a licença do Heusch (C17);
+- o nome novo do repo (começo da C21);
+- se o Pages redireciona depois do rename (C23).
+
+### Próximo passo
+
+C10, em qualquer máquina, perfil `dificil` (opus/high). O primeiro commit é só a emenda de
+pré-registro da parte 2 no `docs/PLAN.md`; nenhum número novo pode entrar antes dela.
 
 ## Sessão C8 (24/09): licença, humanize, rodadas 10 e 11
 

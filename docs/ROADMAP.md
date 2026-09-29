@@ -541,7 +541,7 @@ A regra em uma linha: *«às vezes» e «não sei por quê» pedem mais esforço
 
 ```
 2026-09-27 | respondida | Destino da v2 | partes novas neste repo; a v1 publicada fica congelada como registro auditado | nenhuma fatia edita article/meridian-vs-robyn.md
-2026-09-27 | respondida | Profundidade da entrevista | Fundo | 6 rodadas
+2026-09-27 | respondida | Profundidade da entrevista | Fundo | 7 rodadas, a última com os achados do refutador
 2026-09-27 | respondida | Página de entrada (README) | índice, com a parte mais nova no topo | C13 e C21 fazem o rascunho, C14 e C22 trocam
 2026-09-27 | respondida | Configuração das ferramentas | dois braços: padrão (o que um usuário roda) e melhor caso (cada ferramenta capaz de expressar a verdade) | C17 define, C19a-c rodam
 2026-09-27 | respondida | Cenário novo | gasto endógeno, no máximo um cenário novo | C17, C18
