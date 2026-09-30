@@ -67,7 +67,14 @@ no otimizador (1e-9) estão na escala do ruído de ponto flutuante, não medidas
 folga real de orçamento que cada alocador reporta** e emenda o `BUDGET_RTOL` com a origem se
 precisar.
 
-SEGUNDA_OPINIAO_PENDENTE
+### Segunda opinião (Opus, no /tchau)
+
+A primeira tentativa morreu no limite de uso da API; a segunda rodou. Sem achado que bloqueie
+o `sai:`/`verificar:`: refez o caso à mão (3/11, −1/2), confirmou a enumeração de vértices
+contra o §8.5 (vale para curva em S), a escala das curvas (inclusive Meridian geo) e que o
+validador cobre todo pulo silencioso do `score_result`. Nenhuma dependência nova. Um achado
+menor, **corrigido antes do push** (`a437f4e`): resultado sem `response_curve` de estimador
+listado derrubaria o `scoring.py` inteiro; agora sai da tabela com o nome ao lado.
 
 ### Preso a esta máquina (Karen)
 

@@ -7,13 +7,13 @@
 > Quem escreve: o `/tchau`, ao avançar o ponteiro, e o `/360`, ao desenhar o roadmap.
 > A fatia inteira (entra, sai, verificar, prompt de abertura) está no bloco 3 do `docs/ROADMAP.md`.
 
-chat: C11
-titulo: O erro custa dinheiro? Regret de orçamento com otimizador neutro
-perfil: dificil
-modelo: opus
-esforco: high
+chat: C12
+titulo: Alocadores das ferramentas nos modelos da v1, contra o ótimo verdadeiro
+perfil: padrao
+modelo: sonnet
+esforco: medium
 forma: sessao
-maquina: qualquer
+maquina: Karen
 plan-mode: nao
-persona: analista de alocação de orçamento, cético com métrica de ROI que não vira decisão
-objetivo: Com as curvas que os extratos da v1 já trazem, medir quanto do incremental possível cada ferramenta perde numa realocação, com otimizador neutro exato e os limites do pré-registro (docs/PLAN.md §8.5, L5 fora pela §8.6); e escrever o validador de schema que serve às C12 e C16-C20.
+persona: engenheiro de ML que conhece o Robyn e o Meridian por dentro
+objetivo: Rodar robyn_allocator() e o BudgetOptimizer do Meridian 1.8.0 sobre os modelos da v1 já salvos em outputs/, sem refit, com regret.BOUNDS["primary"], e gravar 10 JSONs de alocação no formato do RESULTS_SCHEMA.md (seção Allocation files); o regret.py já os pontua.

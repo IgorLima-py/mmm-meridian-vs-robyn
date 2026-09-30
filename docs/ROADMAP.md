@@ -38,7 +38,7 @@ Estado: ✅ feito · 🚧 em obras · ⬜ não começou · 🔴 travado
 | # | Chat | Perfil | Forma | Estado | Máquina | Depende de | Paralelo com | O que muda no dia seguinte |
 |---|---|---|---|---|---|---|---|---|
 | 1 | C10 — Quanto do erro da v1 era setup | `dificil` | sessao | ✅ | qualquer | — | — | dá para dizer, por canal e por ferramenta, quanto do erro da v1 era setup e quanto era ferramenta: a pergunta que o `analysis/AUDIT.md` deixou aberta |
-| 2 | C11 — Regret de orçamento com otimizador neutro | `dificil` | sessao | ⬜ | qualquer | C10 | — | dá para dizer quanto do incremental possível cada ferramenta perde numa realocação; existe validador de schema para todo JSON de resultado |
+| 2 | C11 — Regret de orçamento com otimizador neutro | `dificil` | sessao | ✅ | qualquer | C10 | — | dá para dizer quanto do incremental possível cada ferramenta perde numa realocação; existe validador de schema para todo JSON de resultado |
 | 3 | C12 — Alocadores das ferramentas nos modelos da v1 | `padrao` | sessao | ⬜ | Karen | C11 | — | dá para comparar o que o alocador de cada ferramenta recomenda com o ótimo verdadeiro, limitação que a v1 declarou |
 | 4 | C13 — Parte 2 escrita | `publicacao` | sessao | ⬜ | qualquer | C10, C11, C12 | — | o Igor lê a parte 2 inteira, com números que se auto-conferem, e decide se ela vai para o auditor como está |
 | 5 | C14 — Auditoria e publicação da parte 2 | `publicacao` | sessao | ⬜ | qualquer | C13 | — | a parte 2 está pública e o README abre por ela |
