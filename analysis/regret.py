@@ -187,7 +187,7 @@ def load_ground_truths(data_root):
 def collect(results_root, gts):
     """One row per (estimator, seed, bounds), and one per allocation file.
     Returns (rows, missing estimators)."""
-    rows, found = [], set()
+    rows, found, missing = [], set(), []
     for p in sorted(Path(results_root).rglob("*.json")):
         with open(p) as f:
             res = json.load(f)
@@ -204,13 +204,20 @@ def collect(results_root, gts):
             continue
         for label, tool, arm, note in ESTIMATORS:
             if key == (tool, arm):
+                # response_curve is optional in the schema: a run without one
+                # has no plan to score, and says so instead of crashing.
+                if any("response_curve" not in res["channels"].get(c, {})
+                       for c in gts[seed]["channels"]):
+                    missing.append(f"{label} ({arm}) seed {seed}: no "
+                                   "response curve on every channel")
+                    continue
                 found.add(key)
                 for b in BOUNDS:
                     rows.append({"label": label, "tool": tool, "arm": arm,
                                  "seed": seed, "note": note,
                                  **regret_of_result(res, gts[seed], b)})
-    missing = [f"{lab} ({arm})" for lab, t, arm, _ in ESTIMATORS
-               if (t, arm) not in found]
+    missing += [f"{lab} ({arm})" for lab, t, arm, _ in ESTIMATORS
+                if (t, arm) not in found]
     return rows, missing
 
 
@@ -299,7 +306,8 @@ def summary_lines(rows, missing, gts):
         lines.append("- every estimator's optimum is a unique vertex: no plan "
                      "above was picked from a tie.")
     if missing:
-        lines.append("- no result files for: " + ", ".join(missing))
+        lines.append("- not in the table (no result file, or a file without "
+                     "curves): " + "; ".join(missing))
     return lines + [""]
 
 
@@ -405,6 +413,8 @@ def main():
         return
     gts = load_ground_truths(args.data)
     rows, missing = collect(args.results, gts)
+    if not rows:
+        sys.exit("no regret to report: " + "; ".join(missing))
     print("\n".join(summary_lines(rows, missing, gts)))
 
 

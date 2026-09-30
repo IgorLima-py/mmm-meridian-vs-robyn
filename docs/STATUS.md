@@ -1,6 +1,86 @@
 # Status
 
-_Atualizado: 2026-09-29 (C10, na Karen)_
+_Atualizado: 2026-09-29 (C11, na Karen)_
+
+## Sessão C11 (29/09, Karen): o erro custa dinheiro? Regret de orçamento
+
+bateria 6: 5/0/0 (`python -m simulation.checks`, 29/09, antes do push; 5 seeds OK, avisos
+C7 de ooh/display abaixo do piso, como sempre)
+
+### O que foi feito
+
+Nenhuma ferramenta rodou; tudo sobre as curvas que os extratos da v1 já trazem.
+
+- **`analysis/regret.py`** (`cb72543`): otimizador neutro e exato por enumeração de vértices
+  (objetivo separável e linear por partes na grade do gerador, uma restrição de orçamento,
+  caixa por canal: o ótimo tem no máximo um canal fora de breakpoint). `BOUNDS` com as duas
+  faixas do PLAN §8.5 e a origem de cada uma comentada. `--selftest` com quatro testes: curvas
+  verdadeiras dão regret 0; caso de dois canais feito à mão dá 3/11 (e uplift −1/2); 200 mil
+  planos aleatórios viáveis por seed × limite × canal livre não batem o ótimo; arquivo de
+  alocação no ótimo dá 0. Já lê os arquivos de alocação da C12 (`"kind": "allocation"`) e
+  gera a linha "`<Tool>` own allocator" na tabela sem mudança de código.
+- **`analysis/validate_schema.py`** (`cb72543`): erro = o que o scorer pularia ou leria errado
+  em silêncio (canal com outro nome ou ausente, `roi.point` ausente, curva fora da grade,
+  NaN, intervalo com uma ponta só, schema ≠ 1.x, seed sem ground truth); aviso = fora da letra
+  do schema mas inofensivo hoje (chave desconhecida, nome de arquivo fora da convenção).
+  `--strict` reprova os dois. `--allocations` confere limites contra o `BOUNDS` e o orçamento.
+  Padrão de glob que não acha nada sai 2. Expande glob por conta própria (o PowerShell não
+  expande). Testado contra sete arquivos quebrados de propósito e duas alocações, no scratchpad.
+- **`analysis/RESULTS_SCHEMA.md`**: documenta o `ols_ci90` (os oráculos usam desde a v1 e não
+  estava escrito), o formato do arquivo de alocação que a C12 vai gravar
+  (`<tool>_<arm>_allocation_seed<NNN>.json`, só `multiplier` por canal, `bounds` = nome no
+  `BOUNDS`) e o validador.
+- **`analysis/scoring.py`**: anexa a tabela `## Budget regret` ao summary, grava
+  `analysis/out/regret_long.csv` (ignorado pelo git, como o `metrics_long.csv`), e deixa os
+  arquivos de alocação para o `regret.py`.
+- **`analysis/out/summary.md`** (`bf9c966`): só ganhou a seção nova; o resto não mudou.
+
+### Resultado, em poucas linhas (leitura para a C13, não texto publicado)
+
+Limites [0,5; 2,0], média sobre as seeds:
+
+- A melhor realocação rende só ~6,5% sobre a alocação observada (6,0–6,5% por seed).
+  "Não realocar" perde 6,0% do possível; isso é a régua.
+- Meridian nacional perde 5,6%, Robyn 5,9% (0,5% a 13%): quase a régua. Uplift capturado
+  médio 6% e 1%; com seeds abaixo de zero (pior que não mexer), Robyn até −121% na 103, onde
+  dobra o ooh (canal abaixo do piso).
+- Oráculos: L2 0,7%, L3 2,2%, L6 2,3%, L7 2,5%. **Os limites de setup custam quase nada em
+  dinheiro**; o que separa as ferramentas dos oráculos é o "resto", como na decomposição da C10.
+- Todo ótimo é vértice único: nenhum plano foi escolhido por empate.
+
+**Decisão minha, sem consulta:** a linha de referência "keep the observed allocation" na tabela
+não estava no pré-registro; está marcada assim no próprio summary. Se o Igor não quiser, sai
+em uma edição no `regret.summary_lines`.
+
+### O que foi tentado e falhou — não repita
+
+- **Substituição com `\n` via heredoc Python no Bash** virou quebra de linha real e quebrou a
+  sintaxe do `scoring.py`, duas vezes; o Edit resolveu. Para string com escape, usar o Edit.
+- **Rodar o `oracle.py` na Karen regrava os 10 JSONs de L6/L7 com CRLF** (conteúdo idêntico,
+  `git diff --ignore-cr-at-eol` vazio). Restaurei com `git checkout -- runs/oracle/results/`.
+  Não é regressão, mas vai aparecer como `M` no status sempre que a cadeia rodar aqui.
+
+### Números sem medição (declarados no código)
+
+As tolerâncias do validador para alocação (limite 1e-9, orçamento 1e-6 relativo) e do empate
+no otimizador (1e-9) estão na escala do ruído de ponto flutuante, não medidas. **A C12 mede a
+folga real de orçamento que cada alocador reporta** e emenda o `BUDGET_RTOL` com a origem se
+precisar.
+
+SEGUNDA_OPINIAO_PENDENTE
+
+### Preso a esta máquina (Karen)
+
+Nada novo desta sessão. Para a C12 (só na Karen): os modelos salvos em `outputs/meridian/*.pkl`
+e `outputs/robyn/seed*/OutputCollect.rds`.
+
+### Próximo passo
+
+C12 — rodar `robyn_allocator()` e o `BudgetOptimizer` do Meridian sobre os modelos salvos, sem
+refit, com `regret.BOUNDS["primary"]`, e gravar 10 JSONs de alocação no formato do
+`RESULTS_SCHEMA.md` (seção "Allocation files"). Validar com
+`python analysis/validate_schema.py --strict --allocations runs/*/results/*allocation*.json`;
+a cadeia do /score já põe as linhas "own allocator" na tabela. Máquina: Karen.
 
 ## Sessão C10 (29/09, Karen): quanto do erro da v1 era setup
 
