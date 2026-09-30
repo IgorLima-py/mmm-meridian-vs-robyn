@@ -1,6 +1,72 @@
 # Status
 
-_Atualizado: 2026-09-29 (C11, na Karen)_
+_Atualizado: 2026-09-29 (C12, na Karen)_
+
+## Sessão C12 (29/09, Karen): o que os alocadores das próprias ferramentas recomendam
+
+bateria 7: 60/0/0 (`python -m simulation.checks`, 29/09, antes do push)
+
+### O que foi feito
+
+Sem refit: os modelos salvos em `outputs/` (só na Karen) foram reaproveitados.
+
+- **`runs/robyn/run_robyn_allocator.R`**: `robyn_allocator()` sobre o `OutputCollect.rds` e o
+  modelo escolhido pela regra pré-registrada (`extras.selected_model`). `InputCollect` não foi
+  salvo pelo `run_robyn.R`; é refeito pelo mesmo `robyn_inputs()`, e o script para se o gasto da
+  janela refeito não bater com o do modelo salvo. Limites 0,5 e 2,0 (também os defaults do
+  alocador, lidos da fonte). Segundos por seed.
+- **`runs/meridian/run_meridian_allocator.py`**: `BudgetOptimizer.optimize()` no posterior,
+  `spend_constraint_lower=0.5`, `spend_constraint_upper=1.0` (o Meridian declara os limites
+  relativos ao gasto histórico), orçamento fixo, resto default. 441 s na primeira seed (XLA
+  frio), 69 a 84 s nas outras.
+- **10 JSONs** `runs/{meridian,robyn}/results/*_national_allocation_seed10?.json`; entradas
+  datadas em `runs/*/DECISIONS.md` (a do Robyn diz 101-104 em 4000×5, 105 em 2000×5, e que 102,
+  103 e 104 não convergiram pelo teste do próprio Robyn).
+- **`analysis/validate_schema.py`**: `BUDGET_RTOL` de 1e-6 para 2e-3, com a origem medida no
+  comentário; nota no `RESULTS_SCHEMA.md`. `analysis/out/summary.md` ganhou as duas linhas
+  "own allocator".
+
+### Resultado, em poucas linhas (leitura para a C13, não texto publicado)
+
+Limites [0,5; 2,0], média sobre as 5 seeds, regret / uplift capturado:
+
+- Alocador do Meridian: 6,6% (2,6 a 9,9%) / −0,12. Alocador do Robyn: 15,5% (0,9 a 21,7%) /
+  −1,59. "Não realocar" perde 6,0%.
+- As mesmas curvas estimadas dão 5,6% (Meridian) e 5,9% (Robyn) no otimizador neutro da C11.
+  Ou seja, o alocador próprio piorou o resultado nas duas ferramentas, e muito mais no Robyn.
+  Esta sessão não separou por quê (curva do alocador diferente da exportada, ótimo local do
+  SLSQP, ou outra coisa): não afirmar causa na C13.
+- Os planos do Robyn batem nos limites (muitos canais em 0,5 ou 2,0).
+
+### O que foi tentado e falhou — não repita
+
+- **Primeira rodada do Meridian usou como base o `nonoptimized_data` do próprio Meridian**: ele
+  arredonda o orçamento para a grade (120,1 M ou 120,0 M contra 120,12 M observados) e monta
+  essa tabela com o orçamento arredondado; os multiplicadores saíam contra a base errada e o
+  validador reprovou o orçamento. Refeito com o gasto observado de `mmm.input_data`.
+- **Nomes de canal do `dt_optimOut` do Robyn são os de exposição (`tv_I`)**, não os de gasto:
+  a primeira tentativa falhou nisso (é o F7 de novo).
+
+### Números sem medição
+
+O `BUDGET_RTOL` agora é medido (maior lacuna 9,99e-4, Meridian). O Meridian ficou entre 1,7e-4 e
+1e-3 abaixo do orçamento; o efeito dessa sub-execução no regret não foi separado e é ordem de
+1% do uplift possível. A C13 deve citar isso se citar o número.
+
+### Segunda opinião (Opus, no /tchau)
+
+Sem achado. Conferiu o `sai:` e o `verificar:`, a base do multiplicador, a tolerância nova, a
+leitura do Robyn, as duas entradas de `DECISIONS.md` e que não entrou dependência.
+
+### Preso a esta máquina (Karen)
+
+Os modelos em `outputs/meridian/*.pkl` e `outputs/robyn/seed*/`. Os 10 JSONs viajam pelo git,
+então a C13 não precisa da Karen.
+
+### Próximo passo
+
+C13 — parte 2 escrita (`article/part-2.md`, figuras, `docs/drafts/README-part2.md`). Qualquer
+máquina. Leia o **entra** da C13 no `docs/ROADMAP.md`.
 
 ## Sessão C11 (29/09, Karen): o erro custa dinheiro? Regret de orçamento
 

@@ -42,12 +42,16 @@ INTERVAL_KINDS = {"credible90", "candidate_range", "ols_ci90"}
 CURVE_KINDS = {"posterior_median", "selected_model"}
 
 # Allocations: a multiplier this far outside its bound, or a budget this far
-# from the observed total, fails. Not measured — float-noise scale, so that
-# an allocator that did not hold the limits or the budget is caught. If a
-# tool's allocator reports a looser equality than this, C12 records the gap
-# it measured and amends these with their origin.
+# from the observed total, fails. BOUND_ATOL is float-noise scale, not measured.
+# BUDGET_RTOL was measured in C12 (2026-09-29, seeds 101-105): Robyn's allocator
+# holds the budget to 1.2e-14 relative; Meridian 1.8.0's BudgetOptimizer
+# rounds the budget for its grid (gtol=1e-4 default) and underspends by 1.7e-4
+# (seeds 101, 103, 104) and 9.99e-4 (102, 105). 2e-3 is about twice the largest
+# gap measured: it admits Meridian's rounding and still fails an allocator
+# that spends 0.2% or more off the budget. It is a property of the tool's
+# optimiser, kept in the file, not corrected.
 BOUND_ATOL = 1e-9
-BUDGET_RTOL = 1e-6
+BUDGET_RTOL = 2e-3
 
 
 class Report:

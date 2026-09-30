@@ -99,7 +99,10 @@ File name: `<tool>_<arm>_allocation_seed<NNN>.json`, under
   window, the same object as a `response_curve` multiplier. Spend in money
   goes in `extras`, if at all.
 - The budget is the observed window total: Σ multiplier × window spend must
-  equal Σ window spend (`ground_truth.json`, `spend_total`).
+  equal Σ window spend (`ground_truth.json`, `spend_total`), to within 2e-3
+  relative. The tolerance is measured (C12): Robyn's allocator holds the budget
+  to 1e-14, Meridian 1.8.0 rounds it for its grid and lands 1.7e-4 to 1e-3
+  under. The file keeps what the tool returned.
 - Every multiplier sits inside the named `BOUNDS` entry.
 
 ## Validation

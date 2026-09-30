@@ -7,13 +7,13 @@
 > Quem escreve: o `/tchau`, ao avançar o ponteiro, e o `/360`, ao desenhar o roadmap.
 > A fatia inteira (entra, sai, verificar, prompt de abertura) está no bloco 3 do `docs/ROADMAP.md`.
 
-chat: C12
-titulo: Alocadores das ferramentas nos modelos da v1, contra o ótimo verdadeiro
-perfil: padrao
-modelo: sonnet
-esforco: medium
+chat: C13
+titulo: Parte 2 escrita: artigo curto, figuras e o README-índice em rascunho
+perfil: publicacao
+modelo: opus
+esforco: xhigh
 forma: sessao
-maquina: Karen
+maquina: qualquer
 plan-mode: nao
-persona: engenheiro de ML que conhece o Robyn e o Meridian por dentro
-objetivo: Rodar robyn_allocator() e o BudgetOptimizer do Meridian 1.8.0 sobre os modelos da v1 já salvos em outputs/, sem refit, com regret.BOUNDS["primary"], e gravar 10 JSONs de alocação no formato do RESULTS_SCHEMA.md (seção Allocation files); o regret.py já os pontua.
+persona: redator técnico que escreve para quem decide orçamento, sem inflar número
+objetivo: Escrever article/part-2.md (inglês, até 1.000 palavras, primeira linha DRAFT, com a seção What neither tool can tell you) a partir do que a C10, a C11 e a C12 mediram, com figuras novas e o README-índice em docs/drafts/; o README.md e o artigo da v1 não mudam.

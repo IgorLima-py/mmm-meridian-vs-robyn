@@ -261,6 +261,8 @@ Each estimator's response curves are handed to the same exact optimiser, which r
 | oracle L3 — true shape, estimated baseline | national | 5 | 0.022 (0.011 to 0.035) | 0.626 (0.434 to 0.816) | 0.009 (0.000 to 0.029) |
 | oracle L6 — shape projected on Meridian's setup | national | 5 | 0.023 (0.004 to 0.060) | 0.614 (0.000 to 0.936) | 0.016 (0.001 to 0.044) |
 | oracle L7 — shape projected on Robyn's setup | national | 5 | 0.025 (0.011 to 0.036) | 0.575 (0.396 to 0.816) | 0.012 (0.000 to 0.028) |
+| Meridian own allocator — the tool's optimiser (C12) | national | 5 | 0.066 (0.026 to 0.099) | -0.117 (-0.746 to 0.580) | — |
+| Robyn own allocator — the tool's optimiser (C12) | national | 5 | 0.155 (0.009 to 0.217) | -1.585 (-2.546 to 0.856) | — |
 | *reference: keep the observed allocation* | — | 5 | 0.060 (0.057 to 0.061) | 0 by definition | 0.045 (0.042 to 0.045) |
 
 The reference row is not an estimator and was not pre-registered: it is the bar any plan has to clear. The best plan's gain over the observed allocation, as a share of the observed allocation's incremental revenue: seed 101 6.5%, seed 102 6.5%, seed 103 6.4%, seed 104 6.5%, seed 105 6.0% at [0.5, 2.0]; 4.7%, 4.7%, 4.6%, 4.7%, 4.4% at [0.7, 1.3].
@@ -276,5 +278,7 @@ Regret seed by seed, multipliers in [0.5, 2.0]:
 | oracle L3 | national | 0.035 | 0.011 | 0.021 | 0.013 | 0.032 |
 | oracle L6 | national | 0.030 | 0.011 | 0.060 | 0.004 | 0.011 |
 | oracle L7 | national | 0.035 | 0.011 | 0.036 | 0.013 | 0.032 |
+| Meridian own allocator | national | 0.074 | 0.039 | 0.094 | 0.026 | 0.099 |
+| Robyn own allocator | national | 0.217 | 0.168 | 0.188 | 0.009 | 0.191 |
 
 - every estimator's optimum is a unique vertex: no plan above was picked from a tie.

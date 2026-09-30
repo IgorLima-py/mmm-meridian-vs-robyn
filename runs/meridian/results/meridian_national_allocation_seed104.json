@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "kind": "allocation",
+  "tool": "meridian",
+  "tool_version": "1.8.0",
+  "arm": "national",
+  "seed_dataset": 104,
+  "bounds": "primary",
+  "run": {
+    "tool_seed": 1,
+    "runtime_seconds": 79.1,
+    "hardware": "WSL2 Ubuntu 26.04, RTX 4070 Super 12GB, TF 2.21 XLA/CUDA",
+    "converged": true,
+    "convergence_detail": {
+      "fixed_budget": true,
+      "spend_constraint_lower": 0.5,
+      "spend_constraint_upper": 1.0,
+      "gtol": 0.0001,
+      "use_posterior": true
+    }
+  },
+  "channels": {
+    "tv": {
+      "multiplier": 1.4294871804035172
+    },
+    "ooh": {
+      "multiplier": 0.8653846160780325
+    },
+    "social": {
+      "multiplier": 0.7051282051282055
+    },
+    "display": {
+      "multiplier": 0.7122507117434111
+    },
+    "search": {
+      "multiplier": 0.6837606842476924
+    }
+  },
+  "extras": {
+    "budget_gap_relative": -0.00016649975031920468,
+    "observed_spend": {
+      "tv": 46799999.970000006,
+      "ooh": 12479999.99,
+      "social": 18719999.99999999,
+      "display": 14040000.01,
+      "search": 28079999.980000015
+    },
+    "optimised_spend": {
+      "tv": 66900000.0,
+      "ooh": 10800000.0,
+      "social": 13200000.0,
+      "display": 10000000.0,
+      "search": 19200000.0
+    },
+    "grid_budget": 120100000.0
+  }
+}

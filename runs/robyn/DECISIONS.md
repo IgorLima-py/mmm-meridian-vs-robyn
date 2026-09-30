@@ -58,3 +58,22 @@ rather than silently edited into the table.
   estimate; not tested. No run was changed and the
   committed extracts stand; the article, the README and every figure caption
   that shows Robyn state it.
+
+- **2026-09-29 (C12, the tool's own allocator on the saved models):**
+  `runs/robyn/run_robyn_allocator.R` runs `robyn_allocator()` on each seed's
+  saved `OutputCollect.rds` and the model selected by the pre-registered rule
+  (`extras.selected_model` in the committed result). No refit. Which fitted
+  model each allocation sits on: seeds 101–104 are the **4000 × 5** runs and
+  seed 105 is the **2000 × 5** run (the amendments above); of these, 102, 103
+  and 104 did not pass Robyn's own convergence check, and their allocations
+  inherit that. Setup: `scenario = "max_response"`, `date_range = "all"`,
+  `total_budget = NULL` (the observed window total), limits 0.5 and 2.0 on
+  every channel, i.e. `regret.BOUNDS["primary"]`, which are also the defaults
+  of Robyn 3.12.1's own allocator (read from the installed source). Everything
+  else (SLSQP_AUGLAG, `maxeval = 1e5`, `constr_mode = "eq"`) is Robyn's
+  default. `InputCollect` was not saved by `run_robyn.R`; it is rebuilt with
+  the same `robyn_inputs()` call, and the script stops if the rebuilt window
+  spend differs from the saved model's `total_spend`. The multiplier is the
+  optimised over the initial per-period spend of `dt_optimOut`. The allocator
+  names channels after the exposure variables (friction F7), not the spend
+  columns.

@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "kind": "allocation",
+  "tool": "robyn",
+  "tool_version": "3.12.1",
+  "arm": "national",
+  "seed_dataset": 101,
+  "bounds": "primary",
+  "run": {
+    "tool_seed": 123,
+    "runtime_seconds": 2.2,
+    "hardware": "WSL2 Ubuntu 26.04, 11 cores (Ryzen 5 5600G), R 4.5.2",
+    "converged": true,
+    "convergence_detail": {
+      "fitted_run_iterations": 4000,
+      "fitted_run_trials": 5,
+      "allocator_optim_algo": "SLSQP_AUGLAG",
+      "allocator_maxeval": 100000,
+      "allocator_constr_mode": "eq"
+    }
+  },
+  "channels": {
+    "tv": {
+      "multiplier": 0.5
+    },
+    "ooh": {
+      "multiplier": 1.9375000013522
+    },
+    "social": {
+      "multiplier": 0.5
+    },
+    "display": {
+      "multiplier": 0.5
+    },
+    "search": {
+      "multiplier": 2
+    }
+  },
+  "extras": {
+    "selected_model": "5_328_8",
+    "scenario": "max_response",
+    "usecase": "all_historical_vec + historical_budget",
+    "budget_gap_relative": 3.32615205136743e-15,
+    "per_channel": {
+      "tv": {
+        "init_spend_unit": 299999.99974359,
+        "optm_spend_unit": 149999.999871795,
+        "init_response_unit": 287613.014911363,
+        "optm_response_unit": 221577.835925379
+      },
+      "ooh": {
+        "init_spend_unit": 80000.0001923077,
+        "optm_spend_unit": 155000.000480772,
+        "init_response_unit": 78775.6604270739,
+        "optm_response_unit": 130572.14820203
+      },
+      "social": {
+        "init_spend_unit": 120000.00025641,
+        "optm_spend_unit": 60000.0001282051,
+        "init_response_unit": 113717.380828322,
+        "optm_response_unit": 92973.2024024297
+      },
+      "display": {
+        "init_spend_unit": 90000.0001923077,
+        "optm_spend_unit": 45000.0000961538,
+        "init_response_unit": 85147.5367963371,
+        "optm_response_unit": 74214.9319731645
+      },
+      "search": {
+        "init_spend_unit": 179999.999807692,
+        "optm_spend_unit": 359999.999615385,
+        "init_response_unit": 171405.229993811,
+        "optm_response_unit": 333955.089469501
+      }
+    }
+  }
+}
