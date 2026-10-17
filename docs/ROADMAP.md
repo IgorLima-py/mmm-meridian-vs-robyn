@@ -554,7 +554,7 @@ A regra em uma linha: *«às vezes» e «não sei por quê» pedem mais esforço
 2026-09-27 | respondida | Origem do cenário endógeno | avaliar o benchmark do Heusch (arXiv 2608.21130) primeiro; estender o nosso só se ele não servir | C17 decide, C18 segue o ramo
 2026-09-27 | respondida | Base da calibração | em cima do padrão | braços calibrados = padrão + experimento
 2026-09-27 | respondida | Nome do repo | renomear na publicação da parte 3 (contra a recomendação de manter) | nome escolhido no começo da C21, rename na C22, página depois
-2026-09-27 | respondida | stack travada | Python + R só para o Robyn + WSL2 na Karen + página estática sem build; o Igor aceita deixar o Dell de fora onde precisar de admin | linha stack travada: no CLAUDE.md; coluna Máquina por fatia
+2026-09-27 | respondida | Ferramentas do projeto | Python + R só para o Robyn + WSL2 na Karen + página estática sem build; o Igor aceita deixar o Dell de fora onde precisar de admin | era a linha de stack no CLAUDE.md, largada em 16/10/2026 por decisão do Igor (vale o que ajudar); coluna Máquina por fatia
 2026-09-27 | respondida | Alocadores próprios na parte 2 | sim, fatia curta na Karen sobre os modelos salvos da v1 | C12
 2026-09-27 | respondida | Onde a v2 é feita | na main, rascunho com linha DRAFT; README só muda em fatia de publicação | C13 e C21 marcam, C14 e C22 tiram
 2026-09-27 | respondida | Quando sai a página | com a parte 3, depois do rename | C23 depois da C22

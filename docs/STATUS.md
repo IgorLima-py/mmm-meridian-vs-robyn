@@ -247,7 +247,7 @@ Não foi fatia: foi um `/360`, aberto com o ponteiro ainda na C8. Nenhum código
     a fila C10–C23, uma seção por fatia, a tabela de escape e as decisões da entrevista.
   - `docs/ROADMAP_V1.md`, que é o roadmap antigo sem mudança e guarda a spec da C7.
   - `docs/PROXIMO.md` apontando para a C10.
-  - No `CLAUDE.md`: a linha `stack travada:`, "já é público", e o `/oi` e o `/tchau` lendo
+  - No `CLAUDE.md`: a linha de stack (largada em 16/10/2026), "já é público", e o `/oi` e o `/tchau` lendo
     os blocos novos.
 - **O hook de abertura voltou a conferir o perfil:** rodei-o contra os arquivos novos e
   ele deu `perfil x tabela: BATE (dificil = opus/high)`. Com o roadmap antigo, ele dizia

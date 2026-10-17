@@ -26,6 +26,9 @@ limites — ela **não** alega "construí um MMM".
 - O planejamento mais amplo do portfólio mora em repositório privado separado.
   **Nada de lá é citado ou copiado para cá.**
 - **Texto formal que outra pessoa vai ler** (e-mail, proposta, README, descrição de PR) passa pela skill `humanize` antes de sair, e sai como rascunho: quem envia é o Igor.
+- **A comparação é Meridian × Robyn.** GeoLift e LightweightMMM ficam fora de propósito
+  (decisão do `/360` de 27/09/2026; os motivos estão no `docs/BACKLOG.md` e nas decisões do
+  `docs/ROADMAP.md`).
 
 ## O que roda onde
 
@@ -72,11 +75,6 @@ A linha de contrato da bateria, sozinha e na coluna zero (quem lê é o hook de 
 plugin `playbook`, o subagente `bateria` e o `/tchau`):
 
 bateria: python -m simulation.checks
-
-A linha da stack, idem na coluna zero (quem lê é o revisor do `/tchau`, para reconhecer
-dependência que ninguém pediu; decidida no `/360` de 27/09/2026):
-
-stack travada: Python (simulação, análise, Meridian, PyMC-Marketing) + R só para o Robyn + WSL2 na Karen para os runs + página HTML/JS estática sem build. Fora: GeoLift, SaaS comercial, LightweightMMM, framework JS com build, backend, dado real.
 
 ## Ao abrir a sessão
 
